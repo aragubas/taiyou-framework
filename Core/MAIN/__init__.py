@@ -220,12 +220,14 @@ def Run():
     global ProcessListChanged
     global ProcessListChanged_Delay
 
+    # deltaTime in seconds.
+    clock.tick(FPS)
+
+
     # -- Run the Update Code -- #
     for process in ProcessList:
         process.Update()
 
-    # deltaTime in seconds.
-    clock.tick(FPS)
 
     if ProcessListChanged_Delay:
         ProcessListChanged_Delay = False

@@ -524,7 +524,7 @@ class ContentManager:
         :return:
         """
         if SoundDisabled: return
-        FolderName = tge.Get_GameSourceFolder() + FolderName
+        FolderName = self.SourceFolder + FolderName
         self.Sound_LastInit = FolderName
         self.InitSoundSystem()
 

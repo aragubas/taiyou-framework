@@ -53,6 +53,40 @@ def BlurredRectangle(DISPLAY, Rectangle, BlurAmmount=100, BlackContrast_Alpha=50
 
     DISPLAY.blit(ResultPanel, (Rectangle[0], Rectangle[1]))
 
+def BlurredRectangleReturnResult(DISPLAY, Rectangle, BlurAmmount=100, BlackContrast_Alpha=50, BlackBackgroundColor=(0, 0, 0)):
+    """
+    Render a blurred Rectangle, usefull for UI.
+    :param DISPLAY:The surface to be blitted
+    :param Rectangle:Rectangle
+    :param BlurAmmount:The ammount of blur (value higher than 100 is recomended)
+    :param BlackContrast:The ammount of Black Color (usefull for contrast in bright surfaces)
+    :return:
+    """
+    # -- the Result Surface -- #
+    ResultPanel = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.HWSURFACE | pygame.HWACCEL)
+
+    if BlurAmmount < 1:
+        BlurAmmount = 1
+
+    if BlackContrast_Alpha < 1:
+        BlackContrast_Alpha = 1
+
+    if not BlackContrast_Alpha == 0:
+        DarkerBG = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.HWSURFACE | pygame.HWACCEL)
+        DarkerBG.fill((BlackBackgroundColor[0], BlackBackgroundColor[1], BlackBackgroundColor[2], BlackContrast_Alpha))
+        DarkerBG.set_alpha(BlackContrast_Alpha)
+        DISPLAY.blit(DarkerBG, Rectangle)
+
+    # -- Only Blur the Necessary Area -- #
+    AreaToBlur = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.HWSURFACE | pygame.HWACCEL)
+    AreaToBlur.blit(DISPLAY, (0, 0), Rectangle)
+
+    # -- Then Finnaly, blit the Blurred Result -- #
+    ResultPanel.blit(Surface_Blur(AreaToBlur, BlurAmmount, False), (0, 0))
+
+    return ResultPanel
+
+
 def Surface_Blur(surface, amt, fast_scale=False):
     """
     Applies blur to a Surface

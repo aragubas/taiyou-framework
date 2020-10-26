@@ -16,7 +16,7 @@
 #
 import Core
 import pygame
-from CoreFiles.System.TaskManager.MAIN import UI
+from CoreFiles.System.TaiyouUI.MAIN import UI
 from Core.MAIN import DISPLAY as DISPLAY
 
 class Process():
@@ -56,7 +56,6 @@ class Process():
         self.ProcessList.Render(self.DISPLAY)
 
         self.LAST_SURFACE = self.DISPLAY.copy()
-
         return self.DISPLAY
 
     def Update(self):
@@ -67,7 +66,7 @@ class Process():
         self.ProcessList.ColisionXOffset = self.POSITION[0]
         self.ProcessList.ColisionYOffset = self.POSITION[1] + self.TITLEBAR_RECTANGLE[3]
 
-        if (Core.MAIN.ProcessListChanged):
+        if Core.MAIN.ProcessListChanged:
             self.ProcessList.ClearItems()
 
             for process in Core.MAIN.ProcessList:
