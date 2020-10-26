@@ -17,106 +17,88 @@
 import Core
 import pygame
 
-## Required Variables ##
-PROCESS_PID = 0
-PROCESS_NAME = 0
-IS_GRAPHICAL = True
-FULLSCREEN = True
-POSITION = (0, 0)
-DISPLAY = pygame.Surface((800, 600))
-APPLICATION_HAS_FOCUS = True
+class Process():
+    def __init__(self, pPID, pProcessName, pROOT_MODULE):
+        self.PID = pPID
+        self.NAME = pProcessName
+        self.ROOT_MODULE = pROOT_MODULE
+        self.IS_GRAPHICAL = True
+        self.DISPLAY = pygame.Surface((800, 600))
+        self.LAST_SURFACE = self.DISPLAY.copy()
+        self.APPLICATION_HAS_FOCUS = True
+        self.POSITION = (0, 0)
+        self.FULLSCREEN = True
+        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
+        self.TITLEBAR_TEXT = "Bootloader"
 
-DefaultContent = Core.cntMng.ContentManager
+    def Initialize(self):
+        self.DefaultContent = Core.cntMng.ContentManager()
 
-Progress = 0
-ProgressAddDelay = 0
-ProgressProgression = True
-ProgressMax = 100
-LoadingComplete = False
+        self.DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
+        self.DefaultContent.LoadRegKeysInFolder("Data/reg")
+        self.DefaultContent.LoadImagesInFolder("Data/img")
+        self.DefaultContent.SetFontPath("Data/fonts")
 
-def Initialize():
-    global DefaultContent
-    DefaultContent = Core.cntMng.ContentManager()
+        self.Progress = 0
+        self.ProgressAddDelay = 0
+        self.ProgressProgression = True
+        self.ProgressMax = 100
+        self.LoadingComplete = False
 
-    DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
-    DefaultContent.LoadRegKeysInFolder("Data/reg")
-    DefaultContent.LoadImagesInFolder("Data/img")
-    DefaultContent.SetFontPath("Data/fonts")
+    def Update(self):
+        if self.ProgressProgression and not self.LoadingComplete:
+            self.ProgressAddDelay += 1
 
+            if self.ProgressAddDelay == 5:
+                self.ProgressAddDelay = 0
+                self.Progress += 1
 
-def EventUpdate(event):
-    pass
+            if self.ProgressAddDelay == 2:
+                self.LoadingSteps(self.Progress)
 
-def Draw():
-    global DISPLAY
+            if self.Progress >= self.ProgressMax and not self.LoadingComplete:
+                self.LoadingComplete = True
 
-    ## Fill Write Screen
-    DISPLAY.fill((18, 10, 38))
+                print("Bootloader : Loading Complete")
 
-    DrawProgressBar(DISPLAY)
+                # Finish the Bootloader
+                Core.MAIN.KillProcessByPID(self.PID)
 
-    # Draw the Logo
-    LogoPos = (DISPLAY.get_width() / 2 - 231 / 2, DISPLAY.get_height() / 2 - 242, 231, 242)
+    def Draw(self):
+        ## Fill Write Screen
+        self.DISPLAY.fill((18, 10, 38))
 
-    DefaultContent.ImageRender(DISPLAY, "/logo.png", LogoPos[0], LogoPos[1], LogoPos[2], LogoPos[3])
+        self.DrawProgressBar(self.DISPLAY)
 
-    return DISPLAY
+        # Draw the Logo
+        LogoPos = (self.DISPLAY.get_width() / 2 - 231 / 2, self.DISPLAY.get_height() / 2 - 242, 231, 242)
 
-def DrawProgressBar(DISPLAY):
-    LoadingBarPos = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
-    LoadingBarProgress = (LoadingBarPos[0], LoadingBarPos[1], Core.utils.Get_Percentage(Progress, LoadingBarPos[2], ProgressMax), 10)
+        self.DefaultContent.ImageRender(self.DISPLAY, "/logo.png", LogoPos[0], LogoPos[1], LogoPos[2], LogoPos[3])
 
-    Core.shape.Shape_Rectangle(DISPLAY, (20, 20, 58), LoadingBarPos, 0, LoadingBarPos[3])
-    Core.shape.Shape_Rectangle(DISPLAY, (94, 114, 219), LoadingBarProgress, 0, LoadingBarPos[3])
+        self.LAST_SURFACE = self.DISPLAY.copy()
+        return self.DISPLAY
 
+    def DrawProgressBar(self, DISPLAY):
+        self.LoadingBarPos = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
+        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], Core.utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax), 10)
 
-def Update():
-    global ProgressProgression
-    global Progress
-    global ProgressAddDelay
-    global LoadingComplete
+        Core.shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.LoadingBarPos, 0, self.LoadingBarPos[3])
+        Core.shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.LoadingBarProgress, 0, self.LoadingBarPos[3])
 
-    if ProgressProgression and not LoadingComplete:
-        ProgressAddDelay += 1
+    def EventUpdate(self, event):
+        return
 
-        if ProgressAddDelay == 5:
-            ProgressAddDelay = 0
-            Progress += 1
+    def FinishLoadingScreen(self):
+        self.ProgressMax = self.Progress + 5
 
-        if ProgressAddDelay == 2:
-            LoadingSteps(Progress)
+    def LoadingSteps(self, CurrentProgres):
+        if CurrentProgres == 0:
+            # Start the SystemUI
+            Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui")
 
-        if Progress >= ProgressMax and not LoadingComplete:
-            LoadingComplete = True
+        if CurrentProgres == 1:
+            # Start the Default Application
+            Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), "default")
 
-            print("Bootloader : Loading Complete")
-
-            # Finish the Bootloader
-            Core.MAIN.KillProcessByPID(PROCESS_PID)
-
-def LoadingSteps(CurrentProgres):
-    global LoadingComplete
-
-    if CurrentProgres == 0:
-        # Start the SystemUI
-        Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui")
-
-    if CurrentProgres == 1:
-        pass
-        # Start the Default Application
-        Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), "default")
-
-        # Finish the Loading
-        FinishLoadingScreen()
-
-def FinishLoadingScreen():
-    global Progress
-    global ProgressMax
-
-    ProgressMax = Progress + 5
-
-
-
-
-
-
+            # Finish the Loading
+            self.FinishLoadingScreen()

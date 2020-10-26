@@ -20,7 +20,7 @@ import Core as tge
 print("Taiyou FX version " + tge.Get_FXVersion())
 
 
-def BlurredRectangle(DISPLAY, Rectangle,BlurAmmount=100, BlackContrast_Alpha=50, BlackBackgroundColor=(0, 0, 0)):
+def BlurredRectangle(DISPLAY, Rectangle, BlurAmmount=100, BlackContrast_Alpha=50, BlackBackgroundColor=(0, 0, 0)):
     """
     Render a blurred Rectangle, usefull for UI.
     :param DISPLAY:The surface to be blitted
@@ -31,6 +31,12 @@ def BlurredRectangle(DISPLAY, Rectangle,BlurAmmount=100, BlackContrast_Alpha=50,
     """
     # -- the Result Surface -- #
     ResultPanel = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.HWSURFACE | pygame.HWACCEL)
+
+    if BlurAmmount < 1:
+        BlurAmmount = 1
+
+    if BlackContrast_Alpha < 1:
+        BlackContrast_Alpha = 1
 
     if not BlackContrast_Alpha == 0:
         DarkerBG = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.HWSURFACE | pygame.HWACCEL)
@@ -57,7 +63,8 @@ def Surface_Blur(surface, amt, fast_scale=False):
     """
 
     if amt < 1.0:
-        raise ZeroDivisionError("FX.Surface_Blur : Surface blur ammount is lower than 1.0")
+        print("FX.Surface_Blur : Surface blur ammount is lower than 1.0")
+        return surface
 
     Scale = 1.0 / float(amt)
     surf_size = surface.get_size()

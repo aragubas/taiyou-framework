@@ -18,85 +18,163 @@ import Core
 import pygame
 from Core.MAIN import DISPLAY as DISPLAY
 
-DefaultContent = Core.cntMng.ContentManager
+class Process():
+    def __init__(self, pPID, pProcessName, pROOT_MODULE):
+        self.PID = pPID
+        self.NAME = pProcessName
+        self.ROOT_MODULE = pROOT_MODULE
+        self.IS_GRAPHICAL = True
+        self.APPLICATION_HAS_FOCUS = True
+        self.POSITION = (0, 0)
+        self.FULLSCREEN = True
 
-## Required Variables ##
-PROCESS_PID = 0
-PROCESS_NAME = 0
-IS_GRAPHICAL = False
+    def Initialize(self):
+        pygame.mouse.set_visible(False)
+        self.DefaultContent = Core.cntMng.ContentManager()
 
-def Initialize():
-    global DefaultContent
-    pygame.mouse.set_visible(False)
-    DefaultContent = Core.cntMng.ContentManager()
+        self.DefaultContent.SetSourceFolder("CoreFiles/System/TaiyouUI/")
+        self.DefaultContent.LoadRegKeysInFolder("Data/reg")
+        self.DefaultContent.LoadImagesInFolder("Data/img")
+        self.DefaultContent.SetFontPath("Data/fonts")
 
-    DefaultContent.SetSourceFolder("CoreFiles/System/TaiyouUI/")
-    DefaultContent.LoadRegKeysInFolder("Data/reg")
-    DefaultContent.LoadImagesInFolder("Data/img")
-    DefaultContent.SetFontPath("Data/fonts")
+        self.TaskbarEnabled = False
+        self.TaskbarDisableToggle = False
+        self.TaskbarAnimation = Core.utils.AnimationController(2.5, multiplierRestart=True)
 
 
-def EventUpdate():
-    # -- Update Event -- #
-    for event in pygame.fastevent.get():
-        # -- Closes Everthing when clicking on the X button
-        if event.type == pygame.QUIT:
-            Core.MAIN.Destroy()
-            return
 
-        # UI Hotkeys
-        if event.type == pygame.KEYUP and event.key == pygame.K_F12:
-            Core.MAIN.CreateProcess(DefaultContent.Get_RegKey("/task_manager"), "task_manager")
-            return
+    def EventUpdate(self):
+        pygame.fastevent.pump()
 
+        # -- Update Event -- #
+        for event in pygame.fastevent.get():
+            # -- Closes Everthing when clicking on the X button
+            if event.type == pygame.QUIT:
+                Core.MAIN.Destroy()
+                return
+
+            # UI Hotkeys
+            if event.type == pygame.KEYUP:
+                # -- Open Taskbar -- #
+                if event.key == pygame.K_F12:
+                    Core.MAIN.CreateProcess(self.DefaultContent.Get_RegKey("/task_manager"), "task_manager")
+                    return
+
+                # -- Toggle Taskbar -- #
+                if event.key == pygame.K_F11:
+                    if not self.TaskbarEnabled:
+                        self.TaskbarEnabled = True
+                        self.TaskbarAnimation.Enabled = True
+                        print("In Animation Toggle")
+
+                    else:
+                        print("Out Animation Toggle")
+
+                        self.TaskbarDisableToggle = True
+                        self.TaskbarAnimation.Enabled = True
+
+            for process in Core.MAIN.ProcessList:
+                # Check if current process is not TaiyouUI itself
+                if process.PID == self.PID:
+                    continue
+
+                # Check if is window, and update it
+                if process.IS_GRAPHICAL and process.APPLICATION_HAS_FOCUS and not self.TaskbarEnabled:
+                    if not process.FULLSCREEN: self.UpdateProcessWindowDrag(event, process)
+                    process.EventUpdate(event)
+
+    def UpdateProcessWindowDrag(self, event, process):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            MouseColisionRectangle = pygame.Rect(pos[0], pos[1], 2, 2)
+
+            if MouseColisionRectangle.colliderect(process.TITLEBAR_RECTANGLE):
+                process.WindowDragEnable = True
+
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if process.WindowDragEnable:
+                process.WindowDragEnable = False
+
+        if process.WindowDragEnable:
+            pos = pygame.mouse.get_pos()
+
+            process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
+
+    def Update(self):
+        DISPLAY.fill((0, 0, 0))
+        ## Draw the Applications Window
         for process in Core.MAIN.ProcessList:
-            if process.IS_GRAPHICAL and process.APPLICATION_HAS_FOCUS:
-                process.EventUpdate(event)
+            # Skip Non-Graphical Process
+            if not process.IS_GRAPHICAL:
+                continue
 
-def Update():
-    ## Draw the Applications Window
-    for process in Core.MAIN.ProcessList:
-        if process.IS_GRAPHICAL:
-            RenderingPrimitives = DrawWindow(process.Draw(), process)
+            # Check if current process is not TaiyouUI itself
+            if process.PID == self.PID:
+                continue
 
-            DISPLAY.blit(RenderingPrimitives[0], (RenderingPrimitives[1][0], RenderingPrimitives[1][1]))
+            # If is fullscreen process, just draw at max resolution at 0, 0
+            if process.FULLSCREEN:
+                # If application has focus, draw again it's content
+                if process.APPLICATION_HAS_FOCUS:
+                    Surface = process.Draw()
 
-    ## Fill Write Screen
-    DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-    pygame.display.flip()
+                    # Check if Application Surface has maximum size
+                    if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
+                        Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
+                        process.DISPLAY = Surface
 
-    ## Update Applications Events
-    # -- Disable Engine Update when Minimized -- #
-    pygame.fastevent.pump()
+                    DISPLAY.blit(Surface, (0, 0))
+                    continue
+                # If not, just draw a copy of its screen
+                DISPLAY.blit(process.LAST_SURFACE, (0, 0))
+                continue
 
-    EventUpdate()
+            # If not, draw window decoration
+            DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
 
-def DrawWindow(pSurface, process):
-    Surface = None
-    WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), process.DISPLAY.get_height()]
+        # Draw and update the Taskbar UI
+        self.UpdateTaskbar()
 
-    # If not fullscreen, just draw the surface
-    if process.FULLSCREEN:
-        # Set the surface to be drawn
-        Surface = pSurface
+        # Draw the Cursor
+        self.DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
-        # Set window to draw at 0, 0 if is fullscreen one
-        WindowGeometry[0] = 0
-        WindowGeometry[1] = 0
+        pygame.display.flip()
 
-        # Check if surface has maximum size
-        if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
-            Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
-            process.DISPLAY = Surface
-    else:
-        Surface = DrawWindowDecoration(pSurface, WindowGeometry, process.TITLEBAR_RECTANGLE)
+        # Update Applications Events
+        self.EventUpdate()
 
-    return Surface, WindowGeometry
+    def UpdateTaskbar(self):
+        if not self.TaskbarEnabled: return
+        self.TaskbarAnimation.Update()
 
-def DrawWindowDecoration(pDISPLAY, WindowGeometry, TitleBarRectangle):
-    DISPLAY = pDISPLAY
+        # Check if wax is being disabled
+        if self.TaskbarDisableToggle and not self.TaskbarAnimation.Enabled and self.TaskbarAnimation.Value == self.TaskbarAnimation.MinValue:
+            self.TaskbarDisableToggle = False
+            self.TaskbarEnabled = False
 
-    # Draw the title bar
-    Core.shape.Shape_Rectangle(DISPLAY, (28, 13, 18), TitleBarRectangle)
+        # Draw the Blurred Background
+        Core.fx.BlurredRectangle(DISPLAY, (0, 0, DISPLAY.get_width(), DISPLAY.get_height()), self.TaskbarAnimation.Value, self.TaskbarAnimation.Value - 50)
 
-    return DISPLAY
+    def DrawWindow(self, pSurface, process):
+        WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), process.DISPLAY.get_height()]
+        Surface = pygame.Surface((WindowGeometry[2], WindowGeometry[2] + process.TITLEBAR_RECTANGLE[3]))
+
+        # Draw the title bar
+        TitleBarColor = (94, 114, 219)
+        TextColor = (240, 240, 240)
+        if not process.APPLICATION_HAS_FOCUS:
+            TitleBarColor = (39, 54, 159)
+            TextColor = (200, 200, 200)
+
+        Core.shape.Shape_Rectangle(Surface, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2], process.TITLEBAR_RECTANGLE[3]))
+
+        # Draw Title Bar Text
+        TitleBarText = process.TITLEBAR_TEXT
+        FontSize = 12
+        Font = "/Ubuntu.ttf"
+        self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
+
+        # Draw the Window Contents
+        Surface.blit(pSurface, (0, process.TITLEBAR_RECTANGLE[3]))
+
+        return Surface

@@ -43,6 +43,8 @@ InitDelay_Enabled = True
 EngineInitialized = False
 ErrorScreenInitialzed = False
 ThrowException = True
+ProcessListChanged = False
+ProcessListChanged_Delay = False
 ProcessList = list()
 ProcessList_Names = list()
 ProcessList_PID = list()
@@ -182,26 +184,32 @@ def CreateProcess(Path, ProcessName):
     global ProcessList
     global ProcessList_Names
     global DISPLAY
+    global ProcessListChanged
 
     print("Taiyou.GameExecution.CreateProcess : Loading Process: [" + ProcessName + "]")
 
     Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
     PID = len(ProcessList_Names)
-    ProcessList_Names.append("{0}:{1}".format(ProcessName, PID))
-    ProcessList.append(importlib.import_module(tge.Get_MainGameModuleName(Path)))
+    ProcessName = "{0}:{1}".format(ProcessName, PID)
+    ProcessList_Names.append(ProcessName)
+    Module = importlib.import_module(tge.Get_MainGameModuleName(Path))
+    ProcessList.append(Module.Process(PID, ProcessName, tge.Get_MainGameModuleName(Path)))
     ProcessList_PID.append(PID)
 
     ProcessList[PID].Initialize()
-    ProcessList[PID].PROCESS_PID = PID
-    ProcessList[PID].PROCESS_NAME = ProcessName
+    ProcessListChanged = True
 
 def SendSigKillToProcessByPID(PID):
     ProcessList[PID].SendSignal(SIG_KILL)
 
 def KillProcessByPID(PID):
+    global ProcessListChanged
+
     del ProcessList[PID]
     del ProcessList_PID[PID]
     del ProcessList_Names[PID]
+
+    ProcessListChanged = True
 
 def Run():
     global WorkObject
@@ -209,13 +217,22 @@ def Run():
     global DISPLAY
     global deltaTime
     global getTicksLastFrame
+    global ProcessListChanged
+    global ProcessListChanged_Delay
 
     # -- Run the Update Code -- #
     for process in ProcessList:
         process.Update()
 
     # deltaTime in seconds.
-    deltaTime = clock.tick()
+    clock.tick(FPS)
+
+    if ProcessListChanged_Delay:
+        ProcessListChanged_Delay = False
+        ProcessListChanged = False
+
+    if ProcessListChanged:
+        ProcessListChanged_Delay = True
 
 def Destroy():
     pygame.quit()
