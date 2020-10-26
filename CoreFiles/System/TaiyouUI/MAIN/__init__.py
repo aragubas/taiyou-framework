@@ -51,6 +51,8 @@ class Process():
 
         self.TaskbarTools_WidgetController.Append(UI.Widget.Widget_Button(self.DefaultContent, "End Task", 17, 3, 3, 0))
         self.TaskbarTools_WidgetController.Append(UI.Widget.Widget_Button(self.DefaultContent, "Focus", 17, 82, 3, 0))
+        self.SomeWindowIsBeingMoved = False
+        self.SomeWindowIsBeingMoved_PID = -1
 
     def EventUpdate(self):
         pygame.fastevent.pump()
@@ -109,20 +111,31 @@ class Process():
             self.TaskbarAnimation.Enabled = True
 
     def UpdateProcessWindowDrag(self, event, process):
+        if self.SomeWindowIsBeingMoved:
+            if self.SomeWindowIsBeingMoved_PID != process.PID:
+                return
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = pygame.mouse.get_pos()
             MouseColisionRectangle = pygame.Rect(pos[0], pos[1], 2, 2)
 
             if MouseColisionRectangle.colliderect(process.TITLEBAR_RECTANGLE):
                 process.WindowDragEnable = True
+                self.SomeWindowIsBeingMoved = True
+                self.SomeWindowIsBeingMoved_PID = process.PID
                 process.WindowManagerSignal(0)
 
         elif event.type == pygame.MOUSEBUTTONUP:
             if process.WindowDragEnable:
                 process.WindowDragEnable = False
+                self.SomeWindowIsBeingMoved = False
+                self.SomeWindowIsBeingMoved_PID = -1
 
-        if process.WindowDragEnable and process.APPLICATION_HAS_FOCUS:
+        if process.WindowDragEnable and process.APPLICATION_HAS_FOCUS and self.SomeWindowIsBeingMoved_PID == process.PID:
             pos = pygame.mouse.get_pos()
+
+            self.SomeWindowIsBeingMoved = True
+            self.SomeWindowIsBeingMoved_PID = process.PID
 
             process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
 
@@ -141,6 +154,11 @@ class Process():
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
+
+                # Check if 2 windows is not being moved at the same time
+                if self.SomeWindowIsBeingMoved and self.SomeWindowIsBeingMoved_PID != process.PID:
+                    process.WindowDragEnable = False
+                    print("bloqueio")
 
                 if process.APPLICATION_HAS_FOCUS:
                     FocusedProcess = process
@@ -267,12 +285,13 @@ class Process():
 
         # Draw Title Bar Text
         TitleBarText = process.TITLEBAR_TEXT
-        if process.WindowDragEnable:
-            TitleBarText = "||||||||||"
         FontSize = 12
         Font = "/Ubuntu.ttf"
+        if process.WindowDragEnable:
+            TitleBarText = "||||||||||"
+            self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2 - 1, -1)
+
         self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
-        self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
 
         # Draw the Window Borders
         Core.shape.Shape_Rectangle(Surface, WindowBorderColor, (0, 0, Surface.get_width(), Surface.get_height()), 1)

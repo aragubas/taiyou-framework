@@ -32,6 +32,7 @@ class Process():
         self.FULLSCREEN = False
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
         self.TITLEBAR_TEXT = "Task Manager"
+        self.WindowDragEnable = False
 
     def Initialize(self):
         self.DefaultContent = Core.cntMng.ContentManager()
@@ -74,9 +75,12 @@ class Process():
 
     def WindowManagerSignal(self, Signal):
         # Gain Focus
+        OriginalDragValue = self.WindowDragEnable
         if Signal == 0:
             for process in Core.MAIN.ProcessList:
                 process.APPLICATION_HAS_FOCUS = False
+                process.WindowDragEnable = False
 
             # Make this application focused again
             self.APPLICATION_HAS_FOCUS = True
+            self.WindowDragEnable = OriginalDragValue
