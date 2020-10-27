@@ -419,4 +419,5 @@ class Widget_Button:
         if event.type == pygame.MOUSEBUTTONUP:
             self.ButtonState = True
             self.InteractionType = True
+            self.Content.PlaySound("/click.wav")
 

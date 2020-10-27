@@ -30,7 +30,7 @@ class Process():
         self.APPLICATION_HAS_FOCUS = True
         self.POSITION = (0, 0)
         self.FULLSCREEN = False
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
+        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
         self.TITLEBAR_TEXT = "Task Manager"
         self.WindowDragEnable = False
 
@@ -41,37 +41,27 @@ class Process():
         self.DefaultContent.LoadImagesInFolder("Data/img")
         self.DefaultContent.SetFontPath("Data/fonts")
 
-        self.ProcessList = UI.VerticalListWithDescription(pygame.Rect(0, 25, self.DISPLAY.get_width(), self.DISPLAY.get_height() - 50), self.DefaultContent)
         self.WindowManagerSignal(0)
 
         self.WindowDragEnable = False
 
+        self.ExploitTestStatus = "Waiting..."
+        self.ProcessFound = False
+
+
     def EventUpdate(self, event):
-        self.ProcessList.Update(event)
+        pass
 
     def Draw(self):
         self.DISPLAY.fill((120, 120, 120))
 
-        self.DefaultContent.FontRender(self.DISPLAY, "/Ubuntu_Bold.ttf", 14, "Current Running Process", (240, 240, 240), 5, 5)
-
-        self.ProcessList.Render(self.DISPLAY)
+        self.DefaultContent.FontRender(self.DISPLAY, "/Ubuntu_Bold.ttf", 14, self.ExploitTestStatus, (240, 240, 240), 5, 5)
 
         self.LAST_SURFACE = self.DISPLAY.copy()
         return self.DISPLAY
 
     def Update(self):
-        ## Update the Titlebar
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
-
-        # Clear List Items
-        self.ProcessList.ColisionXOffset = self.POSITION[0]
-        self.ProcessList.ColisionYOffset = self.POSITION[1] + self.TITLEBAR_RECTANGLE[3]
-
-        if Core.MAIN.ProcessListChanged:
-            self.ProcessList.ClearItems()
-
-            for process in Core.MAIN.ProcessList:
-                self.ProcessList.AddItem(process.NAME + "," + str(process.PID), "Path: " + str(process.ROOT_MODULE))
+        pass
 
     def WindowManagerSignal(self, Signal):
         # Gain Focus

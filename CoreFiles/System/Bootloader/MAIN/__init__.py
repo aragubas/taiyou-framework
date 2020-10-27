@@ -98,7 +98,7 @@ class Process():
 
         if CurrentProgres == 1:
             # Start the Default Application
-            Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), "default")
+            Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
 
             # Finish the Loading
             self.FinishLoadingScreen()

@@ -34,11 +34,12 @@ class VerticalListWithDescription:
         self.LastRectangle = pygame.Rect(0, 0, 0, 0)
         self.ItemsName = list()
         self.ItemsDescription = list()
-        self.ItemOrderID = list()
+        self.ItemIndexes = list()
         self.ItemSprite = list()
         self.ItemSelected = list()
+        self.ItemProperties = list()
         self.LastItemClicked = "null"
-        self.LastItemOrderID = None
+        self.LastItemIndex = None
         self.ScrollY = 0
         self.ListSurface = pygame.Surface
         self.ClickedItem = ""
@@ -48,6 +49,10 @@ class VerticalListWithDescription:
         self.ButtonDownRectangle = pygame.Rect(34, 0, 32, 32)
         self.ListSurfaceUpdated = False
         self.ContentManager = pContentManager
+
+    def ResetSelectedItem(self):
+        self.LastItemClicked = "null"
+        self.LastItemIndex = None
 
     def Render(self, DISPLAY):
         if not self.Rectangle[2] == self.LastRectangle[2] or not self.Rectangle[3] == self.LastRectangle[3]:
@@ -68,7 +73,7 @@ class VerticalListWithDescription:
             if self.ItemSprite[i] != "null":
                 TextsX = 45
 
-            if self.LastItemClicked == itemNam:  # -- When the Item is Selected
+            if self.LastItemIndex == self.ItemIndexes[i]:  # -- When the Item is Selected
                 BackgroundColor = (20, 42, 59, 100)
                 ItemNameFontColor = (255, 255, 255)
                 BorderColor = (46, 196, 182)
@@ -118,7 +123,8 @@ class VerticalListWithDescription:
                     if ItemRect.collidepoint(pygame.mouse.get_pos()):
                         self.LastItemClicked = itemNam
                         self.ItemSelected[i] = True
-                        self.LastItemOrderID = self.ItemOrderID[i]
+                        self.LastItemIndex = self.ItemIndexes[i]
+
                 if event.type == pygame.MOUSEBUTTONUP:
                     self.ItemSelected[i] = False
 
@@ -134,17 +140,18 @@ class VerticalListWithDescription:
     def Set_H(self, Value):
         self.Rectangle[3] = int(Value)
 
-    def AddItem(self, ItemName, ItemDescription, ItemSprite="null"):
+    def AddItem(self, ItemName, ItemDescription, ItemSprite = "null", ItemProperties = None):
         self.ItemsName.append(ItemName)
         self.ItemsDescription.append(ItemDescription)
         self.ItemSprite.append(ItemSprite)
         self.ItemSelected.append(False)
-        self.ItemOrderID.append((len(self.ItemOrderID) - 2) + 1)
+        self.ItemIndexes.append((len(self.ItemIndexes)))
+        self.ItemProperties.append(ItemProperties)
 
     def ClearItems(self):
         self.ItemsName.clear()
         self.ItemsDescription.clear()
         self.ItemSprite.clear()
         self.ItemSelected.clear()
-        self.ItemOrderID.clear()
-
+        self.ItemIndexes.clear()
+        self.ItemProperties.clear()

@@ -48,6 +48,7 @@ ProcessListChanged_Delay = False
 ProcessList = list()
 ProcessList_Names = list()
 ProcessList_PID = list()
+ProcessNextPID = -1
 
 # Delta Time
 getTicksLastFrame = 0
@@ -77,8 +78,7 @@ def ReceiveCommand(Command, Arguments=None):
     2 - KILL:                   None\n
     3 - OverlayLevel:           Integer\n
     4 - Set Icon:               String [Image Name loaded on Image System]\n
-    5 - Set Title:              String\n
-    6 - Cursor Visible:         Boolean\n
+    5 - Cursor Visible:         Boolean\n
     :param Command:CommandCode
     :param Arguments:Argument of Specified Command
     :return:
@@ -140,11 +140,6 @@ def ReceiveCommand(Command, Arguments=None):
 
         elif Command == 5:
             CommandWasValid = True
-
-            pygame.display.set_caption(Arguments)
-
-        elif Command == 6:
-            CommandWasValid = True
             IsSpecialEvent = True
 
             pygame.mouse.set_visible(Arguments)
@@ -185,18 +180,22 @@ def CreateProcess(Path, ProcessName):
     global ProcessList_Names
     global DISPLAY
     global ProcessListChanged
+    global ProcessNextPID
 
     print("Taiyou.GameExecution.CreateProcess : Loading Process: [" + ProcessName + "]")
 
     Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
-    PID = len(ProcessList_Names)
-    ProcessName = "{0}:{1}".format(ProcessName, PID)
+    ProcessIndex = len(ProcessList_Names)
+    print(ProcessIndex)
+    ProcessNextPID += 1
+
     ProcessList_Names.append(ProcessName)
     Module = importlib.import_module(tge.Get_MainGameModuleName(Path))
-    ProcessList.append(Module.Process(PID, ProcessName, tge.Get_MainGameModuleName(Path)))
-    ProcessList_PID.append(PID)
+    ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainGameModuleName(Path)))
+    ProcessList_PID.append(ProcessNextPID)
 
-    ProcessList[PID].Initialize()
+    ProcessList[ProcessIndex].Initialize()
+    ProcessList[ProcessIndex].PROCESS_INDEX = ProcessIndex
     ProcessListChanged = True
 
 def SendSigKillToProcessByPID(PID):
@@ -204,12 +203,23 @@ def SendSigKillToProcessByPID(PID):
 
 def KillProcessByPID(PID):
     global ProcessListChanged
+    Index = GetProcessIndexByPID(PID)
 
-    del ProcessList[PID]
-    del ProcessList_PID[PID]
-    del ProcessList_Names[PID]
+    print(Index)
+    print(len(ProcessList))
+
+    ProcessList.pop(Index)
+    ProcessList_PID.pop(Index)
+    ProcessList_Names.pop(Index)
+
+    print("Finished process index: " + str(Index))
 
     ProcessListChanged = True
+
+def GetProcessIndexByPID(PID):
+    return ProcessList_PID.index(PID)
+
+
 
 def Run():
     global WorkObject
@@ -223,11 +233,9 @@ def Run():
     # deltaTime in seconds.
     clock.tick(FPS)
 
-
     # -- Run the Update Code -- #
     for process in ProcessList:
         process.Update()
-
 
     if ProcessListChanged_Delay:
         ProcessListChanged_Delay = False

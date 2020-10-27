@@ -50,9 +50,12 @@ class Process():
         self.TaskbarTools_WidgetController = UI.Widget.Widget_Controller(self.DefaultContent, self.TaskbarTools)
 
         self.TaskbarTools_WidgetController.Append(UI.Widget.Widget_Button(self.DefaultContent, "End Task", 17, 3, 3, 0))
-        self.TaskbarTools_WidgetController.Append(UI.Widget.Widget_Button(self.DefaultContent, "Focus", 17, 82, 3, 0))
+        self.TaskbarTools_WidgetController.Append(UI.Widget.Widget_Button(self.DefaultContent, "Switch", 17, 90, 3, 1))
+
         self.SomeWindowIsBeingMoved = False
         self.SomeWindowIsBeingMoved_PID = -1
+
+        self.WelcomeScreenAppered = False
 
     def EventUpdate(self):
         pygame.fastevent.pump()
@@ -73,6 +76,11 @@ class Process():
                 # -- Toggle Taskbar -- #
                 if event.key == pygame.K_F11:
                     self.ToggleTaskbar()
+
+                # -- Close selected process in TaskbarUI -- #
+                if event.key == pygame.K_DELETE:
+                    if self.TaskbarEnabled:
+                        self.UpdateTaskbar_CloseSelectedProcess()
 
             if self.TaskbarEnabled:
                 self.UpdateTaskbarEvents(event)
@@ -97,16 +105,14 @@ class Process():
         if not self.TaskbarEnabled:
             self.TaskbarEnabled = True
             self.TaskbarAnimation.Enabled = True
-            self.DefaultContent.PlaySound("/in.wav")
-
-            # Set all windows as inactive
-            for process in Core.MAIN.ProcessList:
-                process.APPLICATION_HAS_FOCUS = False
+            if not self.WelcomeScreenAppered:
+                self.DefaultContent.PlaySound("/intro_2.wav")
+            else:
+                self.DefaultContent.PlaySound("/in.wav")
 
         else:
             print("Out Animation Toggle")
             self.DefaultContent.PlaySound("/out.wav")
-
             self.TaskbarDisableToggle = True
             self.TaskbarAnimation.Enabled = True
 
@@ -115,7 +121,7 @@ class Process():
             if self.SomeWindowIsBeingMoved_PID != process.PID:
                 return
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = pygame.mouse.get_pos()
             MouseColisionRectangle = pygame.Rect(pos[0], pos[1], 2, 2)
 
@@ -151,14 +157,12 @@ class Process():
                 if not process.IS_GRAPHICAL:
                     continue
 
+                if not process.FULLSCREEN:
+                    process.TITLEBAR_RECTANGLE = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), 15)
+
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
-
-                # Check if 2 windows is not being moved at the same time
-                if self.SomeWindowIsBeingMoved and self.SomeWindowIsBeingMoved_PID != process.PID:
-                    process.WindowDragEnable = False
-                    print("bloqueio")
 
                 if process.APPLICATION_HAS_FOCUS:
                     FocusedProcess = process
@@ -185,7 +189,6 @@ class Process():
 
     def DrawProcess(self, process):
         if process is None:
-            print("None")
             return
 
         # If is fullscreen process, just draw at max resolution at 0, 0
@@ -204,6 +207,22 @@ class Process():
 
             # If not, just draw a copy of its screen
             DISPLAY.blit(process.LAST_SURFACE, (0, 0))
+            if not process.APPLICATION_HAS_FOCUS:
+                WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
+
+                # Draw the title bar
+                TitleBarColor = (39, 54, 159)
+                TextColor = (200, 200, 200)
+
+                Core.shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
+
+                # Draw Title Bar Text
+                TitleBarText = process.TITLEBAR_TEXT
+                FontSize = 12
+                Font = "/Ubuntu.ttf"
+
+                self.DefaultContent.FontRender(DISPLAY, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
+
             return
 
         # If not, draw window decoration
@@ -217,6 +236,7 @@ class Process():
         if self.TaskbarDisableToggle and not self.TaskbarAnimation.Enabled and self.TaskbarAnimation.Value == self.TaskbarAnimation.MinValue:
             self.TaskbarDisableToggle = False
             self.TaskbarEnabled = False
+            self.WelcomeScreenAppered = True
 
         # Draw the Blurred Background
         DISPLAY.blit(Core.fx.Surface_Blur(self.LastDisplayFrame, self.TaskbarAnimation.Value - 25), (0, 0))
@@ -226,6 +246,8 @@ class Process():
         ContentsSurface.set_alpha(self.TaskbarAnimation.Value)
 
         TitleText = "Current Activity"
+        if not self.WelcomeScreenAppered:
+            TitleText = "Welcome"
         TitleFontSize = 58
         TitleFont = "/Ubuntu_Bold.ttf"
         self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), DISPLAY.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
@@ -254,13 +276,38 @@ class Process():
 
         self.TaskbarTools_WidgetController.Update()
 
+        if self.TaskbarTools_WidgetController.LastInteractionID == 0 and self.TaskbarTools_WidgetController.LastInteractionType:
+            self.UpdateTaskbar_CloseSelectedProcess()
+
+        if self.TaskbarTools_WidgetController.LastInteractionID == 1 and self.TaskbarTools_WidgetController.LastInteractionType:
+            self.UpdateTaskbar_SwitchToSelectedProcess()
+
+
+    def UpdateTaskbar_SwitchToSelectedProcess(self):
+        if self.WindowList.LastItemIndex is not None:
+            ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
+            Process = Core.MAIN.ProcessList[Core.MAIN.GetProcessIndexByPID(ProcessPID)]
+
+            Process.WindowManagerSignal(0)
+
+            self.ToggleTaskbar()
+
+
+    def UpdateTaskbar_CloseSelectedProcess(self):
+        if self.WindowList.LastItemIndex is not None:
+            ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
+            Core.MAIN.KillProcessByPID(ProcessPID)
+            self.UpdateTaskbarProcessList()
+
     def UpdateTaskbarProcessList(self):
         # Update WindowList Contents
         self.WindowList.ClearItems()
+        self.WindowList.ResetSelectedItem()
 
         for process in Core.MAIN.ProcessList:
-            self.WindowList.AddItem(process.NAME, "Path: " + str(process.ROOT_MODULE))
-            print("Added Item")
+            if process.PID == self.PID:
+                continue
+            self.WindowList.AddItem(process.NAME, "PID: " + str(process.PID), ItemProperties=process.PID)
 
     def UpdateTaskbarEvents(self, event):
         self.WindowList.Update(event)
