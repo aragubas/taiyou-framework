@@ -18,9 +18,10 @@ import Core
 import pygame
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
         self.PID = pPID
         self.NAME = pProcessName
+        self.INIT_ARGS = pInitArgs
         self.ROOT_MODULE = pROOT_MODULE
         self.IS_GRAPHICAL = True
         self.DISPLAY = pygame.Surface((800, 600))
@@ -32,6 +33,7 @@ class Process():
         self.TITLEBAR_TEXT = "Bootloader"
 
     def Initialize(self):
+        Core.MAIN.ReceiveCommand(0, 0)
         self.DefaultContent = Core.cntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
@@ -46,6 +48,8 @@ class Process():
         self.LoadingComplete = False
 
     def Update(self):
+        self.APPLICATION_HAS_FOCUS = True
+
         if self.ProgressProgression and not self.LoadingComplete:
             self.ProgressAddDelay += 1
 
@@ -89,7 +93,8 @@ class Process():
         return
 
     def FinishLoadingScreen(self):
-        self.ProgressMax = self.Progress + 5
+        self.ProgressMax = self.Progress + 20
+        Core.MAIN.ReceiveCommand(0, 60)
 
     def LoadingSteps(self, CurrentProgres):
         if CurrentProgres == 0:

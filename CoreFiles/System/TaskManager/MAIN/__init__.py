@@ -20,11 +20,12 @@ from CoreFiles.System.TaiyouUI.MAIN import UI
 from Core.MAIN import DISPLAY as DISPLAY
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
         self.PID = pPID
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
         self.IS_GRAPHICAL = True
+        self.INIT_ARGS = pInitArgs
         self.DISPLAY = pygame.Surface((250, 300))
         self.LAST_SURFACE = self.DISPLAY.copy()
         self.APPLICATION_HAS_FOCUS = True
@@ -48,7 +49,6 @@ class Process():
         self.ExploitTestStatus = "Waiting..."
         self.ProcessFound = False
 
-
     def EventUpdate(self, event):
         pass
 
@@ -69,7 +69,7 @@ class Process():
         if Signal == 0:
             for process in Core.MAIN.ProcessList:
                 process.APPLICATION_HAS_FOCUS = False
-                process.WindowDragEnable = False
+                process.WINDOW_DRAG_ENABLED = False
 
             # Make this application focused again
             self.APPLICATION_HAS_FOCUS = True

@@ -20,8 +20,9 @@ from Core.MAIN import DISPLAY as DISPLAY
 from CoreFiles.System.TaiyouUI.MAIN import UI
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
         self.PID = pPID
+        self.INIT_ARGS = pInitArgs
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
         self.IS_GRAPHICAL = True
@@ -126,18 +127,18 @@ class Process():
             MouseColisionRectangle = pygame.Rect(pos[0], pos[1], 2, 2)
 
             if MouseColisionRectangle.colliderect(process.TITLEBAR_RECTANGLE):
-                process.WindowDragEnable = True
+                process.WINDOW_DRAG_ENABLED = True
                 self.SomeWindowIsBeingMoved = True
                 self.SomeWindowIsBeingMoved_PID = process.PID
-                process.WindowManagerSignal(0)
+                Core.wmm.WindowManagerSignal(process, 0)
 
         elif event.type == pygame.MOUSEBUTTONUP:
-            if process.WindowDragEnable:
-                process.WindowDragEnable = False
+            if process.WINDOW_DRAG_ENABLED:
+                process.WINDOW_DRAG_ENABLED = False
                 self.SomeWindowIsBeingMoved = False
                 self.SomeWindowIsBeingMoved_PID = -1
 
-        if process.WindowDragEnable and process.APPLICATION_HAS_FOCUS and self.SomeWindowIsBeingMoved_PID == process.PID:
+        if process.WINDOW_DRAG_ENABLED and process.APPLICATION_HAS_FOCUS and self.SomeWindowIsBeingMoved_PID == process.PID:
             pos = pygame.mouse.get_pos()
 
             self.SomeWindowIsBeingMoved = True
@@ -232,6 +233,9 @@ class Process():
         if not self.TaskbarEnabled: return
         self.TaskbarAnimation.Update()
 
+        self.UpdateTaskbarProcessList()
+
+
         # Check if wax is being disabled
         if self.TaskbarDisableToggle and not self.TaskbarAnimation.Enabled and self.TaskbarAnimation.Value == self.TaskbarAnimation.MinValue:
             self.TaskbarDisableToggle = False
@@ -285,13 +289,16 @@ class Process():
 
     def UpdateTaskbar_SwitchToSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
-            ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
-            Process = Core.MAIN.ProcessList[Core.MAIN.GetProcessIndexByPID(ProcessPID)]
+            try:
+                ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
+                Process = Core.MAIN.ProcessList[Core.MAIN.GetProcessIndexByPID(ProcessPID)]
 
-            Process.WindowManagerSignal(0)
+                Core.wmm.WindowManagerSignal(Process, 0)
 
-            self.ToggleTaskbar()
+                self.ToggleTaskbar()
 
+            except IndexError:
+                self.WindowList.ResetSelectedItem()
 
     def UpdateTaskbar_CloseSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
@@ -302,7 +309,6 @@ class Process():
     def UpdateTaskbarProcessList(self):
         # Update WindowList Contents
         self.WindowList.ClearItems()
-        self.WindowList.ResetSelectedItem()
 
         for process in Core.MAIN.ProcessList:
             if process.PID == self.PID:
@@ -334,8 +340,8 @@ class Process():
         TitleBarText = process.TITLEBAR_TEXT
         FontSize = 12
         Font = "/Ubuntu.ttf"
-        if process.WindowDragEnable:
-            TitleBarText = "||||||||||"
+        if process.WINDOW_DRAG_ENABLED:
+            TitleBarText = "||||||||||||||||||||"
             self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2 - 1, -1)
 
         self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)

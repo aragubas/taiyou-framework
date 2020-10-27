@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.1"
+    return "3.2"
 
 def Get_ShapeVersion():
     return "2.0"
@@ -29,7 +29,7 @@ def Get_UtilsVersion():
     return "1.9"
 
 def Get_TaiyouMainVersion():
-    return "3.4"
+    return "3.5"
 
 def Get_ContentManagerVersion():
     return "2.6"
@@ -38,14 +38,18 @@ def Get_FXVersion():
     return "1.1"
 
 def Get_BootloaderVersion():
-    return "1.7"
+    return "1.8"
 
 def Get_MAINVersion():
     return "1.3"
 
+def Get_WindowManagerManagerVersion():
+    return "1.0"
+
+
 
 # -- Calculate the Version of Taiyou Game Engine -- #
-TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion())
+TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion())
 
 # -- Print Runtime Version -- #
 print("\nTaiyou General version " + str(TaiyouGeneralVersion))
@@ -58,6 +62,7 @@ from Core import FX as fx
 from Core import SHAPES as shape
 from Core import UTILS as utils
 from Core import MAIN
+from Core import WMM as wmm
 import os, pygame, platform
 
 # -- Arguments -- #
@@ -329,7 +334,7 @@ def InitEngine():
         os.environ['SDL_MOUSEDRV'] = str(InputMouseDriver)  # -- Set the Mouse Driver
         os.environ['SDL_NOMOUSE'] = str(InputDisableMouse)  # -- Set the Mouse Driver
 
-        # -- Set X11 Environment Keys -- #
+        # -- Set X11 Environment -- #
         if VideoDriver == "x11":
             if VideoX11CenterWindow:
                 os.environ['SDL_VIDEO_CENTERED'] = "1"  # -- Set the Centered Window

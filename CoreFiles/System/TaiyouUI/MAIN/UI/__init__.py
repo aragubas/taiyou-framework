@@ -155,3 +155,4 @@ class VerticalListWithDescription:
         self.ItemSelected.clear()
         self.ItemIndexes.clear()
         self.ItemProperties.clear()
+

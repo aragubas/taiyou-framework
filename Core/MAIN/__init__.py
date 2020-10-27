@@ -32,7 +32,7 @@ print("Taiyou Main version " + tge.Get_TaiyouMainVersion())
 
 # -- Variables -- #
 clock = pygame.time.Clock()
-FPS = 70
+FPS = 75
 DISPLAY = pygame.display
 CurrentRes_W = 800
 CurrentRes_H = 600
@@ -170,7 +170,7 @@ def SetDisplay():
 
     pygame.display.set_caption("Taiyou Framework v" + str(tge.TaiyouGeneralVersion))
 
-def CreateProcess(Path, ProcessName):
+def CreateProcess(Path, ProcessName, pInitArgs = None):
     """
      Set the Game Object
     :param GameFolder:Folder Path
@@ -186,17 +186,30 @@ def CreateProcess(Path, ProcessName):
 
     Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
     ProcessIndex = len(ProcessList_Names)
-    print(ProcessIndex)
+    print("ProcessIndex: " + str(ProcessIndex))
+    print("Path: " + Path)
+    print("ProcessName: " + ProcessName)
+
     ProcessNextPID += 1
 
+    utils.GarbageCollector_Collect()
     ProcessList_Names.append(ProcessName)
     Module = importlib.import_module(tge.Get_MainGameModuleName(Path))
-    ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainGameModuleName(Path)))
+    ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainGameModuleName(Path), pInitArgs))
     ProcessList_PID.append(ProcessNextPID)
+    utils.GarbageCollector_Collect()
 
-    ProcessList[ProcessIndex].Initialize()
+    # Inject Variables and Functions
     ProcessList[ProcessIndex].PROCESS_INDEX = ProcessIndex
+    ProcessList[ProcessIndex].WINDOW_DRAG_ENABLED = False
+
     ProcessListChanged = True
+
+    # Initialize
+    utils.GarbageCollector_Collect()
+    ProcessList[ProcessIndex].Initialize()
+
+    return ProcessNextPID
 
 def SendSigKillToProcessByPID(PID):
     ProcessList[PID].SendSignal(SIG_KILL)
@@ -208,9 +221,11 @@ def KillProcessByPID(PID):
     print(Index)
     print(len(ProcessList))
 
+    utils.GarbageCollector_Collect()
     ProcessList.pop(Index)
     ProcessList_PID.pop(Index)
     ProcessList_Names.pop(Index)
+    utils.GarbageCollector_Collect()
 
     print("Finished process index: " + str(Index))
 
@@ -218,8 +233,6 @@ def KillProcessByPID(PID):
 
 def GetProcessIndexByPID(PID):
     return ProcessList_PID.index(PID)
-
-
 
 def Run():
     global WorkObject
