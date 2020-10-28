@@ -53,11 +53,11 @@ class Process():
         if self.ProgressProgression and not self.LoadingComplete:
             self.ProgressAddDelay += 1
 
-            if self.ProgressAddDelay == 5:
+            if self.ProgressAddDelay == 2:
                 self.ProgressAddDelay = 0
                 self.Progress += 1
 
-            if self.ProgressAddDelay == 2:
+            if self.ProgressAddDelay == 1:
                 self.LoadingSteps(self.Progress)
 
             if self.Progress >= self.ProgressMax and not self.LoadingComplete:
@@ -66,6 +66,9 @@ class Process():
                 print("Bootloader : Loading Complete")
 
                 # Finish the Bootloader
+                # Start the Default Application
+                Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
+
                 Core.MAIN.KillProcessByPID(self.PID)
 
     def Draw(self):
@@ -93,8 +96,7 @@ class Process():
         return
 
     def FinishLoadingScreen(self):
-        self.ProgressMax = self.Progress + 20
-        Core.MAIN.ReceiveCommand(0, 60)
+        self.ProgressMax = self.Progress + 2
 
     def LoadingSteps(self, CurrentProgres):
         if CurrentProgres == 0:
@@ -102,8 +104,5 @@ class Process():
             Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui")
 
         if CurrentProgres == 1:
-            # Start the Default Application
-            Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
-
             # Finish the Loading
             self.FinishLoadingScreen()

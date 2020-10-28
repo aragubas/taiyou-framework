@@ -64,6 +64,8 @@ class Process():
 
         self.WelcomeScreenAppered = False
 
+        self.FocusedProcess = None
+
     def EventUpdate(self):
         pygame.fastevent.pump()
 
@@ -103,8 +105,18 @@ class Process():
                         if not process.FULLSCREEN:
                             self.UpdateProcessWindowDrag(event, process)
 
-                        if process.APPLICATION_HAS_FOCUS:
+                        ProcessGeometry = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height())
+                        CursorColision = pygame.Rect(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], 1, 1)
+
+                        if process.APPLICATION_HAS_FOCUS and ProcessGeometry.colliderect(CursorColision):
                             process.EventUpdate(event)
+
+                        if self.FocusedProcess is not None:
+                            FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height())
+
+                            # Play beep sound when clicking on inactive windows
+                            if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
+                                self.DefaultContent.PlaySound("/notify.wav")
 
     def ToggleTaskbar(self):
         self.UpdateTaskbarProcessList()
@@ -154,7 +166,7 @@ class Process():
 
     def Update(self):
         ## Draw the Applications Window
-        FocusedProcess = None
+        self.FocusedProcess = None
 
         if not self.TaskbarEnabled:
             # Draw the Unfocused Process
@@ -171,13 +183,13 @@ class Process():
                     continue
 
                 if process.APPLICATION_HAS_FOCUS:
-                    FocusedProcess = process
+                    self.FocusedProcess = process
                     continue
 
                 self.DrawProcess(process)
 
             # Draw the focused process
-            self.DrawProcess(FocusedProcess)
+            self.DrawProcess(self.FocusedProcess)
 
         if not self.TaskbarEnabled:
             self.LastDisplayFrame = DISPLAY.copy()
@@ -189,6 +201,7 @@ class Process():
         self.DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
         pygame.display.flip()
+
 
         # Update Applications Events
         self.EventUpdate()
@@ -240,7 +253,6 @@ class Process():
 
         self.UpdateTaskbarProcessList()
 
-
         # Check if wax is being disabled
         if self.TaskbarDisableToggle and not self.TaskbarAnimation.Enabled and self.TaskbarAnimation.Value == self.TaskbarAnimation.MinValue:
             self.TaskbarDisableToggle = False
@@ -291,7 +303,6 @@ class Process():
         if self.TaskbarTools_WidgetController.LastInteractionID == 1 and self.TaskbarTools_WidgetController.LastInteractionType:
             self.UpdateTaskbar_SwitchToSelectedProcess()
 
-
     def UpdateTaskbar_SwitchToSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
             try:
@@ -341,7 +352,6 @@ class Process():
             TitleBarColor = (39, 54, 159)
             TextColor = (200, 200, 200)
             WindowBorderColor = (20, 20, 58)
-            pSurface = Core.fx.Surface_Blur(pSurface, 1.2)
 
         Core.shape.Shape_Rectangle(Surface, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
 
