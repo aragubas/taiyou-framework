@@ -14,7 +14,16 @@
 #   limitations under the License.
 #
 #
-import pygame
+import pygame, ast
 
 def List_PygameRect(RectList):
     return pygame.Rect(RectList[0], RectList[1], RectList[2], RectList[3])
+
+def Parse_Tuple(string):
+    try:
+        s = ast.literal_eval(str(string))
+        if type(s) == tuple:
+            return s
+        return
+    except:
+        return

@@ -31,7 +31,10 @@ class Process():
         self.FULLSCREEN = True
 
     def Initialize(self):
+        # Set Invisible Mouse
         pygame.mouse.set_visible(False)
+
+        # Initialize Content Manager
         self.DefaultContent = Core.cntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("CoreFiles/System/TaiyouUI/")
@@ -40,6 +43,9 @@ class Process():
         self.DefaultContent.LoadImagesInFolder("Data/img")
         self.DefaultContent.LoadSoundsInFolder("Data/sound")
         self.DefaultContent.SetFontPath("Data/fonts")
+
+        # Load the default Theme File
+        UI.ThemesManager_LoadTheme(self.DefaultContent, self.DefaultContent.Get_RegKey("/selected_theme"))
 
         self.TaskbarEnabled = False
         self.TaskbarDisableToggle = False
@@ -147,7 +153,6 @@ class Process():
             process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
 
     def Update(self):
-        DISPLAY.fill((0, 0, 0))
         ## Draw the Applications Window
         FocusedProcess = None
 
@@ -302,9 +307,13 @@ class Process():
 
     def UpdateTaskbar_CloseSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
-            ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
-            Core.MAIN.KillProcessByPID(ProcessPID)
-            self.UpdateTaskbarProcessList()
+            try:
+                ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
+                Core.MAIN.KillProcessByPID(ProcessPID)
+                self.UpdateTaskbarProcessList()
+
+            except IndexError:
+                self.WindowList.ResetSelectedItem()
 
     def UpdateTaskbarProcessList(self):
         # Update WindowList Contents

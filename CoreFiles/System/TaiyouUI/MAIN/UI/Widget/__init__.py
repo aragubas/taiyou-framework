@@ -17,8 +17,7 @@
 import pygame
 from Core import utils
 from Core import shape
-from OneTrack import MAIN as Main
-from OneTrack.MAIN import UI
+from CoreFiles.System.TaiyouUI.MAIN import UI
 
 class Widget_Controller:
     def __init__(self, pContentManager, Rectangle):
@@ -125,12 +124,12 @@ class Widget_ValueChanger:
 
     def Render(self, DISPLAY):
         # -- Render Background -- #
-        BGColor = UI.Button_Active_BackgroundColor
-        LineColor = UI.Button_Active_IndicatorColor
+        BGColor = UI.ThemesManager_GetProperty("Button_Active_BackgroundColor")
+        LineColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
         if not self.Active:
-            BGColor = UI.Button_Inactive_BackgroundColor
-            LineColor = UI.Button_Inactive_IndicatorColor
+            BGColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
+            LineColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
         shape.Shape_Rectangle(DISPLAY, BGColor, self.Rectangle)
         shape.Shape_Rectangle(DISPLAY, LineColor, self.Rectangle, 1)
@@ -191,163 +190,6 @@ class Widget_Label:
     def EventUpdate(self, event):
         pass
 
-class Widget_PianoKeys:
-    def __init__(self, pContentManager, X, Y, WidgetID):
-        if WidgetID == -1:
-            raise ValueError("WidgetID cannot be -1")
-
-        self.ID = WidgetID
-        self.Content = pContentManager
-        self.InteractionType = None
-        self.Active = True
-        self.EventUpdateable = True
-        self.X = X
-        self.Y = Y
-        self.Rectangle = utils.Convert.List_PygameRect((X, Y, 380, 45))
-        self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
-        self.LastRect = pygame.Rect(0, 0, 0, 0)
-        self.LastNote = -1
-        self.AwaysUpdate = True
-        self.CursorOffset = (0, 0)
-        pygame.key.set_repeat(0, 0)
-
-    def Render(self, DISPLAY):
-        if not self.LastRect == self.Rectangle:
-            self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
-
-        # -- Render Background -- #
-        self.Surface.fill((190, 190, 190))
-        shape.Shape_Rectangle(self.Surface, (100, 100, 100), (0, 0, self.Rectangle[2], self.Rectangle[3]), 5)
-
-        for i in range(12):
-            NoteLabel = self.GetNote_ByIndex(i)
-
-            # -- Variables -- #
-            Width = 30
-            Height = 25
-            X = i * (Width + 2)
-            Y = self.Rectangle[3] - Height
-            BackgroundColor = (100, 105, 155)
-            TextColor = (0, 5, 100)
-            IsHighNote = False
-
-            if "#" in NoteLabel:
-                Width = 30
-                X = i * (Width + 2)
-                Width = 35
-                X -= 2
-                Y = 0
-                BackgroundColor = (10, 15, 25)
-                TextColor = (200, 205, 255)
-                IsHighNote = True
-
-            TextX = X + (Width / 2 - self.Content.GetFont_width("/PressStart2P.ttf", 12, NoteLabel) / 2)
-
-            if self.LastNote == i:
-                BackgroundColor = (200, 205, 255)
-                TextColor = (0, 0, 0)
-
-            if not IsHighNote:
-                shape.Shape_Rectangle(self.Surface, BackgroundColor, (X, Y, Width, Height), 0, 0, 5, 5)
-            else:
-                shape.Shape_Rectangle(self.Surface, BackgroundColor, (X, Y, Width, Height), 0, 0, 0, 0, 5, 5)
-
-            self.Content.FontRender(self.Surface, "/PressStart2P.ttf", 12, NoteLabel, TextColor, TextX, Y + 5)
-
-        DISPLAY.blit(self.Surface, (self.Rectangle[0], self.Rectangle[1]))
-
-    def GetNote_ByIndex(self, i):
-        if i == 0:
-            return "C"
-
-        elif i == 1:
-            return "C#"
-
-        elif i == 2:
-            return "D"
-
-        elif i == 3:
-            return "D#"
-
-        elif i == 4:
-            return "E"
-
-        elif i == 5:
-            return "F"
-
-        elif i == 6:
-            return "F#"
-
-        elif i == 7:
-            return "G"
-
-        elif i == 8:
-            return "G#"
-
-        elif i == 9:
-            return "A"
-
-        elif i == 10:
-            return "A#"
-
-        elif i == 11:
-            return "B"
-
-    def Update(self):
-        pass
-
-    def EventUpdate(self, event):
-        if event.type == pygame.KEYUP:
-            self.LastNote = -1
-
-        if event.type == pygame.KEYDOWN:
-            # -- Note C -- #
-            if event.key == pygame.K_z:
-                self.LastNote = 0
-
-            # -- Note C# -- #
-            if event.key == pygame.K_s:
-                self.LastNote = 1
-
-            # -- Note D -- #
-            if event.key == pygame.K_x:
-                self.LastNote = 2
-
-            # -- Note D# -- #
-            if event.key == pygame.K_d:
-                self.LastNote = 3
-
-            # -- Note E -- #
-            if event.key == pygame.K_c:
-                self.LastNote = 4
-
-            # -- Note F -- #
-            if event.key == pygame.K_v:
-                self.LastNote = 5
-
-            # -- Note F# -- #
-            if event.key == pygame.K_g:
-                self.LastNote = 6
-
-            # -- Note G -- #
-            if event.key == pygame.K_b:
-                self.LastNote = 7
-
-            # -- Note G# -- #
-            if event.key == pygame.K_h:
-                self.LastNote = 8
-
-            # -- Note A -- #
-            if event.key == pygame.K_n:
-                self.LastNote = 9
-
-            # -- Note A# -- #
-            if event.key == pygame.K_j:
-                self.LastNote = 10
-
-            # -- Note B -- #
-            if event.key == pygame.K_m:
-                self.LastNote = 11
 
 class Widget_Button:
     def __init__(self, pContentManager,Text, FontSize, X, Y, WidgetID):
@@ -372,8 +214,8 @@ class Widget_Button:
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.ButtonState = False
         self.CursorOffset = (0, 0)
-        self.BgColor = UI.Button_Inactive_BackgroundColor
-        self.IndicatorColor = UI.Button_Inactive_IndicatorColor
+        self.BgColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
+        self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
 
     def Render(self, DISPLAY):
         # -- Render Background -- #
@@ -404,16 +246,16 @@ class Widget_Button:
             self.LastRect = self.Rectangle
 
         if self.Active and not self.ButtonState:
-            self.BgColor = UI.Button_Active_BackgroundColor
-            self.IndicatorColor = UI.Button_Active_IndicatorColor
+            self.BgColor = UI.ThemesManager_GetProperty("Button_Active_BackgroundColor")
+            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
         elif self.ButtonState:
-            self.BgColor = UI.Button_Active_IndicatorColor
-            self.IndicatorColor = UI.Button_Inactive_IndicatorColor
+            self.BgColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
+            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
 
         else:
-            self.BgColor = UI.Button_Inactive_BackgroundColor
-            self.IndicatorColor = UI.Button_Inactive_IndicatorColor
+            self.BgColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
+            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
 
     def EventUpdate(self, event):
         if event.type == pygame.MOUSEBUTTONUP:

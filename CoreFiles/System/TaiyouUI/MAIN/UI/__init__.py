@@ -20,12 +20,52 @@ import Core.SHAPES as shape
 import Core.UTILS as utils
 import CoreFiles.System.TaiyouUI.MAIN.UI.Widget as widget
 
-# -- Button Colors --
-Button_Active_IndicatorColor = (46, 196, 182)
-Button_Active_BackgroundColor = (15, 27, 44)
-Button_Inactive_IndicatorColor = (255, 51, 102)
-Button_Inactive_BackgroundColor = (1, 22, 39)
-Button_BackgroundColor = (12, 22, 14)
+#region Theme Manager
+ThemesList_Properties = list()
+ThemesList_PropertyNames = list()
+
+def ThemesManager_LoadTheme(ContentManager, ThemeName):
+    global ThemesList_Properties
+    global ThemesList_PropertyNames
+
+    ThemesList_Properties.clear()
+    ThemesList_PropertyNames.clear()
+
+    print("Taiyou.TaskBar : Loading UI Theme '" + ThemeName + "'")
+    for key in ContentManager.Get_RegKey("/theme/{0}".format(ThemeName)).splitlines():
+        if key.startswith("#"):
+            continue
+
+        ThemeDataTag = key.split(";")[0]
+        ThemeDataType = key.split(";")[1]
+        ThemeData = key.split(";")[2]
+        ThemeRawData = None
+
+        if ThemeDataType == "tuple":
+            ThemeRawData = utils.Convert.Parse_Tuple(ThemeData)
+
+        if ThemeDataType == "int":
+            ThemeRawData = int(ThemeData)
+
+        if ThemeDataType == "str":
+            ThemeRawData = str(ThemeData)
+
+        print("Property: '{0}' of type '{1}' loaded with value '{2}'".format(ThemeDataTag, ThemeDataType, ThemeData))
+
+        ThemesManager_AddProperty(ThemeDataTag, ThemeRawData)
+
+    print("Taiyou.TaskBar : Theme Loaded sucefully")
+
+def ThemesManager_GetProperty(pPropertyName):
+    Index = ThemesList_PropertyNames.index(pPropertyName)
+
+    return ThemesList_Properties[Index]
+
+def ThemesManager_AddProperty(PropertyName, PropertyValue):
+    ThemesList_Properties.append(PropertyValue)
+    ThemesList_PropertyNames.append(PropertyName)
+
+#endregion
 
 
 class VerticalListWithDescription:
