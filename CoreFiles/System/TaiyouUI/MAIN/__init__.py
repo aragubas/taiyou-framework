@@ -78,7 +78,7 @@ class Process():
 
             # UI Hotkeys
             if event.type == pygame.KEYUP:
-                # -- Open Taskbar -- #
+                # -- Open Taskmanager -- #
                 if event.key == pygame.K_F12:
                     Core.MAIN.CreateProcess(self.DefaultContent.Get_RegKey("/task_manager"), "task_manager")
 
@@ -130,12 +130,17 @@ class Process():
                 self.DefaultContent.PlaySound("/in.wav")
 
         else:
-            print("Out Animation Toggle")
             self.DefaultContent.PlaySound("/out.wav")
             self.TaskbarDisableToggle = True
             self.TaskbarAnimation.Enabled = True
 
     def UpdateProcessWindowDrag(self, event, process):
+        try:
+            if self.FocusedProcess.FULLSCREEN:
+                return
+        except AttributeError:
+            return
+
         if self.SomeWindowIsBeingMoved:
             if self.SomeWindowIsBeingMoved_PID != process.PID:
                 return
