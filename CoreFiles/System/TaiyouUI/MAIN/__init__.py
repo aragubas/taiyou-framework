@@ -66,6 +66,10 @@ class Process():
 
         self.FocusedProcess = None
 
+        self.PlayNotifySound = False
+
+        Core.wmm.TaskBarUIProcessID = self.PID
+
     def EventUpdate(self):
         pygame.fastevent.pump()
 
@@ -116,7 +120,7 @@ class Process():
 
                             # Play beep sound when clicking on inactive windows
                             if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
-                                self.DefaultContent.PlaySound("/notify.wav")
+                                self.PlayNotifySound = True
 
     def ToggleTaskbar(self):
         self.UpdateTaskbarProcessList()
@@ -210,6 +214,11 @@ class Process():
 
         # Update Applications Events
         self.EventUpdate()
+
+        # Play Notify Sound
+        if self.PlayNotifySound:
+            self.PlayNotifySound = False
+            self.DefaultContent.PlaySound("/notify.wav")
 
     def DrawProcess(self, process):
         if process is None:

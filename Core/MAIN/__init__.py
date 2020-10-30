@@ -208,6 +208,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     # Initialize
     utils.GarbageCollector_Collect()
     ProcessList[ProcessIndex].Initialize()
+    utils.GarbageCollector_Collect()
 
     return ProcessNextPID
 
@@ -218,16 +219,12 @@ def KillProcessByPID(PID):
     global ProcessListChanged
     Index = GetProcessIndexByPID(PID)
 
-    print(Index)
-    print(len(ProcessList))
-
-    utils.GarbageCollector_Collect()
     ProcessList.pop(Index)
     ProcessList_PID.pop(Index)
     ProcessList_Names.pop(Index)
     utils.GarbageCollector_Collect()
 
-    print("Finished process index: " + str(Index))
+    print("Taiyou : Finished process index: " + str(Index))
 
     ProcessListChanged = True
 

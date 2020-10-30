@@ -19,6 +19,7 @@ import Core
 # The main Entry Point
 print("Taiyou Window Manager Manager (WMM) version " + Core.Get_WindowManagerManagerVersion())
 
+TaskBarUIProcessID = -1
 
 def WindowManagerSignal(self, Signal):
     """
@@ -28,10 +29,15 @@ def WindowManagerSignal(self, Signal):
     SignalID          Description\n
     ########          #############\n
     0                 Force Focus on Window\n
-    1                 Kill Process
+    1                 Kill Process\n
+    2                 PLay Notify Sound on Task Bar Graphical Interface\n
     :return:
     """
-    # Gain Focus
+    global TaskBarUIProcessID
+
+    if TaskBarUIProcessID == -1:
+        raise Exception("Cant send signal to TaskBarGUI because it is not running.")
+
     OriginalDragValue = self.WINDOW_DRAG_ENABLED
     if Signal == 0:
         for process in Core.MAIN.ProcessList:
@@ -46,3 +52,6 @@ def WindowManagerSignal(self, Signal):
     if Signal == 1:
         Core.MAIN.KillProcessByPID(self.PID)
         return
+
+    if Signal == 2:
+        Core.MAIN.ProcessList[TaskBarUIProcessID].PlayNotifySound = True

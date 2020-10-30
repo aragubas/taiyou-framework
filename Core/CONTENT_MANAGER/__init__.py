@@ -493,6 +493,8 @@ class ContentManager:
         :param Text:Text
         :return:Size (int)
         """
+        if Text == "" or FontFileLocation == "" or FontSize == 0:
+            return 0
 
         TotalSize = 0
         for i, l in enumerate(Text.splitlines()):
@@ -512,6 +514,8 @@ class ContentManager:
         :param Text:Text
         :return:Size (int)
         """
+        if Text == "" or FontFileLocation == "" or FontSize == 0:
+            return 0
 
         return self.GetFont_object(FontFileLocation, FontSize).render(Text, True, (255, 255, 255)).get_height() * len(Text.splitlines())
 
@@ -708,10 +712,20 @@ class ContentManager:
             channel.unpause()
 
     def UnloadSoundTuneCache(self):
-        utils.GarbageCollector_Collect()
+        print("ContentManager.UnloadSoundTuneCache : Clearing FrequencyGenerator Cache...")
         self.SoundTuneCache_Cache.clear()
         self.SoundTuneCache_Names.clear()
         utils.GarbageCollector_Collect()
+
+        del self.SoundTuneCache_Cache
+        del self.SoundTuneCache_Names
+        utils.GarbageCollector_Collect()
+
+        self.SoundTuneCache_Cache = list()
+        self.SoundTuneCache_Names = list()
+        utils.GarbageCollector_Collect()
+        print("ContentManager.UnloadSoundTuneCache : Done")
+
 
     def PlaySound(self, SourceName, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0):
         """
