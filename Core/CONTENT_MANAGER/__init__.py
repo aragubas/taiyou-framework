@@ -27,6 +27,7 @@ import numpy as np
 import scipy
 import scipy.misc
 import scipy.cluster
+from scipy import signal
 import glob
 import os, time, numpy, math
 
@@ -579,7 +580,7 @@ class ContentManager:
     # endregion
 
     # region Sound Functions
-    def GetTune_FromTuneCache(self, Frequency, Duration, SampleRate):
+    def GetTune_FromTuneCache(self, Frequency, Duration, SampleRate, FrequencyType):
         """
         Get SoundTune from JIT Cache
         :param Frequency:Sound Frequency
@@ -587,22 +588,23 @@ class ContentManager:
         :param SampleRate:Sample Rate
         :return:
         """
-        ObjName = Frequency + Duration + SampleRate
+        ObjName = ''.join((str(Frequency), str(Duration), str(SampleRate), FrequencyType))
         try:  # -- Return the Tune from Cache, if existent -- #
             return self.SoundTuneCache_Cache[self.SoundTuneCache_Names.index(ObjName)]
 
         except ValueError:  # -- If not, generate the tune, then return it from cache -- #
             self.SoundTuneCache_Names.append(ObjName)
-            self.SoundTuneCache_Cache.append(self.GenerateSoundTune(Frequency, Duration, SampleRate))
+            self.SoundTuneCache_Cache.append(self.GenerateSoundTune(Frequency, Duration, SampleRate, FrequencyType))
 
             return self.SoundTuneCache_Cache[self.SoundTuneCache_Names.index(ObjName)]
 
-    def GenerateSoundTune(self, Frequency, Duration, SampleRate):
+    def GenerateSoundTune(self, Frequency, Duration, SampleRate, FrequencyType):
         """
         Generate Sound Tune
         :param Frequency:Frequency
         :param Duration:Duration
         :param SampleRate:Sample Rate
+        :param FrequencyType:Frequency Type\nsine,square
         :return:Buffer
         """
         # -- Generate the Tune -- #
@@ -616,12 +618,22 @@ class ContentManager:
             t = float(s) / SampleRate  # time in seconds
 
             # grab the x-coordinate of the sine wave at a given time, while constraining the sample to what our mixer is set to with "bits"
-            buf[s][0] = int(round(max_sample * math.sin(2 * math.pi * Frequency * t)))
-            buf[s][1] = int(round(max_sample * math.sin(2 * math.pi * Frequency * t)))
+            Value = 0
+
+            if FrequencyType == "square":
+                Value = int(round(max_sample * np.sign(math.sin(2 * math.pi * Frequency * t))))
+
+            if FrequencyType == "sine":
+                Value = int(round(max_sample * math.sin(2 * math.pi * Frequency * t)))
+
+
+            # Mono Sound Output
+            buf[s][0] = Value
+            buf[s][1] = Value
 
         return buf
 
-    def PlayTune(self, Frequency, Duration, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0, SampleRate=44000):
+    def PlayTune(self, Frequency, Duration, FrequencyType, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0, SampleRate=44000):
         """
         Play a tune on the Specified Frequency
         :param Frequency:Frequency
@@ -635,11 +647,11 @@ class ContentManager:
         :param SampleRate:Sample Rate of the Tone
         :return:
         """
-        if SoundDisabled or Frequency == 0 or Duration == 0:
+        if SoundDisabled or Frequency == 0 or Duration == 0 or FrequencyType == "":
             return
 
         # -- Get the tune from the JIT Cache -- #
-        sound = pygame.sndarray.make_sound(self.GetTune_FromTuneCache(Frequency, Duration, SampleRate))
+        sound = pygame.sndarray.make_sound(self.GetTune_FromTuneCache(Frequency, Duration, SampleRate, FrequencyType))
         sound.set_volume(Volume)
 
         return self.PlaySoundObj(sound, PlayOnSpecificID, LeftPan, RightPan, Fadeout, ForcePlay)
