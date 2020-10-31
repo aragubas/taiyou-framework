@@ -259,7 +259,6 @@ class ContentManager:
 
         return Image.get_height()
 
-
     def IsOnScreen(self, DISPLAY, X, Y, Width, Height):
         """
         Check if Object is on Screen
@@ -282,7 +281,8 @@ class ContentManager:
         :return:
         """
         reg_dir = self.SourceFolder + reg_dir
-        self.Reg_LastInit = self.SourceFolder + reg_dir
+        print(self.SourceFolder)
+        self.Reg_LastInit = self.SourceFolder + reg_dir.replace(self.SourceFolder, "")
 
         start_time = time.time()
         # -- Unload the Registry -- #
@@ -388,7 +388,7 @@ class ContentManager:
         :param keyValue:New Value
         :return:
         """
-        FileLocation = "{0}{1}Data{1}REG{1}{2}.data".format(self.SourceFolder, tge.TaiyouPath_CorrectSlash, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
+        FileLocation = "{0}{2}.data".format(self.Reg_LastInit, tge.TaiyouPath_CorrectSlash, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
 
         # -- Create the directory -- #
         os.makedirs(os.path.dirname(FileLocation), exist_ok=True)

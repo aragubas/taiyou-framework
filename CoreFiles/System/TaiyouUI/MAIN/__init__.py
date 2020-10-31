@@ -68,6 +68,7 @@ class Process():
 
         self.PlayNotifySound = False
 
+        # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID
 
     def EventUpdate(self):
@@ -82,10 +83,6 @@ class Process():
 
             # UI Hotkeys
             if event.type == pygame.KEYUP:
-                # -- Open Taskmanager -- #
-                if event.key == pygame.K_F12:
-                    Core.MAIN.CreateProcess(self.DefaultContent.Get_RegKey("/task_manager"), "task_manager")
-
                 # -- Toggle Taskbar -- #
                 if event.key == pygame.K_F11:
                     self.ToggleTaskbar()
@@ -130,6 +127,7 @@ class Process():
             self.TaskbarAnimation.Enabled = True
             if not self.WelcomeScreenAppered:
                 self.DefaultContent.PlaySound("/intro_2.wav")
+                print("Task_BarGUI : Welcome")
             else:
                 self.DefaultContent.PlaySound("/in.wav")
 
