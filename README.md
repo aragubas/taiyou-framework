@@ -9,5 +9,5 @@ Warning: everthing related to program names is case sensetive, aways check spell
 And then. you just need to open main.py
 
 ## Required Packpages
-**pygame**, os, time, binascii, struct, pillow, numpy, scipy, glob, math, sys, importlib, marshal, traceback, threading, datetime, multiprocessing, gc
+**pygame==2.0.0.dev10**, os, time, binascii, struct, pillow, numpy, scipy, glob, math, sys, importlib, marshal, traceback, threading, datetime, multiprocessing, gc
 shutil, requests, string, random, zipfile, urllib, psutil, pathlib, 
