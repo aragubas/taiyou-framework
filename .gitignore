@@ -2,3 +2,6 @@
 /Selected.txt
 *Thumbs.db
 *Thumbs.db:encryptable
+/.idea
+/.venv
+/AppsData

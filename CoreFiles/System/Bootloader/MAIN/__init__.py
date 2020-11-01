@@ -67,6 +67,7 @@ class Process():
 
                 print("Bootloader : Loading Complete")
 
+
                 # Finish the Bootloader
                 # Start the Default Application
                 Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
@@ -89,7 +90,7 @@ class Process():
 
     def DrawProgressBar(self, DISPLAY):
         self.LoadingBarPos = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
-        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], Core.utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax), 10)
+        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], max(10, Core.utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax)), 10)
 
         Core.shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.LoadingBarPos, 0, self.LoadingBarPos[3])
         Core.shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.LoadingBarProgress, 0, self.LoadingBarPos[3])
