@@ -31,7 +31,7 @@ def CorrectFileName(Input):
     """
     if not Input.startswith("/"):
         Input = "/" + Input
-    Input = tge.TaiyouPath_AppDataFolder + Input + ".sav"
+    Input = tge.TaiyouPath_AppDataFolder + Input
 
     if not tge.TaiyouPath_CorrectSlash == "/":
         Input.replace("/", tge.TaiyouPath_CorrectSlash)
@@ -46,8 +46,6 @@ def ReadAppData(FileName, DataType=str):
     :param DataType:Data Type
     :return:Data
     """
-    FileLocation = CorrectFileName(FileName)
-
     file = open(FileLocation, "r")
 
     ReadData = file.read().rstrip()
@@ -71,6 +69,10 @@ def ReadAppData_WithTry(FileName, DataType, DefaultValue):
     :param DefaultValue:Default Value to be written
     :return:Data
     """
+    # Check the file path and wax
+    FileName = CorrectFileName(FileName)
+    os.makedirs(os.path.dirname(FileLocation), exist_ok=True)
+
     try:
         return ReadAppData(FileName, DataType)
     except FileNotFoundError:
@@ -84,13 +86,8 @@ def WriteAppData(FileName, Data):
     :return:Data to be written
     """
 
-    if not FileName.startswith("/"):
-        FileName = "/{0}".format(FileName)
-    FileLocation = "{0}{1}.sav".format(tge.TaiyouPath_AppDataFolder, FileName)
-    os.makedirs(os.path.dirname(FileLocation), exist_ok=True)
-
-    f = open(FileLocation, "w+")
+    f = open(FileName, "w+")
     f.write(str(Data))
     f.close()
 
-    print("Taiyou.Registry.WriteAppData : File[{0}] has been written.".format(FileLocation))
+    print("Taiyou.Registry.WriteAppData : File[{0}] has been written.".format(FileName))

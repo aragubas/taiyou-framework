@@ -21,7 +21,7 @@ import Core as tge
 from Core import APPDATA as reg
 from Core import CONTENT_MANAGER as sprite
 from Core import UTILS as utils
-import pygame, sys, importlib, marshal
+import pygame, sys, importlib, marshal, multiprocessing
 import traceback, threading
 from datetime import datetime
 from multiprocessing import Process
@@ -182,7 +182,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     global ProcessListChanged
     global ProcessNextPID
 
-    print("Taiyou.GameExecution.CreateProcess : Loading Process: [" + ProcessName + "]")
+    print("Taiyou.CreateProcess : Creating Process: [" + ProcessName + "]")
 
     Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
     ProcessIndex = len(ProcessList_Names)
@@ -209,6 +209,8 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     utils.GarbageCollector_Collect()
     ProcessList[ProcessIndex].Initialize()
     utils.GarbageCollector_Collect()
+
+    print("Taiyou.CreateProcess : Process: [" + ProcessName + "] created sucefully.")
 
     return ProcessNextPID
 
@@ -240,7 +242,7 @@ def Run():
     global ProcessListChanged
     global ProcessListChanged_Delay
 
-    # deltaTime in seconds.
+    # Limit the application to the desingned FPS
     clock.tick(FPS)
 
     # -- Run the Update Code -- #

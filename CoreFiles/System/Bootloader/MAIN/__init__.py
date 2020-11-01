@@ -16,6 +16,7 @@
 #
 import Core
 import pygame
+import time
 
 class Process():
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
@@ -48,7 +49,8 @@ class Process():
         self.LoadingComplete = False
 
     def Update(self):
-        self.APPLICATION_HAS_FOCUS = True
+        if not self.APPLICATION_HAS_FOCUS:
+            return
 
         if self.ProgressProgression and not self.LoadingComplete:
             self.ProgressAddDelay += 1

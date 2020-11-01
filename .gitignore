@@ -1,2 +1,4 @@
 *.pyc
 /Selected.txt
+*Thumbs.db
+*Thumbs.db:encryptable

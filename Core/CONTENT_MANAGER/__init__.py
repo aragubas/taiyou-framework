@@ -92,7 +92,6 @@ class ContentManager:
             if not line.startswith('#') and not line == "":
                 currentLine = line.split(':')
                 spriteLocation = FolderName + currentLine[0]
-                print("[{0}]".format(spriteLocation))
                 self.Images_Name += (currentLine[0],)
 
                 if currentLine[1] == "True":
@@ -141,7 +140,6 @@ class ContentManager:
         try:
             return self.Images_Data[self.Images_Name.index(ImageResourceName)]
         except:
-            print("GetImage : Image[" + ImageResourceName + "] does not exist.")
             return DefaultImage
 
     def UnloadImage(self):
@@ -159,9 +157,11 @@ class ContentManager:
         self.Images_Data = list()
         self.Images_Name = list()
 
+        print("Image.Unload : Done")
+
     def ReloadImage(self):
         """
-        Reload all loaded sprites
+        Reload all loaded images
         :return:
         """
         print("Image.Reload : Reloading Images...")
@@ -281,8 +281,9 @@ class ContentManager:
         :return:
         """
         reg_dir = self.SourceFolder + reg_dir
-        print(self.SourceFolder)
+        # -- FIX for working on Windows -- #
         self.Reg_LastInit = self.SourceFolder + reg_dir.replace(self.SourceFolder, "")
+        self.Reg_LastInit = self.Reg_LastInit.replace("/", tge.TaiyouPath_CorrectSlash)
 
         start_time = time.time()
         # -- Unload the Registry -- #
@@ -366,6 +367,7 @@ class ContentManager:
         :param keyName:Name of Key [starting with /]
         :return:KeyData
         """
+    
         if valueType is str:
             return self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))]
 
@@ -388,7 +390,7 @@ class ContentManager:
         :param keyValue:New Value
         :return:
         """
-        FileLocation = "{0}{2}.data".format(self.Reg_LastInit, tge.TaiyouPath_CorrectSlash, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
+        FileLocation = "{0}{1}.data".format(self.Reg_LastInit, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
 
         # -- Create the directory -- #
         os.makedirs(os.path.dirname(FileLocation), exist_ok=True)
@@ -396,7 +398,7 @@ class ContentManager:
         print("Taiyou.ContentManager.Write_RegKey : Registry File Location;" + FileLocation)
 
         # -- Modify the Loaded Value in Memory -- #
-        Index = self.reg_keys.index(keyName)
+        Index = self.reg_keys.index(keyName.replace("/", tge.TaiyouPath_CorrectSlash))
         self.reg_contents[Index] = keyValue
 
         # -- Write the Actual Registry Key -- #
@@ -448,19 +450,24 @@ class ContentManager:
 
                 # -- Render Multiple Lines -- #
                 for i, l in enumerate(Text.splitlines()):
-                    if not backgroundColor == None:  # -- If background was provided, render with Background
+                    if backgroundColor is not None:  # -- If background was provided, render with Background
+                        # FontSurface Object
                         FontSurface = FontFileObject.render(l, antialias, ColorRGB, backgroundColor)
 
-                        if not Opacity == 255:  FontSurface.set_alpha(Opacity)
+                        # Set Font Opacity
+                        FontSurface.set_alpha(Opacity)
 
+                        # Blit Font Surface
                         DISPLAY.blit(FontSurface, (X, Y + Size * i))
 
                     else:  # -- Render Without Background -- #
+                        # FontSurface Object
                         FontSurface = FontFileObject.render(l, antialias, ColorRGB)
 
-                        if not Opacity == 255:  # -- Set the Font Opacity, if needed
-                            FontSurface.set_alpha(Opacity)
+                        # Set Font Opacity
+                        FontSurface.set_alpha(Opacity)
 
+                        # Blit Font Surface
                         DISPLAY.blit(FontSurface, (X, Y + Size * i))
 
     def GetFont_object(self, FontFileLocation, Size):
@@ -479,7 +486,6 @@ class ContentManager:
             except ValueError:  # -- Add font to the FontCache if was not found -- #
                 self.CurrentLoadedFonts_Name.append(FontCacheName)
                 FontPath = self.Font_Path + FontFileLocation.replace("/", tge.TaiyouPath_CorrectSlash)
-                print(FontPath)
 
                 self.CurrentLoadedFonts_Contents.append(pygame.font.Font(FontPath, Size))
 
@@ -528,7 +534,8 @@ class ContentManager:
         :param FolderName:Folder Path Name
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
         FolderName = self.SourceFolder + FolderName
         self.Sound_LastInit = FolderName
         self.InitSoundSystem()
@@ -567,7 +574,8 @@ class ContentManager:
         Unload all loaded sounds
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         self.AllLoadedSounds = ()
         self.SoundChannels = ()
@@ -686,7 +694,8 @@ class ContentManager:
         Stop all sound channels
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for channel in self.SoundChannels:
             channel.stop()
@@ -696,7 +705,8 @@ class ContentManager:
         Pause all sounds on all channels
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for channel in self.SoundChannels:
             channel.pause()
@@ -706,7 +716,8 @@ class ContentManager:
         Unpause all sounds on all channels
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for channel in self.SoundChannels:
             channel.unpause()
@@ -726,7 +737,6 @@ class ContentManager:
         utils.GarbageCollector_Collect()
         print("ContentManager.UnloadSoundTuneCache : Done")
 
-
     def PlaySound(self, SourceName, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0):
         """
         Play a Sound loaded into Sound System
@@ -738,7 +748,8 @@ class ContentManager:
         :param PlayOnSpecificID:Play the sound on a Specific ID
         :return:ChannelID
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         # -- Convert to the Correct Slash -- #
         SourceName = SourceName.replace("/", tge.TaiyouPath_CorrectSlash)
@@ -755,7 +766,8 @@ class ContentManager:
         :param ChannelID:ChannelID
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for i, channel in enumerate(self.SoundChannels):
             if i == ChannelID:
@@ -769,7 +781,8 @@ class ContentManager:
         :param FadeoutTime:Fadeout time in Milisecounds
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for i, channel in enumerate(self.SoundChannels):
             if i == ChannelID:
@@ -783,14 +796,16 @@ class ContentManager:
         :param NewVolume:Volume (Range 0.0 to 1.0)
         :return:
         """
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for i, channel in enumerate(self.SoundChannels):
             if i == ChannelID:
                 channel.set_volume(NewVolume)
 
     def Get_ChannelIsBusy(self, ChannelID):
-        if SoundDisabled: return
+        if SoundDisabled:
+            return
 
         for i, channel in enumerate(self.SoundChannels):
             if i == ChannelID:

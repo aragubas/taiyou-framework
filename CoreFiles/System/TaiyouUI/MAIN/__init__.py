@@ -14,8 +14,7 @@
 #   limitations under the License.
 #
 #
-import Core
-import pygame
+import Core, time, pygame
 from Core.MAIN import DISPLAY as DISPLAY
 from CoreFiles.System.TaiyouUI.MAIN import UI
 
@@ -173,8 +172,6 @@ class Process():
 
     def Update(self):
         ## Draw the Applications Window
-        self.FocusedProcess = None
-
         if not self.TaskbarEnabled:
             # Draw the Unfocused Process
             for process in Core.MAIN.ProcessList:
@@ -182,16 +179,18 @@ class Process():
                 if not process.IS_GRAPHICAL:
                     continue
 
-                if not process.FULLSCREEN:
-                    process.TITLEBAR_RECTANGLE = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), 15)
-
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
 
+                # Set Process Titlebar
+                if not process.FULLSCREEN:
+                    process.TITLEBAR_RECTANGLE = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), 15)
+
                 if process.APPLICATION_HAS_FOCUS:
                     self.FocusedProcess = process
                     continue
+
 
                 self.DrawProcess(process)
 
@@ -208,7 +207,6 @@ class Process():
         self.DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
         pygame.display.flip()
-
 
         # Update Applications Events
         self.EventUpdate()
