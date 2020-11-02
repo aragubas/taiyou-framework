@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 #
-import Core, time, pygame
+import Core, time, pygame, traceback
 from Core.MAIN import DISPLAY as DISPLAY
 from CoreFiles.System.TaiyouUI.MAIN import UI
 
@@ -69,6 +69,8 @@ class Process():
 
         self.TaskBarSystemFault = False
 
+        self.GUI_ALLOW_TASKMANAGER = True
+
         # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID
 
@@ -121,6 +123,10 @@ class Process():
                                 self.PlayNotifySound = True
 
     def UI_Call_Request(self):
+        # Ignore request if GUI_TASKMANAGER is not allowed
+        if not self.GUI_ALLOW_TASKMANAGER:
+            return
+
         self.UpdateTaskbarProcessList()
 
         if not self.TaskbarEnabled:
@@ -188,7 +194,8 @@ class Process():
             self.UI_Call_Request()
 
         ## Draw the Applications Window
-        if not self.TaskbarEnabled:
+        TotalLoopedProcess = 0
+        if not self.TaskbarEnabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
             for process in Core.MAIN.ProcessList:
                 # Skip Non-Graphical Process
@@ -199,6 +206,8 @@ class Process():
                 if process.PID == self.PID:
                     continue
 
+                TotalLoopedProcess += 1
+
                 # Set Process Titlebar
                 if not process.FULLSCREEN:
                     process.TITLEBAR_RECTANGLE = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), 15)
@@ -208,6 +217,19 @@ class Process():
                     continue
 
                 self.DrawProcess(process)
+
+            # Check if there is not only one process
+            if TotalLoopedProcess == 1:
+                for process in Core.MAIN.ProcessList:
+                    # Skip Non-Graphical Process
+                    if not process.IS_GRAPHICAL:
+                        continue
+
+                    # Check if current process is not TaiyouUI itself
+                    if process.PID == self.PID:
+                        continue
+
+                    self.FocusedProcess = process
 
             # Draw the focused process
             self.DrawProcess(self.FocusedProcess)
@@ -235,42 +257,61 @@ class Process():
         if process is None:
             return
 
-        # If is fullscreen process, just draw at max resolution at 0, 0
-        if process.FULLSCREEN:
-            # If application has focus, draw again it's content
-            if process.APPLICATION_HAS_FOCUS:
-                Surface = process.Draw()
+        try:
+            # If is fullscreen process, just draw at max resolution at 0, 0
+            if process.FULLSCREEN:
+                # If application has focus, draw again it's content
+                if process.APPLICATION_HAS_FOCUS:
+                    Surface = process.Draw()
 
-                # Check if Application Surface has maximum size
-                if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
-                    Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
-                    process.DISPLAY = Surface
+                    # Check if Application Surface has maximum size
+                    if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
+                        Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
+                        process.DISPLAY = Surface
 
-                DISPLAY.blit(Surface, (0, 0))
+                    DISPLAY.blit(Surface, (0, 0))
+                    return
+
+                # If not, just draw a copy of its screen
+                DISPLAY.blit(process.LAST_SURFACE, (0, 0))
+                if not process.APPLICATION_HAS_FOCUS:
+                    WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
+
+                    # Draw the title bar
+                    TitleBarColor = (39, 54, 159)
+                    TextColor = (200, 200, 200)
+
+                    Core.shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
+
+                    # Draw Title Bar Text
+                    TitleBarText = process.TITLEBAR_TEXT
+                    FontSize = 12
+                    Font = "/Ubuntu.ttf"
+
+                    self.DefaultContent.FontRender(DISPLAY, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
+
                 return
 
-            # If not, just draw a copy of its screen
-            DISPLAY.blit(process.LAST_SURFACE, (0, 0))
-            if not process.APPLICATION_HAS_FOCUS:
-                WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
+            # If not, draw window decoration
+            DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
+        except Exception as e:
+            Core.MAIN.SystemFault_Trigger = True
+            Core.MAIN.SystemFault_Traceback = traceback.format_exc()
+            Core.MAIN.SystemFault_ProcessObject = process
+            self.FocusedProcess = None
+            self.TaskBarSystemFault = True
+            print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
+            print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
 
-                # Draw the title bar
-                TitleBarColor = (39, 54, 159)
-                TextColor = (200, 200, 200)
+            # Kill the Process
+            try:
+                Core.MAIN.KillProcessByPID(process.PID)
+            except:
+                print("Error while killing process")
 
-                Core.shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
-
-                # Draw Title Bar Text
-                TitleBarText = process.TITLEBAR_TEXT
-                FontSize = 12
-                Font = "/Ubuntu.ttf"
-
-                self.DefaultContent.FontRender(DISPLAY, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
-
+            # Generate the Crash Log
+            Core.MAIN.GenerateCrashLog()
             return
-
-        # If not, draw window decoration
-        DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
 
     def UpdateTaskbar(self):
         if not self.TaskbarEnabled: return

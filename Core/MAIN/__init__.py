@@ -102,14 +102,14 @@ def ReceiveCommand(Command, Arguments=None):
 
             FPS = int(Arguments)
 
-            print("Taiyou.GameExecution.ReceiveCommand : MaxFPS Set to:" + str(FPS))
+            print("Taiyou.ReceiveCommand : MaxFPS Set to:" + str(FPS))
 
         elif Command == 1:  # -- Set Resolution
             CommandWasValid = True
             IsSpecialEvent = True
 
             splitedArg = Arguments.split('x')
-            print("Taiyou.GameExecution.ReceiveCommand : Set Resolution to: {0}x{1}".format(str(splitedArg[0]), str(splitedArg[1])))
+            print("Taiyou.ReceiveCommand : Set Resolution to: {0}x{1}".format(str(splitedArg[0]), str(splitedArg[1])))
 
             CurrentRes_W = int(splitedArg[0])
             CurrentRes_H = int(splitedArg[1])
@@ -120,7 +120,7 @@ def ReceiveCommand(Command, Arguments=None):
             CommandWasValid = True
             IsSpecialEvent = True
 
-            print("Taiyou.GameExecution.ReceiveCommand : Killing Game Process")
+            print("Taiyou.ReceiveCommand : Killing Game Process")
 
             Destroy()
 
@@ -132,7 +132,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             ovelMng.Set_OverlayLevel(int(splitedArg[1]))
 
-            print("Taiyou.GameExecution.ReceiveCommand : Set OVERLAY_LEVEL to " + splitedArg[1])
+            print("Taiyou.ReceiveCommand : Set OVERLAY_LEVEL to " + splitedArg[1])
 
         elif Command == 4:
             CommandWasValid = True
@@ -140,7 +140,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             pygame.display.set_icon(CONTENT_MANAGER.GetImage(Arguments))
 
-            print("Taiyou.GameExecution.ReceiveCommand : Set Icon to " + str(Arguments))
+            print("Taiyou.ReceiveCommand : Set Icon to " + str(Arguments))
 
         elif Command == 5:
             CommandWasValid = True
@@ -148,7 +148,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             pygame.mouse.set_visible(Arguments)
 
-            print("Taiyou.GameExecution.ReceiveCommand : Set CURSOR_VISIBLE to " + str(Arguments))
+            print("Taiyou.ReceiveCommand : Set CURSOR_VISIBLE to " + str(Arguments))
 
         if not CommandWasValid:
             Txt = "TaiyouMessage: Invalid Command:\n'{0}'".format(Command)
@@ -204,17 +204,18 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     utils.GarbageCollector_Collect()
 
     # Inject Variables and Functions
-    ProcessList[ProcessIndex].PROCESS_INDEX = ProcessIndex
-    ProcessList[ProcessIndex].WINDOW_DRAG_ENABLED = False
+    Index = ProcessList_PID.index(ProcessNextPID)
+    ProcessList[Index].PROCESS_INDEX = ProcessIndex
+    ProcessList[Index].WINDOW_DRAG_ENABLED = False
 
     ProcessListChanged = True
 
     # Initialize
     utils.GarbageCollector_Collect()
-    ProcessList[ProcessIndex].Initialize()
+    ProcessList[Index].Initialize()
     utils.GarbageCollector_Collect()
 
-    print("Taiyou.CreateProcess : Process: [" + ProcessName + "] created sucefully.")
+    print("Taiyou.CreateProcess : Process: [" + ProcessName + "] created successfully.")
 
     return ProcessNextPID
 
@@ -235,7 +236,10 @@ def KillProcessByPID(PID):
     ProcessListChanged = True
 
 def GetProcessIndexByPID(PID):
-    return ProcessList_PID.index(PID)
+    try:
+        return ProcessList_PID.index(PID)
+    except ValueError:
+        raise ModuleNotFoundError("The process {0} could not be found".format(PID))
 
 def Run():
     global WorkObject
@@ -286,7 +290,10 @@ def GenerateCrashLog():
     CrashLogsDir = "./Logs/".replace("/", tge.TaiyouPath_CorrectSlash)
     utils.Directory_MakeDir(CrashLogsDir)
 
-    FilePath = CrashLogsDir + SystemFault_ProcessObject.NAME + ".txt"
+    try:
+        FilePath = CrashLogsDir + SystemFault_ProcessObject.NAME + ".txt"
+    except:
+        FilePath = CrashLogsDir + "unknow_process_name.txt"
 
     ProcessInformation = " --- PROCESS INFORMATION ---\n"
 

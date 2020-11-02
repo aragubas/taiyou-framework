@@ -115,6 +115,12 @@ class ContentManager:
 
         print("ContentManager.LoadImagesInFolder : Operation Completed.")
 
+    def ReturnImageObject(self, pPath, pTransparency):
+        if pTransparency:
+            return pygame.image.load(pPath).convert_alpha()
+        return pygame.image.load(pPath).convert()
+
+
     def LoadImage(self, ImagePath, Transparency=False):
         """
         Load the Specified Image
@@ -123,7 +129,7 @@ class ContentManager:
         :return:
         """
         if utils.Directory_Exists(ImagePath):
-            self.Images_Name.append("/" + os.path.basename(ImagePath))
+            self.Images_Name.append(tge.TaiyouPath_CorrectSlash + os.path.basename(ImagePath))
 
             if Transparency:
                 self.Images_Data.append(pygame.image.load(ImagePath).convert_alpha())
@@ -217,6 +223,7 @@ class ContentManager:
                     # -- Set the Image Variable -- #
                     if not ImageNotLoaded:
                         Image = self.GetImage(sprite)
+
                     else:
                         Image = sprite
 

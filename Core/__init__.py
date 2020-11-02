@@ -29,10 +29,10 @@ def Get_UtilsVersion():
     return "2.1"
 
 def Get_TaiyouMainVersion():
-    return "3.5"
+    return "3.6"
 
 def Get_ContentManagerVersion():
-    return "2.8"
+    return "2.9"
 
 def Get_FXVersion():
     return "1.1"

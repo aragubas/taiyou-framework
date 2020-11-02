@@ -35,7 +35,9 @@ def WindowManagerSignal(self, Signal):
     ########          #############\n
     0                 Force Focus on Window\n
     1                 Kill Process\n
-    2                 PLay Notify Sound on Task Bar Graphical Interface\n
+    2                 Play Notify Sound on Task Bar Graphical Interface\n
+    3                 Disable GUI Task Manager\n
+    4                 Enable GUI Task Manager\n
     :return:
     """
     global TaskBarUIProcessID
@@ -43,8 +45,9 @@ def WindowManagerSignal(self, Signal):
     if TaskBarUIProcessID == -1:
         raise Exception("Cant send signal to TaskBarGUI because it is not running.")
 
-    OriginalDragValue = self.WINDOW_DRAG_ENABLED
     if Signal == 0:
+        OriginalDragValue = self.WINDOW_DRAG_ENABLED
+
         for process in Core.MAIN.ProcessList:
             process.APPLICATION_HAS_FOCUS = False
             process.WINDOW_DRAG_ENABLED = False
@@ -60,3 +63,9 @@ def WindowManagerSignal(self, Signal):
 
     if Signal == 2:
         Core.MAIN.ProcessList[TaskBarUIProcessID].PlayNotifySound = True
+
+    if Signal == 3:
+        Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
+
+    if Signal == 4:
+        Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
