@@ -1,0 +1,6 @@
+pygame==2.0.0dev10
+pillow
+numpy
+scipy
+requests
+psutil
