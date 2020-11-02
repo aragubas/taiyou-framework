@@ -49,6 +49,10 @@ ProcessList = list()
 ProcessList_Names = list()
 ProcessList_PID = list()
 ProcessNextPID = -1
+SystemFault_Trigger = False
+SystemFault_Traceback = ""
+SystemFault_ProcessObject = None
+
 
 # Delta Time
 getTicksLastFrame = 0
@@ -241,13 +245,33 @@ def Run():
     global getTicksLastFrame
     global ProcessListChanged
     global ProcessListChanged_Delay
+    global SystemFault_Trigger
+    global SystemFault_Traceback
+    global SystemFault_ProcessObject
 
     # Limit the application to the desingned FPS
     clock.tick(FPS)
 
     # -- Run the Update Code -- #
     for process in ProcessList:
-        process.Update()
+        try:
+            process.Update()
+
+        except Exception as e:
+            SystemFault_Trigger = True
+            SystemFault_Traceback = traceback.format_exc()
+            SystemFault_ProcessObject = process
+            print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
+            print("Traceback:\n" + SystemFault_Traceback)
+
+            # Call the Window Manager to Toggle the UI Mode
+            tge.wmm.CallWindowManagerUI()
+
+            # Kill the Process
+            KillProcessByPID(process.PID)
+
+            # Generate the Crash Log
+            GenerateCrashLog()
 
     if ProcessListChanged_Delay:
         ProcessListChanged_Delay = False
@@ -255,6 +279,63 @@ def Run():
 
     if ProcessListChanged:
         ProcessListChanged_Delay = True
+
+def GenerateCrashLog():
+    print("Generating crash log...")
+    # Create the directory for the Crash Logs
+    CrashLogsDir = "./Logs/".replace("/", tge.TaiyouPath_CorrectSlash)
+    utils.Directory_MakeDir(CrashLogsDir)
+
+    FilePath = CrashLogsDir + SystemFault_ProcessObject.NAME + ".txt"
+
+    ProcessInformation = " --- PROCESS INFORMATION ---\n"
+
+    ProcessInformation += "Name:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.NAME + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "PID:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.PID + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "ModulePath:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.ROOT_MODULE + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "IsFullscreen:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.FULLSCREEN + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "HasFocus:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.APPLICATION_HAS_FOCUS + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "TitlebarText:"
+    try:
+        ProcessInformation += SystemFault_ProcessObject.TITLEBAR_TEXT + "\n"
+    except:
+        ProcessInformation += "Error while parsing\n"
+
+    ProcessInformation += "\nAny field with 'Error while parsing' was because the process does not actualy have the variable\n\n --- ERROR TRACEBACK ---"
+
+
+    FileWrite = open(FilePath, "w")
+    FileWrite.write(ProcessInformation)
+    FileWrite.write(SystemFault_Traceback)
+    FileWrite.close()
+
+    print("Crash log completed")
+
 
 def Destroy():
     pygame.quit()

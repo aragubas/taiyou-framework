@@ -67,15 +67,14 @@ class Process():
 
                 print("Bootloader : Loading Complete")
 
-
-                # Finish the Bootloader
                 # Start the Default Application
                 Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
 
+                # Kills the Bootloader process
                 Core.MAIN.KillProcessByPID(self.PID)
 
     def Draw(self):
-        ## Fill Write Screen
+        # Fill the screen
         self.DISPLAY.fill((18, 10, 38))
 
         self.DrawProgressBar(self.DISPLAY)

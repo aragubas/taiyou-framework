@@ -67,6 +67,8 @@ class Process():
 
         self.PlayNotifySound = False
 
+        self.TaskBarSystemFault = False
+
         # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID
 
@@ -84,7 +86,7 @@ class Process():
             if event.type == pygame.KEYUP:
                 # -- Toggle Taskbar -- #
                 if event.key == pygame.K_F11:
-                    self.ToggleTaskbar()
+                    self.UI_Call_Request()
 
                 # -- Close selected process in TaskbarUI -- #
                 if event.key == pygame.K_DELETE:
@@ -118,17 +120,25 @@ class Process():
                             if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
                                 self.PlayNotifySound = True
 
-    def ToggleTaskbar(self):
+    def UI_Call_Request(self):
         self.UpdateTaskbarProcessList()
 
         if not self.TaskbarEnabled:
             self.TaskbarEnabled = True
             self.TaskbarAnimation.Enabled = True
-            if not self.WelcomeScreenAppered:
-                self.DefaultContent.PlaySound("/intro_2.wav")
-                print("Task_BarGUI : Welcome")
-            else:
-                self.DefaultContent.PlaySound("/in.wav")
+
+            # Play Error Sound when the UI opened on a System Fault
+            if not Core.MAIN.SystemFault_Trigger:
+                # Play Welcome Sound when opening the UI for the first time
+                if not self.WelcomeScreenAppered:
+                    self.DefaultContent.PlaySound("/intro_2.wav")
+                    print("Task_BarGUI : Welcome")
+
+                else:  # Play the Opening Sound when not opening for the First Time
+                    self.DefaultContent.PlaySound("/in.wav")
+
+            else:  # Play error sound when returning from System Fault
+                self.DefaultContent.PlaySound("/error.wav")
 
         else:
             self.DefaultContent.PlaySound("/out.wav")
@@ -171,6 +181,12 @@ class Process():
             process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
 
     def Update(self):
+        # Check if SystemFault has been occoured
+        if Core.MAIN.SystemFault_Trigger:
+            Core.MAIN.SystemFault_Trigger = False
+            self.TaskBarSystemFault = True
+            self.UI_Call_Request()
+
         ## Draw the Applications Window
         if not self.TaskbarEnabled:
             # Draw the Unfocused Process
@@ -190,7 +206,6 @@ class Process():
                 if process.APPLICATION_HAS_FOCUS:
                     self.FocusedProcess = process
                     continue
-
 
                 self.DrawProcess(process)
 
@@ -268,6 +283,7 @@ class Process():
             self.TaskbarDisableToggle = False
             self.TaskbarEnabled = False
             self.WelcomeScreenAppered = True
+            self.TaskBarSystemFault = False
 
         # Draw the Blurred Background
         DISPLAY.blit(Core.fx.Surface_Blur(self.LastDisplayFrame, self.TaskbarAnimation.Value - 25), (0, 0))
@@ -276,6 +292,13 @@ class Process():
         ContentsSurface = pygame.Surface((self.LastDisplayFrame.get_width(), self.LastDisplayFrame.get_height()), pygame.SRCALPHA)
         ContentsSurface.set_alpha(self.TaskbarAnimation.Value)
 
+        if not self.TaskBarSystemFault:
+            self.UpdateTaskBar_ActivityMode(ContentsSurface)
+
+        else:
+            self.UpdateTaskBar_SystemFaultDetectorMode(ContentsSurface)
+
+    def UpdateTaskBar_ActivityMode(self, ContentsSurface):
         TitleText = "Current Activity"
         if not self.WelcomeScreenAppered:
             TitleText = "Welcome"
@@ -313,6 +336,35 @@ class Process():
         if self.TaskbarTools_WidgetController.LastInteractionID == 1 and self.TaskbarTools_WidgetController.LastInteractionType:
             self.UpdateTaskbar_SwitchToSelectedProcess()
 
+    def UpdateTaskBar_SystemFaultDetectorMode(self, ContentsSurface):
+        # Draw the title
+        TitleText = "The process {0} has failed.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.NAME, 40))
+        TitleFontSize = 22
+        TitleFont = "/Ubuntu_Bold.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), DISPLAY.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
+
+        # Draw the SystemFault message
+        TitleText = "Title : {0}\nPID : {1}\nExecPath : {2}\n\nDetails about the crash has been saved on logs folder\nlocated in: <root>/logs/.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.TITLEBAR_TEXT, 35), str(Core.MAIN.SystemFault_ProcessObject.PID), Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.ROOT_MODULE, 35))
+        TitleFontSize = 14
+        TitleFont = "/Ubuntu.ttf"
+        X = DISPLAY.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2
+        Y = 55
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), X + 50, Y)
+
+        # Draw the Warning Icon
+        self.DefaultContent.ImageRender(ContentsSurface, "/warning.png", X - 97, Y, 95, 97, True)
+
+        # Draw the Traceback Text
+        self.DefaultContent.FontRender(ContentsSurface, "/Ubuntu.ttf", 12, Core.MAIN.SystemFault_Traceback, (240, 240, 240), 5, 175)
+
+        # Draw Bottom Text
+        TitleText = "Press [F11] to exit."
+        TitleFontSize = 14
+        TitleFont = "/Ubuntu_Lite.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), DISPLAY.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, DISPLAY.get_height() - self.DefaultContent.GetFont_height(TitleFont, TitleFontSize, TitleText) - 15)
+
+        DISPLAY.blit(ContentsSurface, (0, 0))
+
     def UpdateTaskbar_SwitchToSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
             try:
@@ -321,7 +373,7 @@ class Process():
 
                 Core.wmm.WindowManagerSignal(Process, 0)
 
-                self.ToggleTaskbar()
+                self.UI_Call_Request()
 
             except IndexError:
                 self.WindowList.ResetSelectedItem()
@@ -346,9 +398,10 @@ class Process():
             self.WindowList.AddItem(process.NAME, "PID: " + str(process.PID), ItemProperties=process.PID)
 
     def UpdateTaskbarEvents(self, event):
-        self.WindowList.Update(event)
+        if not self.TaskBarSystemFault:
+            self.WindowList.Update(event)
 
-        self.TaskbarTools_WidgetController.EventUpdate(event)
+            self.TaskbarTools_WidgetController.EventUpdate(event)
 
     def DrawWindow(self, pSurface, process):
         WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]

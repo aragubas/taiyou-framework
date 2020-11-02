@@ -26,7 +26,7 @@ def Get_AppDataVersion():
     return "1.1"
 
 def Get_UtilsVersion():
-    return "2.0"
+    return "2.1"
 
 def Get_TaiyouMainVersion():
     return "3.5"
@@ -44,7 +44,7 @@ def Get_MAINVersion():
     return "1.3"
 
 def Get_WindowManagerManagerVersion():
-    return "1.0"
+    return "1.1"
 
 
 

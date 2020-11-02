@@ -21,6 +21,11 @@ print("Taiyou Window Manager Manager (WMM) version " + Core.Get_WindowManagerMan
 
 TaskBarUIProcessID = -1
 
+def CallWindowManagerUI():
+    process_obj = Core.MAIN.ProcessList[Core.MAIN.ProcessList_PID.index(TaskBarUIProcessID)]
+
+    process_obj.UI_Call_Request()
+
 def WindowManagerSignal(self, Signal):
     """
     Sends a signal to the TaskBar's Window Manager

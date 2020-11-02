@@ -30,7 +30,7 @@ import scipy.cluster
 import glob
 import Core.UTILS.Convert as Convert
 
-print("TaiyouGameEngineUtils version " + tge.Get_UtilsVersion())
+print("Taiyou Utils version " + tge.Get_UtilsVersion())
 
 def Directory_FilesList(dirName):
     """
@@ -61,6 +61,13 @@ def FormatNumber(num, precision=2, suffixes=['', 'K', 'M', 'G', 'T', 'P']):
     """
     m = sum([abs(num/1000.0**x) >= 1 for x in range(1, len(suffixes))])
     return f'{num/1000.0**m:.{precision}f}{suffixes[m]}'
+
+def ShortString(input, max_size):
+    if len(input) > max_size:
+        input = input[:max_size]
+        input += "..."
+
+    return input
 
 def GetImage_DominantColor(Surface, Number_Clusters=5):
     """
