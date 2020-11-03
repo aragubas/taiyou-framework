@@ -118,16 +118,15 @@ class Process():
                         if self.FocusedProcess is not None:
                             FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height())
 
-                            # Play beep sound when clicking on inactive windows
+                            # Play beep sound when clicking on inactive window
                             if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
                                 self.PlayNotifySound = True
 
     def UI_Call_Request(self):
         # Ignore request if GUI_TASKMANAGER is not allowed
         if not self.GUI_ALLOW_TASKMANAGER:
+            print("GUI is not allowed, skipping request...")
             return
-
-        self.UpdateTaskbarProcessList()
 
         if not self.TaskbarEnabled:
             self.TaskbarEnabled = True
@@ -141,6 +140,7 @@ class Process():
                     print("Task_BarGUI : Welcome")
 
                 else:  # Play the Opening Sound when not opening for the First Time
+                    self.UpdateTaskbarProcessList()
                     self.DefaultContent.PlaySound("/in.wav")
 
             else:  # Play error sound when returning from System Fault

@@ -29,7 +29,7 @@ def CallWindowManagerUI():
 def WindowManagerSignal(self, Signal):
     """
     Sends a signal to the TaskBar's Window Manager
-    :param self:Process Objct
+    :param self:Process Object
     :param Signal:Signal Table:
     SignalID          Description\n
     ########          #############\n
@@ -38,6 +38,7 @@ def WindowManagerSignal(self, Signal):
     2                 Play Notify Sound on Task Bar Graphical Interface\n
     3                 Disable GUI Task Manager\n
     4                 Enable GUI Task Manager\n
+    5                 Disable Intro Sound Trigger\n
     :return:
     """
     global TaskBarUIProcessID
@@ -57,15 +58,22 @@ def WindowManagerSignal(self, Signal):
         self.WINDOW_DRAG_ENABLED = OriginalDragValue
         return
 
-    if Signal == 1:
+    elif Signal == 1:
         Core.MAIN.KillProcessByPID(self.PID)
         return
 
-    if Signal == 2:
+    elif Signal == 2:
         Core.MAIN.ProcessList[TaskBarUIProcessID].PlayNotifySound = True
+        return
 
-    if Signal == 3:
+    elif Signal == 3:
         Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
+        return
 
-    if Signal == 4:
+    elif Signal == 4:
         Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
+        return
+
+    elif Signal == 5:
+        Core.MAIN.ProcessList[TaskBarUIProcessID].WelcomeScreenAppered = True
+        return

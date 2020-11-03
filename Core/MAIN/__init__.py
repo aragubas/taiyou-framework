@@ -172,7 +172,7 @@ def SetDisplay():
     else:
         DISPLAY = pygame.display.set_mode((CurrentRes_W, CurrentRes_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
 
-    pygame.display.set_caption("Taiyou Framework v" + str(tge.TaiyouGeneralVersion))
+    pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion, 3))
 
 def CreateProcess(Path, ProcessName, pInitArgs = None):
     """
@@ -253,7 +253,7 @@ def Run():
     global SystemFault_Traceback
     global SystemFault_ProcessObject
 
-    # Limit the application to the desingned FPS
+    # Limit the application to the designed FPS
     clock.tick(FPS)
 
     # -- Run the Update Code -- #
@@ -269,6 +269,7 @@ def Run():
             print("Traceback:\n" + SystemFault_Traceback)
 
             # Call the Window Manager to Toggle the UI Mode
+            tge.wmm.WindowManagerSignal(None, 4)
             tge.wmm.CallWindowManagerUI()
 
             # Kill the Process

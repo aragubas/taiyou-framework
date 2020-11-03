@@ -120,8 +120,10 @@ class Process():
         self.DefaultContent = Core.cntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
+        self.DefaultContent.InitSoundSystem()
         self.DefaultContent.LoadRegKeysInFolder("Data/reg")
         self.DefaultContent.LoadImagesInFolder("Data/img")
+        self.DefaultContent.LoadSoundsInFolder("Data/sound")
         self.DefaultContent.SetFontPath("Data/fonts")
 
         self.Progress = 0
@@ -129,6 +131,7 @@ class Process():
         self.ProgressProgression = True
         self.ProgressMax = 100
         self.LoadingComplete = False
+        self.InitialLoadingDelay = 0
 
         self.CenterX = self.DISPLAY.get_width() / 2
         self.CenterY = self.DISPLAY.get_height() / 2
@@ -138,12 +141,13 @@ class Process():
         self.ApplicationSelectorObj = ApplicationSelector(self.DefaultContent, self.CenterX - 550 / 2, self.CenterY - 120 / 2)
 
         self.NoFoldersFound = False
+        self.FatalErrorScreen = False
 
         # List all valid folders
-        folder_list = Core.utils.Directory_FilesList("./")
+        folder_list = Core.utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
-            if file.endswith("/boot"):
+            if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
                 BootFolders.append(file)
 
         for boot in BootFolders:
@@ -171,7 +175,7 @@ class Process():
         if self.ProgressProgression and not self.LoadingComplete:
             self.ProgressAddDelay += 1
 
-            if self.ProgressAddDelay == 2:
+            if self.ProgressAddDelay == 5:
                 self.ProgressAddDelay = 0
                 self.Progress += 1
 
@@ -188,16 +192,22 @@ class Process():
                     # Create the Application Process
                     Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
 
+                    # Allow Window Manager do receive request
+                    Core.wmm.WindowManagerSignal(None, 4)
+
                     # Kills the Bootloader process
                     Core.MAIN.KillProcessByPID(self.PID)
 
                 except:
                     self.ApplicationSeletor = True
+                    print("Error while creating the process...\nOpening Application Selector")
 
     def Draw(self):
         if not self.InitialSignal:
             self.InitialSignal = True
-            Core.wmm.WindowManagerSignal(3, None)
+
+            # Disable Window manager Requests
+            Core.wmm.WindowManagerSignal(None, 3)
 
         # Fill the screen
         self.DISPLAY.fill((18, 10, 38))
@@ -215,7 +225,7 @@ class Process():
         DisplayWithOpacity = self.DISPLAY.copy()
         DisplayWithOpacity.set_alpha(self.ApplicationSeletorAnimatorStart.Value)
 
-        if not self.NoFoldersFound:
+        if not self.NoFoldersFound and not self.FatalErrorScreen:
             self.ApplicationSelectorObj.Draw(DisplayWithOpacity)
 
             # Draw the Selected Application Title
@@ -232,10 +242,29 @@ class Process():
             TextColor = (150, 150, 150)
             self.DefaultContent.FontRender(DisplayWithOpacity, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
 
-        else:
+        elif not self.FatalErrorScreen:
             self.ApplicationSeletorAnimatorStart.Enabled = True
             self.ApplicationSeletorAnimatorStart.ValueMultiplierSpeed = 0.05
             self.DefaultContent.ImageRender(DisplayWithOpacity, "/folder_question.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
+
+            # Draw the Select the Enter
+            Text = self.DefaultContent.Get_RegKey("/seletor/no_folders_found_down_text")
+            FontSize = 12
+            Font = "/Ubuntu.ttf"
+            TextColor = (150, 150, 150)
+            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+
+        else:
+            self.ApplicationSeletorAnimatorStart.Enabled = True
+            self.ApplicationSeletorAnimatorStart.ValueMultiplierSpeed = 0.2
+            self.DefaultContent.ImageRender(DisplayWithOpacity, "/error.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
+
+            # Draw the Select the Enter
+            Text = self.DefaultContent.Get_RegKey("/seletor/fatal_error_down_text")
+            FontSize = 12
+            Font = "/Ubuntu.ttf"
+            TextColor = (150, 150, 150)
+            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
 
         self.DISPLAY.blit(DisplayWithOpacity, (0, 0))
 
@@ -260,14 +289,31 @@ class Process():
 
             if event.type == pygame.KEYUP and event.key == pygame.K_RETURN:
                 if not self.ApplicationSelectorObj.SelectedItemIndex == -1:
-                    # Create the Application Process
-                    Core.MAIN.CreateProcess(self.ApplicationSelectorObj.SelectedItemModulePath, self.ApplicationSelectorObj.SelectedItemModulePath)
+                    try:
+                        # Create the Application Process
+                        Core.MAIN.CreateProcess(self.ApplicationSelectorObj.SelectedItemModulePath, self.ApplicationSelectorObj.SelectedItemModulePath)
 
-                    Core.wmm.WindowManagerSignal(4, None)
+                        # Allow Window Manager do receive request
+                        Core.wmm.WindowManagerSignal(None, 4)
 
-                    # Kills the Bootloader process
-                    Core.MAIN.KillProcessByPID(self.PID)
+                        # Kills the Bootloader process
+                        Core.MAIN.KillProcessByPID(self.PID)
+                    except:
+                        print("Something bad happened while creating the process for this application.")
+                        self.FatalErrorScreen = True
 
+        else:
+            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress == 0:
+                self.DefaultContent.PlaySound("/intro.wav")
+                Core.wmm.WindowManagerSignal(None, 5)
+
+                self.LoadingComplete = False
+                self.LoadingBarProgress = 0
+                self.Progress = 0
+                self.ProgressAddDelay = 0
+                self.ProgressProgression = False
+
+                self.ApplicationSeletor = True
 
     def FinishLoadingScreen(self):
         self.ProgressMax = self.Progress

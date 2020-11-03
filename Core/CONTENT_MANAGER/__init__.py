@@ -760,9 +760,15 @@ class ContentManager:
 
         # -- Convert to the Correct Slash -- #
         SourceName = SourceName.replace("/", tge.TaiyouPath_CorrectSlash)
-        
-        # -- Get Sound -- #
+        if not SourceName.startswith(tge.TaiyouPath_CorrectSlash):
+            SourceName = tge.TaiyouPath_CorrectSlash + SourceName
         sound = self.AllLoadedSounds.get(SourceName)
+
+
+        if sound == None:
+            raise FileNotFoundError("The soundfile [{0}] does not exists.".format(SourceName))
+
+        # -- Get Sound -- #
         sound.set_volume(Volume)
 
         return self.PlaySoundObj(sound, PlayOnSpecificID, LeftPan, RightPan, Fadeout, ForcePlay)
