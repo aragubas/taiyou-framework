@@ -37,6 +37,7 @@ class ApplicationSelector:
         self.SelectedItemModulePath = None
 
         self.HScroll = 10
+        pygame.key.set_repeat(5, 15)
 
     def Draw(self, Surface):
         self.ObjectSurface.fill((0, 0, 0, 0))
@@ -47,13 +48,10 @@ class ApplicationSelector:
         for item in self.SeletorItems_Index:
             index += 1
             ItemRect = pygame.Rect(self.HScroll + 105 * index, 5, 100, self.Height - 10)
-            ItemPicBox = pygame.Rect(ItemRect[0] + 13, ItemRect[1] + 15, int(ItemRect[2] / 1.3), int(ItemRect[3] / 1.5))
+            ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
 
-            ItemBGOpacity = 100
             if self.SelectedItemIndex == index:
-                ItemBGOpacity = 150
-
-            shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, ItemBGOpacity), ItemRect, 0, 2)
+                shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
 
             if self.SeletorItems_Icon[index] == None:
                 self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)
@@ -72,25 +70,35 @@ class ApplicationSelector:
             self.SeletorItems_Icon.append(self.Content.ReturnImageObject(IconPath, True))
 
     def EventUpdate(self, event):
-        if event.type == pygame.MOUSEMOTION:
-            MouseColision = pygame.Rect(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], 1, 1)
+        ThisRect = pygame.Rect(self.X, self.Y, self.Width, self.Height)
 
+        if ThisRect.collidepoint(pygame.mouse.get_pos()):
             index = -1
+            SelectedItems = 0
             for item in self.SeletorItems_Title:
                 index += 1
                 ItemRect = pygame.Rect(self.X + self.HScroll + 105 * index, 5, 100, self.Y + self.Height - 10)
 
                 if ItemRect.collidepoint(pygame.mouse.get_pos()):
+                    SelectedItems += 1
                     self.SelectedItemIndex = index
                     self.SelectedItemTitle = item
                     self.SelectedItemModulePath = self.SeletorItems_ModulePath[index]
 
-        if event.type == pygame.KEYUP:
+            if SelectedItems == 0:
+                self.SelectedItemIndex = -1
+                self.SelectedItemTitle = ""
+                self.SelectedItemModulePath = None
+
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                self.HScroll -= 10
+                self.HScroll -= 5
 
             if event.key == pygame.K_RIGHT:
-                self.HScroll += 10
+                self.HScroll += 5
+
+            if event.key == pygame.K_HOME:
+                self.HScroll = 10
 
 
 class Process():
@@ -129,6 +137,8 @@ class Process():
         self.ApplicationSeletorAnimatorStart = Core.utils.AnimationController(0.5, multiplierRestart=True)
         self.ApplicationSelectorObj = ApplicationSelector(self.DefaultContent, self.CenterX - 550 / 2, self.CenterY - 120 / 2)
 
+        self.NoFoldersFound = False
+
         # List all valid folders
         folder_list = Core.utils.Directory_FilesList("./")
         BootFolders = list()
@@ -145,6 +155,9 @@ class Process():
 
             self.ApplicationSelectorObj.AddItem(AppTitle, ModulePath, IconPath)
 
+        if len(BootFolders) == 0:
+            self.NoFoldersFound = True
+
         self.InitialSignal = False
 
     def Update(self):
@@ -153,7 +166,6 @@ class Process():
 
         if self.ApplicationSeletor:
             self.ApplicationSeletorAnimatorStart.Update()
-
             return
 
         if self.ProgressProgression and not self.LoadingComplete:
@@ -203,14 +215,27 @@ class Process():
         DisplayWithOpacity = self.DISPLAY.copy()
         DisplayWithOpacity.set_alpha(self.ApplicationSeletorAnimatorStart.Value)
 
-        self.ApplicationSelectorObj.Draw(DisplayWithOpacity)
+        if not self.NoFoldersFound:
+            self.ApplicationSelectorObj.Draw(DisplayWithOpacity)
 
-        # Draw the Selected Application
-        TitleBarText = self.ApplicationSelectorObj.SelectedItemTitle.rstrip()
-        FontSize = 34
-        Font = "/UbuntuMono.ttf"
-        TextColor = (250, 250, 250)
-        self.DefaultContent.FontRender(DisplayWithOpacity, Font, FontSize, TitleBarText, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, self.CenterY - 120)
+            # Draw the Selected Application Title
+            TitleBarText = self.ApplicationSelectorObj.SelectedItemTitle.rstrip()
+            FontSize = 34
+            Font = "/UbuntuMono.ttf"
+            TextColor = (250, 250, 250)
+            self.DefaultContent.FontRender(DisplayWithOpacity, Font, FontSize, TitleBarText, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, self.CenterY - 120)
+
+            # Draw the Select the Enter
+            Text = self.DefaultContent.Get_RegKey("/seletor/down_text")
+            FontSize = 12
+            Font = "/Ubuntu.ttf"
+            TextColor = (150, 150, 150)
+            self.DefaultContent.FontRender(DisplayWithOpacity, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+
+        else:
+            self.ApplicationSeletorAnimatorStart.Enabled = True
+            self.ApplicationSeletorAnimatorStart.ValueMultiplierSpeed = 0.05
+            self.DefaultContent.ImageRender(DisplayWithOpacity, "/folder_question.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
 
         self.DISPLAY.blit(DisplayWithOpacity, (0, 0))
 
@@ -240,15 +265,12 @@ class Process():
 
                     Core.wmm.WindowManagerSignal(4, None)
 
-
-
                     # Kills the Bootloader process
                     Core.MAIN.KillProcessByPID(self.PID)
 
 
-
     def FinishLoadingScreen(self):
-        self.ProgressMax = self.Progress + 2
+        self.ProgressMax = self.Progress
 
     def LoadingSteps(self, CurrentProgres):
         if CurrentProgres == 0:
