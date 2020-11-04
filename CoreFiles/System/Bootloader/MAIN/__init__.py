@@ -14,10 +14,8 @@
 #   limitations under the License.
 #
 #
-import Core
+import Core, traceback, pygame, time
 from Core import shape
-import pygame
-import time
 
 class ApplicationSelector:
     def __init__(self, pContentManager, pX, pY):
@@ -298,7 +296,13 @@ class Process():
 
                         # Kills the Bootloader process
                         Core.MAIN.KillProcessByPID(self.PID)
-                    except:
+                    except Exception as e:
+                        Traceback = traceback.format_exc()
+
+                        self.GenerateCrashLog(Traceback, self.ApplicationSelectorObj.SelectedItemModulePath)
+
+                        print(Traceback)
+
                         print("Something bad happened while creating the process for this application.")
                         self.FatalErrorScreen = True
 
@@ -314,6 +318,29 @@ class Process():
                 self.ProgressProgression = False
 
                 self.ApplicationSeletor = True
+
+    def GenerateCrashLog(self, Traceback, ApplicationName):
+        print("Generating crash log...")
+        # Create the directory for the Crash Logs
+        CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
+        Core.utils.Directory_MakeDir(CrashLogsDir)
+
+        # Set the FileName
+        FilePath = CrashLogsDir + ApplicationName + "_boot.txt"
+
+        # Set the Application Information
+        ProcessInformation = "This application has been failed to boot\n --- Application INFORMATION ---\n"
+
+        ProcessInformation += "Name:" + ApplicationName + "\n"
+
+        ProcessInformation += "--- ERROR TRACEBACK ---"
+
+        FileWrite = open(FilePath, "w")
+        FileWrite.write(ProcessInformation)
+        FileWrite.write(Traceback)
+        FileWrite.close()
+
+        print("Crash log completed")
 
     def FinishLoadingScreen(self):
         self.ProgressMax = self.Progress

@@ -36,7 +36,6 @@ FPS = 75
 DISPLAY = pygame.display
 CurrentRes_W = 800
 CurrentRes_H = 600
-WindowTitle = "Taiyou Game Engine v{0}".format(utils.FormatNumber(tge.TaiyouGeneralVersion))
 WorkObject = None
 InitDelay_Delta = 0
 InitDelay_Enabled = True
@@ -63,13 +62,13 @@ def Initialize():
     global CurrentRes_W
     global CurrentRes_H
     global EngineInitialized
-    print("Taiyou.GameExecution.Initialize : Initializing Taiyou...")
+    print("TaiyouFramework.Initialize : Initializing Taiyou...")
 
     # -- Load Engine -- #
     tge.InitEngine()
 
     EngineInitialized = True
-    print("Taiyou.GameExecution.Initialize : Initialization complete.")
+    print("TaiyouFramework.Initialize : Initialization complete.")
 
 
 def ReceiveCommand(Command, Arguments=None):
@@ -102,14 +101,14 @@ def ReceiveCommand(Command, Arguments=None):
 
             FPS = int(Arguments)
 
-            print("Taiyou.ReceiveCommand : MaxFPS Set to:" + str(FPS))
+            print("TaiyouFramework.ReceiveCommand : MaxFPS Set to:" + str(FPS))
 
         elif Command == 1:  # -- Set Resolution
             CommandWasValid = True
             IsSpecialEvent = True
 
             splitedArg = Arguments.split('x')
-            print("Taiyou.ReceiveCommand : Set Resolution to: {0}x{1}".format(str(splitedArg[0]), str(splitedArg[1])))
+            print("TaiyouFramework.ReceiveCommand : Set Resolution to: {0}x{1}".format(str(splitedArg[0]), str(splitedArg[1])))
 
             CurrentRes_W = int(splitedArg[0])
             CurrentRes_H = int(splitedArg[1])
@@ -120,7 +119,7 @@ def ReceiveCommand(Command, Arguments=None):
             CommandWasValid = True
             IsSpecialEvent = True
 
-            print("Taiyou.ReceiveCommand : Killing Game Process")
+            print("TaiyouFramework.ReceiveCommand : Killing Game Process")
 
             Destroy()
 
@@ -132,7 +131,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             ovelMng.Set_OverlayLevel(int(splitedArg[1]))
 
-            print("Taiyou.ReceiveCommand : Set OVERLAY_LEVEL to " + splitedArg[1])
+            print("TaiyouFramework.ReceiveCommand : Set OVERLAY_LEVEL to " + splitedArg[1])
 
         elif Command == 4:
             CommandWasValid = True
@@ -140,7 +139,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             pygame.display.set_icon(CONTENT_MANAGER.GetImage(Arguments))
 
-            print("Taiyou.ReceiveCommand : Set Icon to " + str(Arguments))
+            print("TaiyouFramework.ReceiveCommand : Set Icon to " + str(Arguments))
 
         elif Command == 5:
             CommandWasValid = True
@@ -148,7 +147,7 @@ def ReceiveCommand(Command, Arguments=None):
 
             pygame.mouse.set_visible(Arguments)
 
-            print("Taiyou.ReceiveCommand : Set CURSOR_VISIBLE to " + str(Arguments))
+            print("TaiyouFramework.ReceiveCommand : Set CURSOR_VISIBLE to " + str(Arguments))
 
         if not CommandWasValid:
             Txt = "TaiyouMessage: Invalid Command:\n'{0}'".format(Command)
@@ -186,7 +185,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     global ProcessListChanged
     global ProcessNextPID
 
-    print("Taiyou.CreateProcess : Creating Process: [" + ProcessName + "]")
+    print("TaiyouFramework.CreateProcess : Creating Process: [" + ProcessName + "]")
 
     Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
     ProcessIndex = len(ProcessList_Names)
@@ -335,7 +334,6 @@ def GenerateCrashLog():
         ProcessInformation += "Error while parsing\n"
 
     ProcessInformation += "\nAny field with 'Error while parsing' was because the process does not actualy have the variable\n\n --- ERROR TRACEBACK ---"
-
 
     FileWrite = open(FilePath, "w")
     FileWrite.write(ProcessInformation)

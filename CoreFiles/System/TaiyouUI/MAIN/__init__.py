@@ -187,14 +187,15 @@ class Process():
             process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
 
     def Update(self):
-        # Check if SystemFault has been occoured
+        # Check if SystemFault has been occurred
         if Core.MAIN.SystemFault_Trigger:
             Core.MAIN.SystemFault_Trigger = False
             self.TaskBarSystemFault = True
             self.UI_Call_Request()
 
-        ## Draw the Applications Window
+        # Draw the Applications Window
         TotalLoopedProcess = 0
+        DISPLAY.fill((0, 0, 0))
         if not self.TaskbarEnabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
             for process in Core.MAIN.ProcessList:
@@ -294,6 +295,7 @@ class Process():
 
             # If not, draw window decoration
             DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
+
         except Exception as e:
             Core.MAIN.SystemFault_Trigger = True
             Core.MAIN.SystemFault_Traceback = traceback.format_exc()
