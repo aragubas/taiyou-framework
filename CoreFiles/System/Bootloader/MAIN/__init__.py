@@ -118,11 +118,16 @@ class Process():
         self.DefaultContent = Core.cntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
-        self.DefaultContent.InitSoundSystem()
-        self.DefaultContent.LoadRegKeysInFolder("Data/reg")
-        self.DefaultContent.LoadImagesInFolder("Data/img")
-        self.DefaultContent.LoadSoundsInFolder("Data/sound")
         self.DefaultContent.SetFontPath("Data/fonts")
+        self.DefaultContent.SetImageFolder("Data/img")
+        self.DefaultContent.SetRegKeysPath("Data/reg")
+        self.DefaultContent.SetSoundPath("Data/sound")
+
+        self.DefaultContent.InitSoundSystem()
+
+        self.DefaultContent.LoadRegKeysInFolder()
+        self.DefaultContent.LoadImagesInFolder()
+        self.DefaultContent.LoadSoundsInFolder()
 
         self.Progress = 0
         self.ProgressAddDelay = 0
@@ -140,6 +145,8 @@ class Process():
 
         self.NoFoldersFound = False
         self.FatalErrorScreen = False
+
+        self.ApplicationSeletorWelcomeSound = False
 
         # List all valid folders
         folder_list = Core.utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
@@ -168,6 +175,17 @@ class Process():
 
         if self.ApplicationSeletor:
             self.ApplicationSeletorAnimatorStart.Update()
+
+            if self.ApplicationSeletorAnimatorStart.Value <= 10 and not self.FatalErrorScreen:
+                self.ApplicationSeletorAnimatorStart.Enabled = True
+
+            if not self.ApplicationSeletorWelcomeSound and not self.FatalErrorScreen:
+                self.ApplicationSeletorWelcomeSound = True
+
+                self.DefaultContent.PlaySound("/intro.wav")
+                Core.wmm.WindowManagerSignal(None, 5)
+
+
             return
 
         if self.ProgressProgression and not self.LoadingComplete:
@@ -196,9 +214,18 @@ class Process():
                     # Kills the Bootloader process
                     Core.MAIN.KillProcessByPID(self.PID)
 
-                except:
+                except Exception as e:
+                    print("Fatal Error : Error while creating the process to the Auto-Start Application.")
+
+                    Traceback = traceback.format_exc()
+
+                    self.GenerateCrashLog(Traceback, Core.GetUserSelectedApplication())
+
+                    print(Traceback)
+
+                    print("Something bad happened while creating the process for this application.")
+                    self.FatalErrorScreen = True
                     self.ApplicationSeletor = True
-                    print("Error while creating the process...\nOpening Application Selector")
 
     def Draw(self):
         if not self.InitialSignal:
@@ -302,21 +329,22 @@ class Process():
                         self.GenerateCrashLog(Traceback, self.ApplicationSelectorObj.SelectedItemModulePath)
 
                         print(Traceback)
-
-                        print("Something bad happened while creating the process for this application.")
                         self.FatalErrorScreen = True
+                        self.ApplicationSeletor = True
 
         else:
             if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress == 0:
-                self.DefaultContent.PlaySound("/intro.wav")
-                Core.wmm.WindowManagerSignal(None, 5)
-
                 self.LoadingComplete = False
                 self.LoadingBarProgress = 0
                 self.Progress = 0
                 self.ProgressAddDelay = 0
                 self.ProgressProgression = False
 
+                self.ApplicationSeletor = True
+
+        if self.FatalErrorScreen:
+            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+                self.FatalErrorScreen = False
                 self.ApplicationSeletor = True
 
     def GenerateCrashLog(self, Traceback, ApplicationName):

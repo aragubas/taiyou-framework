@@ -171,7 +171,7 @@ def SetDisplay():
     else:
         DISPLAY = pygame.display.set_mode((CurrentRes_W, CurrentRes_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
 
-    pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion, 3))
+    pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion))
 
 def CreateProcess(Path, ProcessName, pInitArgs = None):
     """
@@ -195,12 +195,10 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
 
     ProcessNextPID += 1
 
-    utils.GarbageCollector_Collect()
     ProcessList_Names.append(ProcessName)
     Module = importlib.import_module(tge.Get_MainGameModuleName(Path))
     ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainGameModuleName(Path), pInitArgs))
     ProcessList_PID.append(ProcessNextPID)
-    utils.GarbageCollector_Collect()
 
     # Inject Variables and Functions
     Index = ProcessList_PID.index(ProcessNextPID)
@@ -210,16 +208,25 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     ProcessListChanged = True
 
     # Initialize
-    utils.GarbageCollector_Collect()
-    ProcessList[Index].Initialize()
-    utils.GarbageCollector_Collect()
+    try:
+        ProcessList[Index].Initialize()
+    except Exception as ex:
+        # Remove the last item from the lists
+        print("TaiyouFramework.CreateProcess : Process: [" + ProcessName + "] thrown an error on while trying to initialize")
 
-    print("Taiyou.CreateProcess : Process: [" + ProcessName + "] created successfully.")
+        del ProcessList[-1]
+        del ProcessList_PID[-1]
+        del ProcessList_Names[-1]
+        utils.GarbageCollector_Collect()
+
+        raise ex
+
+    print("TaiyouFramework.CreateProcess : Process: [" + ProcessName + "] created successfully.")
 
     return ProcessNextPID
 
 def SendSigKillToProcessByPID(PID):
-    ProcessList[PID].SendSignal(SIG_KILL)
+    ProcessList[PID].ReceiveSignal("SIG_KILL")
 
 def KillProcessByPID(PID):
     global ProcessListChanged

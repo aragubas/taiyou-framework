@@ -55,9 +55,9 @@ class ContentManager:
         self.Fonts_Data = list()
         self.CurrentLoadedFonts_Name = list()
         self.CurrentLoadedFonts_Contents = list()
-        self.Reg_LastInit = ""
-        self.Image_LastInit = ""
-        self.Sound_LastInit = ""
+        self.Reg_Path = ""
+        self.Image_Path = ""
+        self.Sound_Path = ""
         self.Font_Path = ""
         self.SoundChannels = list()
         self.AllLoadedSounds = {}
@@ -69,18 +69,22 @@ class ContentManager:
         self.SourceFolder = pSourceFolder.replace("/", tge.TaiyouPath_CorrectSlash)
 
     # region Image I/O Functions
-    def LoadImagesInFolder(self, FolderName):
+    def SetImageFolder(self, pFolder):
+        self.Image_Path = self.SourceFolder + pFolder.replace("/", tge.TaiyouPath_CorrectSlash)
+
+    def LoadImagesInFolder(self):
         """
         Load all sprites on the specified folder\n
         Alert: Folder must contain meta.data file.
         :param FolderName:Folder Path
         :return:
         """
+        if self.Image_Path == "":
+            raise Exception("Image path was not set.")
         pygame.font.init()
-        FolderName = self.SourceFolder + FolderName
         index = -1
 
-        self.Image_LastInit = FolderName
+        FolderName = self.Image_Path
 
         sprite_metadata = open(FolderName + "/meta.data".replace("/", tge.TaiyouPath_CorrectSlash), "r")
         sprite_meta_lines = sprite_metadata.readlines()
@@ -119,7 +123,6 @@ class ContentManager:
         if pTransparency:
             return pygame.image.load(pPath).convert_alpha()
         return pygame.image.load(pPath).convert()
-
 
     def LoadImage(self, ImagePath, Transparency=False):
         """
@@ -177,21 +180,6 @@ class ContentManager:
         LoadImagesInFolder(tge.Get_GameSourceFolder())
 
         print("Image.Reload : Operation Completed")
-
-    def UnloadImage(self, ImageResourceName):
-        """
-        Unload the Specified Image Resource
-        :param ImageResourceName: Image Resource Name
-        :return:
-        """
-        try:
-            sprite_index = self.Images_Name.index(ImageResourceName)
-
-            print("UnloadImage : Image[" + ImageResourceName + "] unloaded sucefully.")
-
-            del self.Images_Data[sprite_index]
-        except:
-            print("UnloadImage : Image[" + ImageResourceName + "] does not exist.")
 
     # endregion
 
@@ -281,16 +269,22 @@ class ContentManager:
     # endregion
 
     # region Registry I/O functions
-    def LoadRegKeysInFolder(self, reg_dir):
+    def SetRegKeysPath(self, pFolder):
+        self.Reg_Path = self.SourceFolder + pFolder.replace("/", tge.TaiyouPath_CorrectSlash)
+
+    def LoadRegKeysInFolder(self):
         """
         Load all keys on Specified Folder
         :param reg_dir:Specified Folder
         :return:
         """
-        reg_dir = self.SourceFolder + reg_dir
+        if self.Reg_Path == "":
+            raise Exception("Registry Path was not set.")
+
+        reg_dir = self.Reg_Path
         # -- FIX for working on Windows -- #
-        self.Reg_LastInit = self.SourceFolder + reg_dir.replace(self.SourceFolder, "")
-        self.Reg_LastInit = self.Reg_LastInit.replace("/", tge.TaiyouPath_CorrectSlash)
+        self.Reg_Path = self.SourceFolder + reg_dir.replace(self.SourceFolder, "")
+        self.Reg_Path = self.Reg_Path.replace("/", tge.TaiyouPath_CorrectSlash)
 
         start_time = time.time()
         # -- Unload the Registry -- #
@@ -332,7 +326,7 @@ class ContentManager:
         """
         print("Taiyou.ContentManager.ReloadRegistry : Reloading Registry...")
         self.UnloadRegistry()
-        self.LoadRegKeysInFolder(self.Reg_LastInit)
+        self.LoadRegKeysInFolder(self.Reg_Path)
 
         utils.GarbageCollector_Collect()
 
@@ -366,7 +360,7 @@ class ContentManager:
         :param FolderName:
         :return:
         """
-        self.Font_Path = self.SourceFolder + FolderName
+        self.Font_Path = self.SourceFolder + FolderName.replace("/", tge.TaiyouPath_CorrectSlash)
 
     def Get_RegKey(self, keyName, valueType=str):
         """
@@ -397,7 +391,7 @@ class ContentManager:
         :param keyValue:New Value
         :return:
         """
-        FileLocation = "{0}{1}.data".format(self.Reg_LastInit, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
+        FileLocation = "{0}{1}.data".format(self.Reg_Path, keyName.replace("/", tge.TaiyouPath_CorrectSlash))
 
         # -- Create the directory -- #
         os.makedirs(os.path.dirname(FileLocation), exist_ok=True)
@@ -535,7 +529,11 @@ class ContentManager:
     # endregion
 
     # region Sound I/O Functions
-    def LoadSoundsInFolder(self, FolderName):
+
+    def SetSoundPath(self, pFolder):
+        self.Sound_Path = (self.SourceFolder + pFolder).replace("/", tge.TaiyouPath_CorrectSlash)
+
+    def LoadSoundsInFolder(self):
         """
         Load all sounds on the specified folder\n
         :param FolderName:Folder Path Name
@@ -543,8 +541,11 @@ class ContentManager:
         """
         if SoundDisabled:
             return
-        FolderName = self.SourceFolder + FolderName
-        self.Sound_LastInit = FolderName
+
+        if self.Sound_Path == "":
+            raise Exception("Sound Path was not set.")
+
+        FolderName = self.Sound_Path
         self.InitSoundSystem()
 
         temp_sound_files = utils.Directory_FilesList(FolderName)
@@ -763,7 +764,6 @@ class ContentManager:
         if not SourceName.startswith(tge.TaiyouPath_CorrectSlash):
             SourceName = tge.TaiyouPath_CorrectSlash + SourceName
         sound = self.AllLoadedSounds.get(SourceName)
-
 
         if sound == None:
             raise FileNotFoundError("The soundfile [{0}] does not exists.".format(SourceName))

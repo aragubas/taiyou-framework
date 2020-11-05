@@ -37,11 +37,16 @@ class Process():
         self.DefaultContent = Core.cntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("CoreFiles/System/TaiyouUI/")
-        self.DefaultContent.InitSoundSystem()
-        self.DefaultContent.LoadRegKeysInFolder("Data/reg")
-        self.DefaultContent.LoadImagesInFolder("Data/img")
-        self.DefaultContent.LoadSoundsInFolder("Data/sound")
         self.DefaultContent.SetFontPath("Data/fonts")
+        self.DefaultContent.SetImageFolder("Data/img")
+        self.DefaultContent.SetRegKeysPath("Data/reg")
+        self.DefaultContent.SetSoundPath("Data/sound")
+        self.DefaultContent.SetFontPath("Data/fonts")
+
+        self.DefaultContent.InitSoundSystem()
+        self.DefaultContent.LoadRegKeysInFolder()
+        self.DefaultContent.LoadImagesInFolder()
+        self.DefaultContent.LoadSoundsInFolder()
 
         # Load the default Theme File
         UI.ThemesManager_LoadTheme(self.DefaultContent, self.DefaultContent.Get_RegKey("/selected_theme"))
@@ -112,9 +117,11 @@ class Process():
                         ProcessGeometry = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height())
                         CursorColision = pygame.Rect(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], 1, 1)
 
-                        if process.APPLICATION_HAS_FOCUS and ProcessGeometry.colliderect(CursorColision):
+                        # Process EventUpdate for the process
+                        if process.APPLICATION_HAS_FOCUS and ProcessGeometry.colliderect(CursorColision) and not process.WINDOW_DRAG_ENABLED:
                             process.EventUpdate(event)
 
+                        # Play beep sound when clicking on Inactive Window
                         if self.FocusedProcess is not None:
                             FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height())
 
@@ -302,6 +309,8 @@ class Process():
             Core.MAIN.SystemFault_ProcessObject = process
             self.FocusedProcess = None
             self.TaskBarSystemFault = True
+            Core.wmm.WindowManagerSignal(None, 4)
+            self.UI_Call_Request()
             print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
             print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
 
