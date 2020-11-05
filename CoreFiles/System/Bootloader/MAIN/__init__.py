@@ -112,7 +112,7 @@ class Process():
         self.POSITION = (0, 0)
         self.FULLSCREEN = True
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
-        self.TITLEBAR_TEXT = "Bootloader"
+        self.TITLEBAR_TEXT = "Taiyou System Loader"
 
     def Initialize(self):
         self.DefaultContent = Core.cntMng.ContentManager()
@@ -170,9 +170,6 @@ class Process():
         self.InitialSignal = False
 
     def Update(self):
-        if not self.APPLICATION_HAS_FOCUS:
-            return
-
         if self.ApplicationSeletor:
             self.ApplicationSeletorAnimatorStart.Update()
 
@@ -184,8 +181,6 @@ class Process():
 
                 self.DefaultContent.PlaySound("/intro.wav")
                 Core.wmm.WindowManagerSignal(None, 5)
-
-
             return
 
         if self.ProgressProgression and not self.LoadingComplete:
@@ -214,7 +209,7 @@ class Process():
                     # Kills the Bootloader process
                     Core.MAIN.KillProcessByPID(self.PID)
 
-                except Exception as e:
+                except Exception:
                     print("Fatal Error : Error while creating the process to the Auto-Start Application.")
 
                     Traceback = traceback.format_exc()
@@ -226,6 +221,7 @@ class Process():
                     print("Something bad happened while creating the process for this application.")
                     self.FatalErrorScreen = True
                     self.ApplicationSeletor = True
+                    self.APPLICATION_HAS_FOCUS = True
 
     def Draw(self):
         if not self.InitialSignal:
@@ -331,6 +327,7 @@ class Process():
                         print(Traceback)
                         self.FatalErrorScreen = True
                         self.ApplicationSeletor = True
+                        self.APPLICATION_HAS_FOCUS = True
 
         else:
             if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress == 0:
