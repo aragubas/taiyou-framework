@@ -20,6 +20,8 @@ import Core.SHAPES as shape
 import Core.UTILS as utils
 import CoreFiles.System.TaiyouUI.MAIN.UI.Widget as widget
 
+TaskBar_Version = "1.7"
+
 #region Theme Manager
 ThemesList_Properties = list()
 ThemesList_PropertyNames = list()
@@ -34,6 +36,9 @@ def ThemesManager_LoadTheme(ContentManager, ThemeName):
     print("Taiyou.TaskBar : Loading UI Theme '" + ThemeName + "'")
     for key in ContentManager.Get_RegKey("/theme/{0}".format(ThemeName)).splitlines():
         if key.startswith("#"):
+            continue
+
+        if len(key) < 5:
             continue
 
         ThemeDataTag = key.split(";")[0]

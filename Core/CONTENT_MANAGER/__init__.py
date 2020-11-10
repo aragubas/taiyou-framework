@@ -326,7 +326,8 @@ class ContentManager:
         """
         print("Taiyou.ContentManager.ReloadRegistry : Reloading Registry...")
         self.UnloadRegistry()
-        self.LoadRegKeysInFolder(self.Reg_Path)
+        
+        self.LoadRegKeysInFolder()
 
         utils.GarbageCollector_Collect()
 
@@ -424,7 +425,7 @@ class ContentManager:
     # endregion
 
     # region Font Rendering
-    def FontRender(self, DISPLAY, FontFileLocation, Size, Text, ColorRGB, X, Y, antialias=True, backgroundColor=None, Opacity=255):
+    def FontRender(self, DISPLAY, FontFileLocation, Size, Text, ColorRGB, X, Y, antialias=True, Opacity=255):
         """
         Render a Text using a font loaded into Taiyou Font Cache
         :param DISPLAY:Surface Name
@@ -451,25 +452,14 @@ class ContentManager:
 
                 # -- Render Multiple Lines -- #
                 for i, l in enumerate(Text.splitlines()):
-                    if backgroundColor is not None:  # -- If background was provided, render with Background
-                        # FontSurface Object
-                        FontSurface = FontFileObject.render(l, antialias, ColorRGB, backgroundColor)
+                    # FontSurface Object
+                    FontSurface = FontFileObject.render(l, antialias, ColorRGB)
 
-                        # Set Font Opacity
-                        FontSurface.set_alpha(Opacity)
+                    # Set Font Opacity
+                    FontSurface.set_alpha(Opacity)
 
-                        # Blit Font Surface
-                        DISPLAY.blit(FontSurface, (X, Y + Size * i))
-
-                    else:  # -- Render Without Background -- #
-                        # FontSurface Object
-                        FontSurface = FontFileObject.render(l, antialias, ColorRGB)
-
-                        # Set Font Opacity
-                        FontSurface.set_alpha(Opacity)
-
-                        # Blit Font Surface
-                        DISPLAY.blit(FontSurface, (X, Y + Size * i))
+                    # Blit Font Surface
+                    DISPLAY.blit(FontSurface, (X, Y + Size * i))
 
     def GetFont_object(self, FontFileLocation, Size):
         """
@@ -801,6 +791,13 @@ class ContentManager:
             if i == ChannelID:
                 channel.fadeout(FadeoutTime)
                 break
+
+    def FadeoutAllSounds(self, FadeoutTime):
+        if SoundDisabled:
+            return
+
+        for i, channel in enumerate(self.SoundChannels):
+            channel.fadeout(FadeoutTime)
 
     def SetSoundVoume(self, ChannelID, NewVolume):
         """

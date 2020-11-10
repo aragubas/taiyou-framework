@@ -31,6 +31,7 @@ class Process():
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
         self.TITLEBAR_TEXT = "Hello World"
         self.WindowDragEnable = False
+        self.WINDOW_OPACITY = 255
 
     def Initialize(self):
         pass

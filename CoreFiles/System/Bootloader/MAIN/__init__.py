@@ -214,14 +214,24 @@ class Process():
 
                     Traceback = traceback.format_exc()
 
-                    self.GenerateCrashLog(Traceback, Core.GetUserSelectedApplication())
+                    # Check if SelectedFile wax exists
 
-                    print(Traceback)
+                    try:
+                        UserSelectedApplication = Core.GetUserSelectedApplication()
 
-                    print("Something bad happened while creating the process for this application.")
-                    self.FatalErrorScreen = True
-                    self.ApplicationSeletor = True
-                    self.APPLICATION_HAS_FOCUS = True
+                        self.GenerateCrashLog(Traceback, UserSelectedApplication)
+                        print(Traceback)
+                        print("Something bad happened while creating the process for the default application.")
+
+                        self.FatalErrorScreen = True
+                        self.ApplicationSeletor = True
+                        self.APPLICATION_HAS_FOCUS = True
+
+                    except:
+                        print("Selected application file is not readable.")
+                        self.ApplicationSeletor = True
+                        self.APPLICATION_HAS_FOCUS = True
+
 
     def Draw(self):
         if not self.InitialSignal:

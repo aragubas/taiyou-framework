@@ -214,7 +214,7 @@ class Widget_Button:
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.ButtonState = False
         self.CursorOffset = (0, 0)
-        self.BgColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
+        self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
 
     def Render(self, DISPLAY):
@@ -228,8 +228,8 @@ class Widget_Button:
 
         DISPLAY.blit(self.Surface, (self.Rectangle[0], self.Rectangle[1]))
 
-        if self.ButtonState:
-            self.ButtonState = False
+        if self.ButtonState == 2:
+            self.ButtonState = 0
 
     def Update(self):
         # -- Check if surface has the correct size -- #
@@ -237,29 +237,34 @@ class Widget_Button:
             self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
 
             # -- Update all Size and Position Variables -- #
-            self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-            self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+            self.TextWidth = UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+            self.TextHeight = UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
             self.Rectangle = utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
-            self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
-            self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+            self.Centred_X = self.Rectangle[2] / 2 - UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+            self.Centred_Y = self.Rectangle[3] / 2 - UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
 
             self.LastRect = self.Rectangle
 
-        if self.Active and not self.ButtonState:
-            self.BgColor = UI.ThemesManager_GetProperty("Button_Active_BackgroundColor")
+        self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
+        self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
+
+        if not self.Active:
+            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
+
+            return
+
+        if self.ButtonState == 0:
+            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
+
+        elif self.ButtonState == 1:
             self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
-        elif self.ButtonState:
-            self.BgColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
-            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
-
-        else:
-            self.BgColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
-            self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
-
     def EventUpdate(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.ButtonState = 1
+
         if event.type == pygame.MOUSEBUTTONUP:
-            self.ButtonState = True
+            self.ButtonState = 0
             self.InteractionType = True
             self.Content.PlaySound("/click.wav")
 

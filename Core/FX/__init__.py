@@ -15,10 +15,26 @@
 #
 #
 import pygame
-import Core as tge
+import Core
 
-print("Taiyou FX version " + tge.Get_FXVersion())
 
+print("Taiyou FX version " + Core.Get_FXVersion())
+
+def Simple_BlurredRectangle(SourceSurface, Rectangle, BlurAmmount=100, BackgroundAlpha=100, BackgroundFillColor=(0, 0, 0)):
+    # Create new surface, blit SourceSurface
+    ResultCeira = pygame.Surface((Rectangle[2], Rectangle[3]))
+    ResultCeira.blit(SourceSurface, (0, 0), (Rectangle[0], Rectangle[1], Rectangle[2], Rectangle[3]))
+    ResultCeira = Core.fx.Surface_Blur(ResultCeira, BlurAmmount)
+
+    # Copy the ResultCeira surface, fill with Fill Color then set a Alpha Value
+    BlackBG = ResultCeira.copy()
+    BlackBG.fill(BackgroundFillColor)
+    BlackBG.set_alpha(BackgroundAlpha)
+
+    # Blit everthing when done
+    ResultCeira.blit(BlackBG, (0, 0))
+
+    return ResultCeira
 
 def BlurredRectangle(DISPLAY, Rectangle, BlurAmmount=100, BlackContrast_Alpha=50, BlackBackgroundColor=(0, 0, 0)):
     """
@@ -97,7 +113,6 @@ def Surface_Blur(surface, amt, fast_scale=False):
     """
 
     if amt < 1.0:
-        print("FX.Surface_Blur : Surface blur ammount is lower than 1.0")
         return surface
 
     Scale = 1.0 / float(amt)

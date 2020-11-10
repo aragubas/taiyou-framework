@@ -32,10 +32,10 @@ def Get_TaiyouMainVersion():
     return "3.7"
 
 def Get_ContentManagerVersion():
-    return "3.1"
+    return "3.2"
 
 def Get_FXVersion():
-    return "1.1"
+    return "1.2"
 
 def Get_BootloaderVersion():
     return "1.8"
