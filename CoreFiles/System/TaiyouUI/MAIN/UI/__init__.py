@@ -20,7 +20,7 @@ import Core.SHAPES as shape
 import Core.UTILS as utils
 import CoreFiles.System.TaiyouUI.MAIN.UI.Widget as widget
 
-TaskBar_Version = "1.7"
+TaskBar_Version = "1.8"
 
 #region Theme Manager
 ThemesList_Properties = list()
@@ -201,3 +201,84 @@ class VerticalListWithDescription:
         self.ItemIndexes.clear()
         self.ItemProperties.clear()
 
+
+class ApplicationSelector:
+    def __init__(self, pContentManager, pX, pY):
+        self.X = pX
+        self.Y = pY
+        self.Width = 550
+        self.Height = 120
+        self.Content = pContentManager
+        self.ObjectSurface = pygame.Surface((self.Width, self.Height), pygame.SRCALPHA)
+        self.SeletorItems_Title = list()
+        self.SeletorItems_Index = list()
+        self.SeletorItems_Icon = list()
+        self.SeletorItems_ModulePath = list()
+
+        self.SelectedItemIndex = -1
+        self.SelectedItemTitle = ""
+        self.SelectedItemModulePath = None
+
+        self.HScroll = 10
+
+    def Draw(self, Surface):
+        self.ObjectSurface.fill((0, 0, 0, 0))
+
+        shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
+
+        index = -1
+        for item in self.SeletorItems_Index:
+            index += 1
+            ItemRect = pygame.Rect(self.HScroll + 105 * index, 5, 100, self.Height - 10)
+            ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
+
+            if self.SelectedItemIndex == index:
+                shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
+
+            if self.SeletorItems_Icon[index] == None:
+                self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)
+            else:
+                self.Content.ImageRender(self.ObjectSurface, self.SeletorItems_Icon[index], ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True, ImageNotLoaded=True)
+
+        Surface.blit(self.ObjectSurface, (self.X, self.Y))
+
+    def AddItem(self, Title, pModulePath, IconPath="None"):
+        self.SeletorItems_Title.append(Title.rstrip())
+        self.SeletorItems_Index.append(len(self.SeletorItems_Title))
+        self.SeletorItems_ModulePath.append(pModulePath)
+        if IconPath == "None":
+            self.SeletorItems_Icon.append(None)
+        else:
+            self.SeletorItems_Icon.append(self.Content.ReturnImageObject(IconPath, True))
+
+    def EventUpdate(self, event):
+        ThisRect = pygame.Rect(self.X, self.Y, self.Width, self.Height)
+
+        if ThisRect.collidepoint(pygame.mouse.get_pos()):
+            index = -1
+            SelectedItems = 0
+            for item in self.SeletorItems_Title:
+                index += 1
+                ItemRect = pygame.Rect(self.X + self.HScroll + 105 * index, 5, 100, self.Y + self.Height - 10)
+
+                if ItemRect.collidepoint(pygame.mouse.get_pos()):
+                    SelectedItems += 1
+                    self.SelectedItemIndex = index
+                    self.SelectedItemTitle = item
+                    self.SelectedItemModulePath = self.SeletorItems_ModulePath[index]
+
+            if SelectedItems == 0:
+                self.SelectedItemIndex = -1
+                self.SelectedItemTitle = ""
+                self.SelectedItemModulePath = None
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4:
+                self.HScroll -= 5
+
+            if event.button == 5:
+                self.HScroll += 5
+
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_HOME:
+                self.HScroll = 10

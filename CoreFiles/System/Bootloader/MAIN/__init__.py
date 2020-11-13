@@ -35,7 +35,6 @@ class ApplicationSelector:
         self.SelectedItemModulePath = None
 
         self.HScroll = 10
-        pygame.key.set_repeat(5, 15)
 
     def Draw(self, Surface):
         self.ObjectSurface.fill((0, 0, 0, 0))
@@ -88,13 +87,14 @@ class ApplicationSelector:
                 self.SelectedItemTitle = ""
                 self.SelectedItemModulePath = None
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4:
                 self.HScroll -= 5
 
-            if event.key == pygame.K_RIGHT:
+            if event.button == 5:
                 self.HScroll += 5
 
+        if event.type == pygame.KEYUP:
             if event.key == pygame.K_HOME:
                 self.HScroll = 10
 
@@ -232,7 +232,6 @@ class Process():
                         self.ApplicationSeletor = True
                         self.APPLICATION_HAS_FOCUS = True
 
-
     def Draw(self):
         if not self.InitialSignal:
             self.InitialSignal = True
@@ -329,6 +328,7 @@ class Process():
 
                         # Kills the Bootloader process
                         Core.MAIN.KillProcessByPID(self.PID)
+
                     except Exception as e:
                         Traceback = traceback.format_exc()
 
@@ -383,7 +383,7 @@ class Process():
     def LoadingSteps(self, CurrentProgres):
         if CurrentProgres == 0:
             # Start the SystemUI
-            Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui")
+            Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui", pPriority=1)
 
         if CurrentProgres == 1:
             # Finish the Loading

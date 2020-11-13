@@ -14,9 +14,11 @@
 #   limitations under the License.
 #
 #
-import Core, pygame
+import Core, pygame, traceback
 from Core import utils
 from CoreFiles.System.TaiyouUI.MAIN import UI
+from CoreFiles.System.TaiyouUI.MAIN.UI import Widget
+
 
 class TaskBarInstance:
     def __init__(self, pDefaultContent, pRootProcess):
@@ -31,6 +33,8 @@ class TaskBarInstance:
         self.LastDisplayFrame = pygame.Surface((800, 600))
         self.Workaround_RenderLastFrame = False
 
+        self.SetMode(0)
+
     def SetMode(self, pModeID):
         if not self.CurrentMode is None:
             del self.CurrentMode
@@ -41,6 +45,10 @@ class TaskBarInstance:
 
         if pModeID == 1:
             self.CurrentMode = SystemFault_Instance(self.DefaultContent, self)
+            return
+
+        if pModeID == 2:
+            self.CurrentMode = ApplicationDashboard_Instace(self.DefaultContent, self)
             return
 
     def Set_LastDisplayFrame(self, pDisplay):
@@ -130,8 +138,11 @@ class ApplicationSelectorMode_Instace:
         self.UpdateProcessList()
 
         # Set TaskbarTools Cordinate
-        self.Tools[0] = self.WindowList.Rectangle[0]
+        self.Tools[0] = self.WindowList.Rectangle[0] + int(self.RootObj.Animation.Value - 255) / 30
         self.Tools[1] = self.WindowList.Rectangle.bottom
+
+        # Set WindowList X
+        self.WindowList.Rectangle[0] = self.WindowList.Rectangle[0] + int(self.RootObj.Animation.Value - 255) / 25
 
         # WindowList Buttons
         self.Tools_WidgetController.Rectangle = self.Tools
@@ -145,13 +156,7 @@ class ApplicationSelectorMode_Instace:
             self.SwitchToSelectedProcess()
 
     def Draw(self, ContentsSurface):
-        TitleText = "Opened Tasks"
-        if not self.RootObj.Welcome:
-            TitleText = "Welcome"
-        TitleFontSize = 58
-        TitleFont = "/Ubuntu_Bold.ttf"
-        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
-
+        self.RenderTitle(ContentsSurface)
         self.WindowList.Render(ContentsSurface)
 
         # Render TaskbarTools Background
@@ -161,25 +166,37 @@ class ApplicationSelectorMode_Instace:
         # Render Close Button
         self.Tools_WidgetController.Draw(ContentsSurface)
 
-        # Draw Bottom Text
-        TitleText = "[DELETE] Finish selected task, [SPACEBAR] Switch to selected task, [F12] Open TaskBar Dashboard"
-        TitleFontSize = 14
-        TextY = 35
-        TitleFont = "/Ubuntu.ttf"
-        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, ContentsSurface.get_height() - self.DefaultContent.GetFont_height(TitleFont, TitleFontSize, TitleText) - TextY)
-
-        # Draw Bottom Text
-        TitleText = "TaskBar v" + UI.TaskBar_Version
-        TextY = 15
-        TitleFontSize = 12
-        TitleFont = "/Ubuntu_Bold.ttf"
-        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, ContentsSurface.get_height() - self.DefaultContent.GetFont_height(TitleFont, TitleFontSize, TitleText) - TextY)
+        self.RenderBottomText(ContentsSurface)
+        self.RenderBottomInfosText(ContentsSurface)
 
 
         # Center Window list
         self.WindowList.Set_X(ContentsSurface.get_width() / 2 - self.WindowList.Rectangle[2] / 2)
         self.WindowList.Set_Y(ContentsSurface.get_height() / 2 - self.WindowList.Rectangle[3] / 2)
 
+    def RenderTitle(self, ContentsSurface):
+        TitleText = "Opened Tasks"
+        if not self.RootObj.Welcome:
+            TitleText = "Welcome"
+        TitleFontSize = 58
+        TitleFont = "/Ubuntu_Bold.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), int(self.RootObj.Animation.Value - 255) / 10 + ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
+
+    def RenderBottomText(self, ContentsSurface):
+        # Draw Bottom Text
+        TitleText = "[DELETE] Finish selected task, [SPACEBAR] Switch to selected task, [F12] Open TaskBar Dashboard"
+        TitleFontSize = 14
+        TextY = 35
+        TitleFont = "/Ubuntu.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), int(self.RootObj.Animation.Value - 255) / 10 + ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, ContentsSurface.get_height() - self.DefaultContent.GetFont_height(TitleFont, TitleFontSize, TitleText) - TextY)
+
+    def RenderBottomInfosText(self, ContentsSurface):
+        # Draw Bottom Text
+        TitleText = "TaskBar v" + UI.TaskBar_Version
+        TextY = 15
+        TitleFontSize = 12
+        TitleFont = "/Ubuntu_Bold.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), int(self.RootObj.Animation.Value - 255) / 10 + ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, ContentsSurface.get_height() - self.DefaultContent.GetFont_height(TitleFont, TitleFontSize, TitleText) - TextY)
 
     def EventUpdate(self, event):
         self.WindowList.Update(event)
@@ -215,6 +232,26 @@ class ApplicationSelectorMode_Instace:
             except IndexError:
                 self.WindowList.ResetSelectedItem()
 
+            except ModuleNotFoundError:
+                try:
+                    raise Exception("Cannot finish an nonexistent process.")
+
+                except Exception:
+                    Core.MAIN.SystemFault_Trigger = True
+                    Core.MAIN.SystemFault_Traceback = traceback.format_exc()
+                    Core.MAIN.SystemFault_ProcessObject = None
+                    Core.wmm.WindowManagerSignal(None, 4)
+
+
+                    print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
+                    print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
+
+                    # Generate the Crash Log
+                    Core.MAIN.GenerateCrashLog()
+                    self.RootObj.SetMode(1)
+
+                    return
+
     def SwitchToSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
             try:
@@ -231,7 +268,9 @@ class ApplicationSelectorMode_Instace:
                 self.WindowList.ResetSelectedItem()
 
     def SwitchToDashboard(self):
-        print("Placeholder")
+        self.DefaultContent.PlaySound("/click.wav")
+
+        self.RootObj.SetMode(2)
 
     def Toggle(self):
         pass
@@ -246,13 +285,21 @@ class SystemFault_Instance:
 
     def Draw(self, ContentsSurface):
         # Draw the title
-        TitleText = "The process {0} has failed.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.NAME, 40))
+        try:
+            ProcessName = Core.MAIN.SystemFault_ProcessObject.NAME
+        except:
+            ProcessName = "Unknown"
+
+        TitleText = "The process {0} has failed.".format(Core.utils.ShortString(ProcessName, 40))
         TitleFontSize = 22
         TitleFont = "/Ubuntu_Bold.ttf"
         self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
 
         # Draw the SystemFault message
-        TitleText = "Title : {0}\nPID : {1}\nExecPath : {2}\n\nDetails about the crash has been saved on logs folder\nlocated in: <root>/logs/.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.TITLEBAR_TEXT, 35), str(Core.MAIN.SystemFault_ProcessObject.PID), Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.ROOT_MODULE, 35))
+        try:
+            TitleText = "Title : {0}\nPID : {1}\nExecPath : {2}\n\nDetails about the crash has been saved on logs folder\nlocated in: <root>/logs/.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.TITLEBAR_TEXT, 35), str(Core.MAIN.SystemFault_ProcessObject.PID), Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.ROOT_MODULE, 35))
+        except:
+            TitleText = "Cannot obtain process information."
         TitleFontSize = 14
         TitleFont = "/Ubuntu.ttf"
         X = ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2
@@ -276,4 +323,132 @@ class SystemFault_Instance:
 
     def EventUpdate(self, event):
         pass
+
+class ApplicationDashboard_Instace:
+    def __init__(self, pDefaultContent, pRootObj):
+        self.DefaultContent = pDefaultContent
+        self.RootObj = pRootObj
+
+        self.ApplicationSelector = UI.ApplicationSelector(pDefaultContent, 800 / 2 - 550 / 2, 600 / 2 - 120 / 2)
+        self.NoFoldersFound = False
+
+        self.LoadApplicationsList()
+
+        self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, 600 - 50 - 5, 800 - 10, 50))
+        self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
+        self.BottomButtonsList.Append(Widget.Widget_Button(pDefaultContent, "About", 16, 190, 10, 0))
+
+        self.ApplicationManagerBarAnimatorDisableToggle = True
+        self.ApplicationManagerBarAnimator = utils.AnimationController(2)
+        self.ApplicationManagerBarAnimator.Enabled = False
+        self.ApplicationManagerBar = Widget.Widget_Controller(pDefaultContent, (5, 650, 800 - 10, 50))
+        self.ApplicationManagerBar.Append(Widget.Widget_Button(pDefaultContent, "Remove Application", 14, 5, 5, 0))
+
+        self.TextsBaseX = 0
+        self.DisableInput = False
+
+        self.ApplicationManagerEnabled = False
+
+    def LoadApplicationsList(self):
+        # List all valid folders
+        folder_list = Core.utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        BootFolders = list()
+        for file in folder_list:
+            if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
+                BootFolders.append(file)
+
+        for boot in BootFolders:
+            ReadData = open(boot, "r").readlines()
+
+            AppTitle = ReadData[0].rstrip()
+            IconPath = ReadData[1].rstrip()
+            ModulePath = ReadData[2].rstrip()
+
+            self.ApplicationSelector.AddItem(AppTitle, ModulePath, IconPath)
+
+        if len(BootFolders) == 0:
+            self.NoFoldersFound = True
+
+    def Update(self):
+        self.RootObj.GoToModeWhenReturning = 0
+
+        self.BottomButtonsList.Update()
+
+        # Update X values
+        self.ApplicationSelector.X = 800 / 2 - 550 / 2 + int(self.RootObj.Animation.Value - 255) / 10
+        self.BottomButtonsList.Rectangle[0] = 5 + int(self.RootObj.Animation.Value - 255) / 10
+        self.TextsBaseX = int(self.RootObj.Animation.Value - 255) / 25
+
+        self.UpdateApplicationManager()
+
+    def UpdateApplicationManager(self):
+        self.ApplicationManagerBarAnimator.Update()
+        self.ApplicationManagerBar.Rectangle[1] = 600 - 100 - 5 - max(2, self.ApplicationManagerBarAnimator.Value) / 10
+        self.ApplicationManagerBar.Opacity = self.ApplicationManagerBarAnimator.Value
+
+        self.ApplicationManagerEnabled = self.ApplicationSelector.SelectedItemIndex != -1
+
+        if not self.ApplicationManagerEnabled:
+            if not self.ApplicationManagerBarAnimatorDisableToggle and not self.ApplicationManagerBarAnimator.Enabled:
+                self.ApplicationManagerBarAnimatorDisableToggle = True
+                self.ApplicationManagerBarAnimator.Enabled = True
+
+        else:
+            self.ApplicationManagerBar.Update()
+
+            if self.ApplicationManagerBarAnimatorDisableToggle and not self.ApplicationManagerBarAnimator.Enabled:
+                self.ApplicationManagerBarAnimatorDisableToggle = False
+                self.ApplicationManagerBarAnimator.Enabled = True
+
+    def Draw(self, ContentsSurface):
+        self.RenderTitle(ContentsSurface)
+        self.RenderApplicationTitle(ContentsSurface)
+
+        self.ApplicationSelector.Draw(ContentsSurface)
+
+        self.BottomButtonsList.Draw(ContentsSurface)
+
+        self.ApplicationManagerBar.Draw(ContentsSurface)
+
+    def RenderTitle(self, ContentsSurface):
+        TitleText = "Dashboard"
+        TitleFontSize = 58
+        TitleFont = "/Ubuntu_Bold.ttf"
+        self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), self.TextsBaseX + ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
+
+    def RenderApplicationTitle(self, ContentsSurface):
+        # Draw the Selected Application Title
+        TitleBarText = self.ApplicationSelector.SelectedItemTitle.rstrip()
+        FontSize = 34
+        Font = "/Ubuntu.ttf"
+        TextColor = (250, 250, 250)
+        self.DefaultContent.FontRender(ContentsSurface, Font, FontSize, TitleBarText, TextColor, self.TextsBaseX + 800 / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 600 / 2 - 120)
+
+    def InstanceToggled(self):
+        pass
+
+    def Toggle(self):
+        pass
+
+    def EventUpdate(self, event):
+        if self.DisableInput:
+            return
+        self.ApplicationSelector.EventUpdate(event)
+
+        self.BottomButtonsList.EventUpdate(event)
+
+        if self.ApplicationManagerEnabled:
+            self.ApplicationManagerBar.EventUpdate(event)
+
+        if event.type == pygame.KEYUP and event.key == pygame.K_RETURN or event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.DisableInput = True
+            print("OpenApp : " + self.ApplicationSelector.SelectedItemTitle)
+
+            try:
+                # Create the Application Process
+                Core.MAIN.CreateProcess(self.ApplicationSelector.SelectedItemModulePath, self.ApplicationSelector.SelectedItemModulePath)
+
+                self.RootObj.Toggle()
+            except:
+                print("Error while creating application process")
 

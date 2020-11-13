@@ -27,9 +27,11 @@ class Widget_Controller:
         self.LastInteractionType = None
         self.Active = False
         self.ContentManager = pContentManager
+        self.Opacity = 255
 
     def Draw(self, DISPLAY):
         WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
+        WidgetSurface.set_alpha(self.Opacity)
         for widget in self.WidgetCollection:
             widget.Render(WidgetSurface)
 
@@ -154,7 +156,6 @@ class Widget_ValueChanger:
 
         if self.Content.GetFont_width("/Ubuntu_Bold.ttf", 12, self.TitleName) > self.Rectangle[2]:
             self.Rectangle[2] = self.Rectangle[2] + self.Content.GetFont_width("/Ubuntu_Bold.ttf", 12, self.TitleName)
-
 
         self.Changer.Rectangle[0] = self.Rectangle[0] + self.Rectangle[2] / 2 - self.Content.GetFont_width("/PressStart2P.ttf", 12, self.Changer.Value) / 2
 

@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 #
-import Core, time, pygame, traceback
+import Core, time, pygame, traceback, math
 from Core.MAIN import DISPLAY as DISPLAY
 from CoreFiles.System.TaiyouUI.MAIN import UI
 from CoreFiles.System.TaiyouUI.MAIN import TaskBar
@@ -26,10 +26,10 @@ class Process():
         self.INIT_ARGS = pInitArgs
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = True
+        self.IS_GRAPHICAL = False
         self.APPLICATION_HAS_FOCUS = True
         self.POSITION = (0, 0)
-        self.FULLSCREEN = True
+        self.FULLSCREEN = False
 
     def Initialize(self):
         # Set Invisible Mouse
@@ -65,7 +65,6 @@ class Process():
         self.GUI_ALLOW_TASKMANAGER = True
 
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
-        self.TaskBarInstance.SetMode(0)
 
         # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID

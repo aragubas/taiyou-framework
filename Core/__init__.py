@@ -26,7 +26,7 @@ def Get_AppDataVersion():
     return "1.1"
 
 def Get_UtilsVersion():
-    return "2.1"
+    return "2.3"
 
 def Get_TaiyouMainVersion():
     return "3.7"
@@ -41,7 +41,7 @@ def Get_BootloaderVersion():
     return "1.8"
 
 def Get_MAINVersion():
-    return "1.4"
+    return "1.5"
 
 def Get_WindowManagerManagerVersion():
     return "1.2"
@@ -380,7 +380,7 @@ def InitializeBootloader():
     global TaiyouPath_CorrectSlash
 
     CurrentGame_Folder = "CoreFiles{0}System{0}Bootloader".format(TaiyouPath_CorrectSlash)
-    MAIN.CreateProcess(CurrentGame_Folder, "bootloader")
+    MAIN.CreateProcess(CurrentGame_Folder, "bootloader", pPriority=1)
 
 def GetUserSelectedApplication():
     return open("Selected.txt", "r").read().rstrip().replace("/", TaiyouPath_CorrectSlash)

@@ -350,7 +350,16 @@ def Get_MemoryUsage():
     Warning: This function decrease peformace (causes dead spikes of lag)
     :return:
     """
-    return psutil.Process(os.getpid()).memory_full_info()[0]
+    return psutil.virtual_memory().percent
+
+def Get_CpuUsage():
+    """
+    Get the current Memory Use\n
+    Warning: This function decrease peformace (causes dead spikes of lag)
+    :return:
+    """
+    return psutil.cpu_percent()
+
 
 class AnimationController:
     def __init__(self, multiplierSpeed=1.0, maxValue=255, minValue=0, multiplierRestart=False):
@@ -397,12 +406,14 @@ class AnimationController:
                 self.Value += self.ValueMultiplier
 
                 if self.Value >= self.MaxValue:
+                    self.Value = self.MaxValue
                     self.DisableSignal = True
 
             else:
                 self.Value -= self.ValueMultiplier
 
                 if self.Value <= self.MinValue:
+                    self.Value = self.MinValue
                     self.DisableSignal = True
 
 def Is_Multiple(x, y):

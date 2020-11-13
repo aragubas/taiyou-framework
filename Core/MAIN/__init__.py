@@ -173,7 +173,7 @@ def SetDisplay():
 
     pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion))
 
-def CreateProcess(Path, ProcessName, pInitArgs = None):
+def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
     """
      Set the Game Object
     :param GameFolder:Folder Path
@@ -200,10 +200,20 @@ def CreateProcess(Path, ProcessName, pInitArgs = None):
     ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainGameModuleName(Path), pInitArgs))
     ProcessList_PID.append(ProcessNextPID)
 
+    importlib.reload(Module)
+    del Module
+
+    if tge.Get_MainGameModuleName(Path) in sys.modules:
+        sys.modules.pop(tge.Get_MainGameModuleName(Path))
+    utils.GarbageCollector_Collect()
+
     # Inject Variables and Functions
     Index = ProcessList_PID.index(ProcessNextPID)
     ProcessList[Index].PROCESS_INDEX = ProcessIndex
     ProcessList[Index].WINDOW_DRAG_ENABLED = False
+    ProcessList[Index].APPLICATION_HAS_FOCUS = True
+    ProcessList[Index].EXECUTABLE_PATH = Path
+    ProcessList[Index].PRIORITY = pPriority
 
     ProcessListChanged = True
 
@@ -244,8 +254,35 @@ def KillProcessByPID(PID):
 def GetProcessIndexByPID(PID):
     try:
         return ProcessList_PID.index(PID)
+
     except ValueError:
         raise ModuleNotFoundError("The process {0} could not be found".format(PID))
+
+HigherPriorityProcess = list()
+NormalPriorityProcess = list()
+LowerPriorityProcess = list()
+
+def UpdateProcessPriorityList():
+    global HigherPriorityProcess
+    global NormalPriorityProcess
+    global LowerPriorityProcess
+
+    HigherPriorityProcess.clear()
+    NormalPriorityProcess.clear()
+    LowerPriorityProcess.clear()
+
+    for process in ProcessList:
+        if process.PRIORITY == 1:
+            HigherPriorityProcess.append(process)
+        elif process.PRIORITY == 0:
+            NormalPriorityProcess.append(process)
+
+        elif process.PRIORITY == -1:
+            LowerPriorityProcess.append(process)
+
+        else:
+            raise Exception("Invalid priority value: {0}".format(str(process.PRIORITY)))
+
 
 def Run():
     global WorkObject
@@ -258,31 +295,41 @@ def Run():
     global SystemFault_Trigger
     global SystemFault_Traceback
     global SystemFault_ProcessObject
+    global HigherPriorityProcess
+    global NormalPriorityProcess
+    global LowerPriorityProcess
+
+    # -- Run the Update Code -- #
+    if ProcessListChanged:
+        UpdateProcessPriorityList()
+
+    # Update high priority process
+    for process in HigherPriorityProcess:
+        try:
+            process.Update()
+
+        except Exception:
+            UpdateProcess(process)
 
     # Limit the application to the designed FPS
     clock.tick(FPS)
 
-    # -- Run the Update Code -- #
-    for process in ProcessList:
+    # Update Normal Priority process
+    for process in NormalPriorityProcess:
         try:
             process.Update()
 
-        except Exception as e:
-            SystemFault_Trigger = True
-            SystemFault_Traceback = traceback.format_exc()
-            SystemFault_ProcessObject = process
-            print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
-            print("Traceback:\n" + SystemFault_Traceback)
+        except Exception:
+            UpdateProcess(process)
 
-            # Call the Window Manager to Toggle the UI Mode
-            tge.wmm.WindowManagerSignal(None, 4)
-            tge.wmm.CallWindowManagerUI()
+    # Update Lower Priority process
+    for process in LowerPriorityProcess:
+        try:
+            process.Update()
 
-            # Kill the Process
-            KillProcessByPID(process.PID)
+        except Exception:
+            UpdateProcess(process)
 
-            # Generate the Crash Log
-            GenerateCrashLog()
 
     if ProcessListChanged_Delay:
         ProcessListChanged_Delay = False
@@ -290,6 +337,28 @@ def Run():
 
     if ProcessListChanged:
         ProcessListChanged_Delay = True
+
+def UpdateProcess(process):
+    global SystemFault_Trigger
+    global SystemFault_Traceback
+    global SystemFault_ProcessObject
+
+    SystemFault_Trigger = True
+    SystemFault_Traceback = traceback.format_exc()
+    SystemFault_ProcessObject = process
+    print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
+    print("Traceback:\n" + SystemFault_Traceback)
+
+    # Call the Window Manager to Toggle the UI Mode
+    tge.wmm.WindowManagerSignal(None, 4)
+    tge.wmm.CallWindowManagerUI()
+
+    # Kill the Process
+    KillProcessByPID(process.PID)
+
+    # Generate the Crash Log
+    GenerateCrashLog()
+
 
 def GenerateCrashLog():
     print("Generating crash log...")
