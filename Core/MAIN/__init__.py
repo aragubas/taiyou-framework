@@ -34,8 +34,8 @@ print("Taiyou Main version " + tge.Get_TaiyouMainVersion())
 clock = pygame.time.Clock()
 FPS = 75
 DISPLAY = pygame.display
-CurrentRes_W = 800
-CurrentRes_H = 600
+ScreenWidth = 1024
+ScreenHeight = 720
 WorkObject = None
 InitDelay_Delta = 0
 InitDelay_Enabled = True
@@ -57,10 +57,16 @@ SystemFault_ProcessObject = None
 getTicksLastFrame = 0
 deltaTime = 0
 
+# Priority List
+HigherPriorityProcess = list()
+NormalPriorityProcess = list()
+LowerPriorityProcess = list()
+
+
 def Initialize():
     global DISPLAY
-    global CurrentRes_W
-    global CurrentRes_H
+    global ScreenWidth
+    global ScreenHeight
     global EngineInitialized
     print("TaiyouFramework.Initialize : Initializing Taiyou...")
 
@@ -88,8 +94,8 @@ def ReceiveCommand(Command, Arguments=None):
     """
     global DISPLAY
     global FPS
-    global CurrentRes_W
-    global CurrentRes_H
+    global ScreenWidth
+    global ScreenHeight
 
     CommandWasValid = False
     IsSpecialEvent = False
@@ -110,8 +116,8 @@ def ReceiveCommand(Command, Arguments=None):
             splitedArg = Arguments.split('x')
             print("TaiyouFramework.ReceiveCommand : Set Resolution to: {0}x{1}".format(str(splitedArg[0]), str(splitedArg[1])))
 
-            CurrentRes_W = int(splitedArg[0])
-            CurrentRes_H = int(splitedArg[1])
+            ScreenWidth = int(splitedArg[0])
+            ScreenHeight = int(splitedArg[1])
 
             SetDisplay()
 
@@ -162,14 +168,14 @@ def ReceiveCommand(Command, Arguments=None):
 
 def SetDisplay():
     global DISPLAY
-    global CurrentRes_W
-    global CurrentRes_H
+    global ScreenWidth
+    global ScreenHeight
 
     if not tge.RunInFullScreen:
-        DISPLAY = pygame.display.set_mode((CurrentRes_W, CurrentRes_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE)
+        DISPLAY = pygame.display.set_mode((ScreenWidth, ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE)
 
     else:
-        DISPLAY = pygame.display.set_mode((CurrentRes_W, CurrentRes_H), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
+        DISPLAY = pygame.display.set_mode((ScreenWidth, ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
 
     pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion))
 
@@ -219,7 +225,9 @@ def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
 
     # Initialize
     try:
+        # Intialize Process Code
         ProcessList[Index].Initialize()
+
     except Exception as ex:
         # Remove the last item from the lists
         print("TaiyouFramework.CreateProcess : Process: [" + ProcessName + "] thrown an error on while trying to initialize")
@@ -257,10 +265,6 @@ def GetProcessIndexByPID(PID):
 
     except ValueError:
         raise ModuleNotFoundError("The process {0} could not be found".format(PID))
-
-HigherPriorityProcess = list()
-NormalPriorityProcess = list()
-LowerPriorityProcess = list()
 
 def UpdateProcessPriorityList():
     global HigherPriorityProcess

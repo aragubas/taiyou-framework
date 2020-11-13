@@ -20,7 +20,7 @@ import Core.SHAPES as shape
 import Core.UTILS as utils
 import CoreFiles.System.TaiyouUI.MAIN.UI.Widget as widget
 
-TaskBar_Version = "1.8"
+TaskBar_Version = "1.9"
 
 #region Theme Manager
 ThemesList_Properties = list()

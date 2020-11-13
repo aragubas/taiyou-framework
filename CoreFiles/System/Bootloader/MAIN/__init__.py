@@ -106,7 +106,7 @@ class Process():
         self.INIT_ARGS = pInitArgs
         self.ROOT_MODULE = pROOT_MODULE
         self.IS_GRAPHICAL = True
-        self.DISPLAY = pygame.Surface((800, 600))
+        self.DISPLAY = pygame.Surface((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
         self.LAST_SURFACE = self.DISPLAY.copy()
         self.APPLICATION_HAS_FOCUS = True
         self.POSITION = (0, 0)
@@ -376,6 +376,9 @@ class Process():
         FileWrite.close()
 
         print("Crash log completed")
+
+    def InstallPackpagedApplication(self):
+        pass
 
     def FinishLoadingScreen(self):
         self.ProgressMax = self.Progress

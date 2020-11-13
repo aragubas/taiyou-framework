@@ -30,7 +30,7 @@ class TaskBarInstance:
         self.Welcome = False
         self.GoToModeWhenReturning = None
         self.DefaultContent = pDefaultContent
-        self.LastDisplayFrame = pygame.Surface((800, 600))
+        self.LastDisplayFrame = pygame.Surface((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
         self.Workaround_RenderLastFrame = False
 
         self.SetMode(0)
@@ -329,19 +329,19 @@ class ApplicationDashboard_Instace:
         self.DefaultContent = pDefaultContent
         self.RootObj = pRootObj
 
-        self.ApplicationSelector = UI.ApplicationSelector(pDefaultContent, 800 / 2 - 550 / 2, 600 / 2 - 120 / 2)
+        self.ApplicationSelector = UI.ApplicationSelector(pDefaultContent, Core.MAIN.ScreenWidth / 2 - 550 / 2, Core.MAIN.ScreenHeight / 2 - 120 / 2)
         self.NoFoldersFound = False
 
         self.LoadApplicationsList()
 
-        self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, 600 - 50 - 5, 800 - 10, 50))
+        self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, Core.MAIN.ScreenHeight - 50 - 5, Core.MAIN.ScreenWidth - 10, 50))
         self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
         self.BottomButtonsList.Append(Widget.Widget_Button(pDefaultContent, "About", 16, 190, 10, 0))
 
         self.ApplicationManagerBarAnimatorDisableToggle = True
         self.ApplicationManagerBarAnimator = utils.AnimationController(2)
         self.ApplicationManagerBarAnimator.Enabled = False
-        self.ApplicationManagerBar = Widget.Widget_Controller(pDefaultContent, (5, 650, 800 - 10, 50))
+        self.ApplicationManagerBar = Widget.Widget_Controller(pDefaultContent, (5, 650, Core.MAIN.ScreenWidth - 10, 50))
         self.ApplicationManagerBar.Append(Widget.Widget_Button(pDefaultContent, "Remove Application", 14, 5, 5, 0))
 
         self.TextsBaseX = 0
@@ -375,7 +375,7 @@ class ApplicationDashboard_Instace:
         self.BottomButtonsList.Update()
 
         # Update X values
-        self.ApplicationSelector.X = 800 / 2 - 550 / 2 + int(self.RootObj.Animation.Value - 255) / 10
+        self.ApplicationSelector.X = Core.MAIN.ScreenWidth / 2 - 550 / 2 + int(self.RootObj.Animation.Value - 255) / 10
         self.BottomButtonsList.Rectangle[0] = 5 + int(self.RootObj.Animation.Value - 255) / 10
         self.TextsBaseX = int(self.RootObj.Animation.Value - 255) / 25
 
@@ -383,7 +383,7 @@ class ApplicationDashboard_Instace:
 
     def UpdateApplicationManager(self):
         self.ApplicationManagerBarAnimator.Update()
-        self.ApplicationManagerBar.Rectangle[1] = 600 - 100 - 5 - max(2, self.ApplicationManagerBarAnimator.Value) / 10
+        self.ApplicationManagerBar.Rectangle[1] = Core.MAIN.ScreenHeight - 100 - 5 - max(2, self.ApplicationManagerBarAnimator.Value) / 10
         self.ApplicationManagerBar.Opacity = self.ApplicationManagerBarAnimator.Value
 
         self.ApplicationManagerEnabled = self.ApplicationSelector.SelectedItemIndex != -1
@@ -422,7 +422,7 @@ class ApplicationDashboard_Instace:
         FontSize = 34
         Font = "/Ubuntu.ttf"
         TextColor = (250, 250, 250)
-        self.DefaultContent.FontRender(ContentsSurface, Font, FontSize, TitleBarText, TextColor, self.TextsBaseX + 800 / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 600 / 2 - 120)
+        self.DefaultContent.FontRender(ContentsSurface, Font, FontSize, TitleBarText, TextColor, self.TextsBaseX + Core.MAIN.ScreenWidth / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 600 / 2 - 120)
 
     def InstanceToggled(self):
         pass
@@ -440,7 +440,8 @@ class ApplicationDashboard_Instace:
         if self.ApplicationManagerEnabled:
             self.ApplicationManagerBar.EventUpdate(event)
 
-        if event.type == pygame.KEYUP and event.key == pygame.K_RETURN or event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        ColRect = pygame.Rect(self.ApplicationSelector.X, self.ApplicationSelector.Y, self.ApplicationSelector.Width, self.ApplicationSelector.Height)
+        if event.type == pygame.KEYUP and event.key == pygame.K_RETURN or event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and ColRect.collidepoint(pygame.mouse.get_pos()) and self.ApplicationSelector.SelectedItemTitle != "":
             self.DisableInput = True
             print("OpenApp : " + self.ApplicationSelector.SelectedItemTitle)
 

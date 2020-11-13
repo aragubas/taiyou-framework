@@ -115,6 +115,13 @@ class Process():
                 # Update TaskBar Input Handling
                 self.TaskBarInstance.EventUpdate(event)
 
+    def SingleInstanceFocus(self):
+        if len(Core.MAIN.ProcessList) == 2:
+            for process in Core.MAIN.ProcessList:
+                if process.PID != self.PID:
+                    process.APPLICATION_HAS_FOCUS = True
+                    process.PRIORITY = -1
+
     def UI_Call_Request(self):
         # Ignore request if GUI_TASKMANAGER is not allowed
         if not self.GUI_ALLOW_TASKMANAGER:
@@ -166,7 +173,6 @@ class Process():
             self.UI_Call_Request()
 
         # Draw the Applications Window
-        DISPLAY.fill((0, 0, 0))
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
             for process in Core.MAIN.ProcessList:
@@ -210,6 +216,9 @@ class Process():
 
         # Update Applications Events
         self.EventUpdate()
+
+        # Single-Instance Application Focus
+        self.SingleInstanceFocus()
 
         # Play Notify Sound
         if self.PlayNotifySound:

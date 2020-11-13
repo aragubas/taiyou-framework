@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.2"
+    return "3.3"
 
 def Get_ShapeVersion():
     return "2.0"
@@ -38,10 +38,10 @@ def Get_FXVersion():
     return "1.2"
 
 def Get_BootloaderVersion():
-    return "1.8"
+    return "1.9"
 
 def Get_MAINVersion():
-    return "1.5"
+    return "1.6"
 
 def Get_WindowManagerManagerVersion():
     return "1.2"
@@ -63,7 +63,7 @@ from Core import SHAPES as shape
 from Core import UTILS as utils
 from Core import MAIN
 from Core import WMM as wmm
-import os, pygame, platform
+import os, pygame, platform, getpass
 
 # -- Arguments -- #
 IsGameRunning = False
@@ -128,13 +128,13 @@ def InitEngine():
         TaiyouPath_CorrectSlash = "/"
         TaiyouPath_SystemPath = "CoreFiles/"
         TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemPath + "system.config"
-        TaiyouPath_AppDataFolder = "./AppsData/"
+        TaiyouPath_AppDataFolder = "./UserData/{0}/AppsData/".format(getpass.getuser())
 
     elif CurrentPlatform == "Windows":
         TaiyouPath_CorrectSlash = "\\"
         TaiyouPath_SystemPath = "CoreFiles\\"
         TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemPath + "system.config"
-        TaiyouPath_AppDataFolder = ".\\AppsData\\"
+        TaiyouPath_AppDataFolder = ".\\UserData\\{0}\\AppsData\\".format(getpass.getuser())
 
     conf_file = open(TaiyouPath_TaiyouConfigFile)
 
@@ -324,6 +324,29 @@ def InitEngine():
                     ThrowException = False
 
                 print("Taiyou.Runtime.InitEngine : ThrowException was set to:" + str(ThrowException))
+
+            elif SplitedParms[0] == "ScreenRes":
+                ScreenResCode = SplitedParms[1].split("x")
+
+                try:
+                    ResWidth = int(ScreenResCode[0])
+                    ResHeight = int(ScreenResCode[1])
+
+                except:
+                    ResWidth = 790
+                    ResHeight = 576
+
+                # Minimun Screen Size
+                if ResWidth < 790:
+                    ResWidth = 790
+                if ResHeight < 576:
+                    ResHeight = 576
+
+                MAIN.ScreenWidth = ResWidth
+                MAIN.ScreenHeight = ResHeight
+
+                print("Taiyou.Runtime.InitEngine : ScreenResolution was set to:" + str(MAIN.ScreenWidth) + "x" + str(MAIN.ScreenHeight))
+
 
     if not IgnoreSDL2Parameters:  # -- Set SDL2 Parameters (if enabled) -- #
         # -- Set the Enviroments Variables -- #
