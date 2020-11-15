@@ -101,6 +101,8 @@ def FixColorRange(ColorArguments):
     :param ColorArguments: Input
     :return: Output
     """
+    if ColorArguments is None:
+        return (0, 0, 0, 0)
     ColorArguments = list(ColorArguments)
 
     if len(ColorArguments) < 4:  # -- Add the Alpha Argument

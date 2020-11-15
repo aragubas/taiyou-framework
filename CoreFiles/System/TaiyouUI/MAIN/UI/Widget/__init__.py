@@ -213,7 +213,7 @@ class Widget_Button:
         self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
-        self.ButtonState = False
+        self.ButtonState = 0
         self.CursorOffset = (0, 0)
         self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")

@@ -18,6 +18,7 @@ import Core, pygame, traceback
 from Core import utils
 from CoreFiles.System.TaiyouUI.MAIN import UI
 from CoreFiles.System.TaiyouUI.MAIN.UI import Widget
+from CoreFiles.System.Bootloader.MAIN import ListInstalledApplications
 
 
 class TaskBarInstance:
@@ -25,13 +26,14 @@ class TaskBarInstance:
         self.Enabled = False
         self.DisableToggle = False
         self.RootProcess = pRootProcess
-        self.Animation = utils.AnimationController(5.5, multiplierRestart=True)
+        self.Animation = utils.AnimationController(3, multiplierRestart=True)
         self.CurrentMode = None
         self.Welcome = False
         self.GoToModeWhenReturning = None
         self.DefaultContent = pDefaultContent
         self.LastDisplayFrame = pygame.Surface((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
         self.Workaround_RenderLastFrame = False
+        self.BluredBackgroundResult = pygame.Surface((0, 0))
 
         self.SetMode(0)
 
@@ -95,18 +97,24 @@ class TaskBarInstance:
     def Draw(self, DISPLAY):
         # Draw the Blurred Background
         if self.Animation.Value == 0 and not self.Animation.Enabled and not self.Workaround_RenderLastFrame:
-            DISPLAY.blit(Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25), (0, 0))
+            # Only blur the background wheen needed
+            if self.Animation.Value != self.Animation.MaxValue:
+                self.BluredBackgroundResult = Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+
+            DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
         if not self.Enabled:
             self.Workaround_RenderLastFrame = True
             if self.GoToModeWhenReturning is not None:
                 self.SetMode(self.GoToModeWhenReturning)
                 self.GoToModeWhenReturning = None
-
             return
 
-        # Render blurred copy of screen
-        DISPLAY.blit(Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25), (0, 0))
+        # Only blur the background wheen needed
+        if self.Animation.Value != self.Animation.MaxValue:
+            self.BluredBackgroundResult = Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+
+        DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
         # Contents Surface
         ContentsSurface = pygame.Surface((self.LastDisplayFrame.get_width(), self.LastDisplayFrame.get_height()), pygame.SRCALPHA)
@@ -219,6 +227,10 @@ class ApplicationSelectorMode_Instace:
         for process in Core.MAIN.ProcessList:
             if process.PID == self.RootObj.RootProcess.PID:
                 continue
+            # Skip non-graphical processes
+            if not process.IS_GRAPHICAL:
+                continue
+
             self.WindowList.AddItem(process.NAME, "PID: " + str(process.PID), ItemProperties=process.PID)
 
     def CloseSelectedProcess(self):
@@ -242,14 +254,12 @@ class ApplicationSelectorMode_Instace:
                     Core.MAIN.SystemFault_ProcessObject = None
                     Core.wmm.WindowManagerSignal(None, 4)
 
-
                     print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
                     print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
 
                     # Generate the Crash Log
                     Core.MAIN.GenerateCrashLog()
                     self.RootObj.SetMode(1)
-
                     return
 
     def SwitchToSelectedProcess(self):
@@ -336,18 +346,16 @@ class ApplicationDashboard_Instace:
 
         self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, Core.MAIN.ScreenHeight - 50 - 5, Core.MAIN.ScreenWidth - 10, 50))
         self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
-        self.BottomButtonsList.Append(Widget.Widget_Button(pDefaultContent, "About", 16, 190, 10, 0))
 
         self.ApplicationManagerBarAnimatorDisableToggle = True
         self.ApplicationManagerBarAnimator = utils.AnimationController(2)
         self.ApplicationManagerBarAnimator.Enabled = False
         self.ApplicationManagerBar = Widget.Widget_Controller(pDefaultContent, (5, 650, Core.MAIN.ScreenWidth - 10, 50))
-        self.ApplicationManagerBar.Append(Widget.Widget_Button(pDefaultContent, "Remove Application", 14, 5, 5, 0))
+        self.ApplicationManagerBar.Append(Widget.Widget_Button(pDefaultContent, "Open Application", 14, 5, 5, 0))
+        self.ApplicationManagerEnabled = False
 
         self.TextsBaseX = 0
         self.DisableInput = False
-
-        self.ApplicationManagerEnabled = False
 
     def LoadApplicationsList(self):
         # List all valid folders
@@ -357,16 +365,9 @@ class ApplicationDashboard_Instace:
             if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
                 BootFolders.append(file)
 
-        for boot in BootFolders:
-            ReadData = open(boot, "r").readlines()
+        ListInstalledApplications(BootFolders, self.ApplicationSelector)
 
-            AppTitle = ReadData[0].rstrip()
-            IconPath = ReadData[1].rstrip()
-            ModulePath = ReadData[2].rstrip()
-
-            self.ApplicationSelector.AddItem(AppTitle, ModulePath, IconPath)
-
-        if len(BootFolders) == 0:
+        if len(BootFolders) == 0 or len(self.ApplicationSelector.SeletorItems_ModulePath) == 0:
             self.NoFoldersFound = True
 
     def Update(self):
@@ -380,6 +381,9 @@ class ApplicationDashboard_Instace:
         self.TextsBaseX = int(self.RootObj.Animation.Value - 255) / 25
 
         self.UpdateApplicationManager()
+
+        if self.ApplicationManagerBar.LastInteractionID == 0 and self.ApplicationManagerBar.LastInteractionType == True:
+            self.OpenSelectedApp()
 
     def UpdateApplicationManager(self):
         self.ApplicationManagerBarAnimator.Update()
@@ -433,6 +437,7 @@ class ApplicationDashboard_Instace:
     def EventUpdate(self, event):
         if self.DisableInput:
             return
+
         self.ApplicationSelector.EventUpdate(event)
 
         self.BottomButtonsList.EventUpdate(event)
@@ -442,14 +447,28 @@ class ApplicationDashboard_Instace:
 
         ColRect = pygame.Rect(self.ApplicationSelector.X, self.ApplicationSelector.Y, self.ApplicationSelector.Width, self.ApplicationSelector.Height)
         if event.type == pygame.KEYUP and event.key == pygame.K_RETURN or event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and ColRect.collidepoint(pygame.mouse.get_pos()) and self.ApplicationSelector.SelectedItemTitle != "":
-            self.DisableInput = True
-            print("OpenApp : " + self.ApplicationSelector.SelectedItemTitle)
+            self.OpenSelectedApp()
 
-            try:
-                # Create the Application Process
-                Core.MAIN.CreateProcess(self.ApplicationSelector.SelectedItemModulePath, self.ApplicationSelector.SelectedItemModulePath)
+    def OpenSelectedApp(self):
+        self.DisableInput = True
+        print("OpenApp : " + self.ApplicationSelector.SelectedItemTitle)
 
-                self.RootObj.Toggle()
-            except:
-                print("Error while creating application process")
+        try:
+            # Create the Application Process
+            Core.MAIN.CreateProcess(self.ApplicationSelector.SelectedItemModulePath, self.ApplicationSelector.SelectedItemModulePath)
 
+            self.RootObj.Toggle()
+        except Exception:
+            self.DisableInput = False
+            Core.MAIN.SystemFault_Trigger = True
+            Core.MAIN.SystemFault_Traceback = traceback.format_exc()
+            Core.MAIN.SystemFault_ProcessObject = None
+            Core.wmm.WindowManagerSignal(None, 4)
+
+            print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
+            print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
+
+            # Generate the Crash Log
+            Core.MAIN.GenerateCrashLog()
+            self.RootObj.SetMode(1)
+            return

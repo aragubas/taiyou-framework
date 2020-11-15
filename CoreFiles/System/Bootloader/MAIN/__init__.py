@@ -98,6 +98,35 @@ class ApplicationSelector:
             if event.key == pygame.K_HOME:
                 self.HScroll = 10
 
+def ListInstalledApplications(BootFolders, ApplicationSelector):
+    for boot in BootFolders:
+        ReadData = open(boot, "r").readlines()
+
+        AppTitle = None
+        IconPath = None
+        ModulePath = None
+
+        for Data in ReadData:
+            Data = Data.rstrip().lstrip()
+            if Data.startswith("#"):
+                continue
+
+            Splited = Data.split(":")
+
+            if Splited[0] == "title":
+                AppTitle = Splited[1]
+
+            if Splited[0] == "icon_path":
+                IconPath = Splited[1]
+
+            if Splited[0] == "folder":
+                ModulePath = Splited[1]
+
+        if AppTitle is None or IconPath is None or ModulePath is None:
+            continue
+
+        ApplicationSelector.AddItem(AppTitle, ModulePath, IconPath)
+
 
 class Process():
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
@@ -155,16 +184,9 @@ class Process():
             if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
                 BootFolders.append(file)
 
-        for boot in BootFolders:
-            ReadData = open(boot, "r").readlines()
+        ListInstalledApplications(BootFolders, self.ApplicationSelectorObj)
 
-            AppTitle = ReadData[0].rstrip()
-            IconPath = ReadData[1].rstrip()
-            ModulePath = ReadData[2].rstrip()
-
-            self.ApplicationSelectorObj.AddItem(AppTitle, ModulePath, IconPath)
-
-        if len(BootFolders) == 0:
+        if len(BootFolders) == 0 or len(self.ApplicationSelectorObj.SeletorItems_Index) == 0:
             self.NoFoldersFound = True
 
         self.InitialSignal = False
@@ -223,7 +245,7 @@ class Process():
                         print(Traceback)
                         print("Something bad happened while creating the process for the default application.")
 
-                        self.FatalErrorScreen = True
+                        self.FatalErrorScreen = False
                         self.ApplicationSeletor = True
                         self.APPLICATION_HAS_FOCUS = True
 
@@ -389,5 +411,9 @@ class Process():
             Core.MAIN.CreateProcess("CoreFiles/System/TaiyouUI", "system_ui", pPriority=1)
 
         if CurrentProgres == 1:
+            # Start the Task Scheduler
+            Core.MAIN.CreateProcess("CoreFiles/System/task_scheduler", "task_scheduler", pPriority=1)
+
+        if CurrentProgres == 2:
             # Finish the Loading
             self.FinishLoadingScreen()

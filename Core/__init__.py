@@ -20,7 +20,7 @@ def Get_Version():
     return "3.3"
 
 def Get_ShapeVersion():
-    return "2.0"
+    return "2.1"
 
 def Get_AppDataVersion():
     return "1.1"

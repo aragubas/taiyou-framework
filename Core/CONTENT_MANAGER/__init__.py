@@ -120,9 +120,13 @@ class ContentManager:
         print("ContentManager.LoadImagesInFolder : Operation Completed.")
 
     def ReturnImageObject(self, pPath, pTransparency):
-        if pTransparency:
-            return pygame.image.load(pPath).convert_alpha()
-        return pygame.image.load(pPath).convert()
+        try:
+            if pTransparency:
+                return pygame.image.load(pPath).convert_alpha()
+            return pygame.image.load(pPath).convert()
+        except Exception as ex:
+            print("Error while loading unloaded image.\n" + str(ex) + "\nPath [{0}]".format(pPath))
+            return DefaultImage
 
     def LoadImage(self, ImagePath, Transparency=False):
         """

@@ -26,16 +26,16 @@ print("Taiyou SHAPE version: " + tge.Get_ShapeVersion())
 def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Border_TopLeft_Radius=0, Border_TopRight_Radius=0, Border_BottomLeft_Radius=0, Border_BottomRight_Radius=0, DrawLines=False):
     """
     Draw a Rectangle
-    :param DISPLAY:Surface to be drawn
-    :param Color:Color (RGB)
-    :param Rectangle:Rectangle Rectangle
-    :param BorderWidth:Border Width
-    :param BorderRadius:Border Radius
-    :param Border_TopLeft_Radius:Only apply border to TopLeft
-    :param Border_TopRight_Radius:Only apply border to TopRight
-    :param Border_BottomLeft_Radius:Only apply border to BottomLeft
-    :param Border_BottomRight_Radius:Only apply border to BottomRight
-    :param DrawLines:Draw only rectangle line
+    :param DISPLAY:Surface to be drawn\n
+    :param Color:Color (RGB)\n
+    :param Rectangle:Rectangle Rectangle\n
+    :param BorderWidth:Border Width\n
+    :param BorderRadius:Border Radius\n
+    :param Border_TopLeft_Radius:Only apply border to TopLeft\n
+    :param Border_TopRight_Radius:Only apply border to TopRight\n
+    :param Border_BottomLeft_Radius:Only apply border to BottomLeft\n
+    :param Border_BottomRight_Radius:Only apply border to BottomRight\n
+    :param DrawLines:Draw only rectangle line\n
     :return:
     """
     if cntMng.RectangleRenderingDisabled:

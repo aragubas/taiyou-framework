@@ -66,6 +66,11 @@ class Process():
 
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
 
+        self.Zoomlevel = 1.0
+        self.ZoomlevelMod = 1.0
+
+        self.ZoomEnabled = False
+
         # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID
 
@@ -74,6 +79,7 @@ class Process():
 
         # -- Update Event -- #
         for event in pygame.fastevent.get():
+            LastModKey = pygame.key.get_mods()
             # -- Closes Everthing when clicking on the X button
             if event.type == pygame.QUIT:
                 Core.MAIN.Destroy()
@@ -81,7 +87,36 @@ class Process():
 
             # UI Hotkeys
             if event.type == pygame.KEYUP:
-                # -- Toggle Taskbar -- #
+                # -- Increase Zoom -- #
+                if LastModKey & pygame.KMOD_SHIFT:
+                    if event.key == pygame.K_F11:
+                        self.ZoomlevelMod += self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount", float)
+
+                        if self.ZoomlevelMod >= 10:
+                            self.ZoomlevelMod = 10
+                        continue
+
+                    if event.key == pygame.K_F12:
+                        # -- Toggle Enable Zoom -- #
+                        if not self.ZoomEnabled:
+                            self.ZoomEnabled = True
+                            self.Zoomlevel = 1
+                            self.ZoomlevelMod = 1
+                        else:
+                            self.ZoomEnabled = False
+                            self.Zoomlevel = 1
+                            self.ZoomlevelMod = 1
+                        continue
+
+                if LastModKey & pygame.KMOD_CTRL:
+                    # -- Decrease Zoom -- #
+                    if event.key == pygame.K_F11:
+                        self.ZoomlevelMod -= self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount", float)
+
+                        if self.ZoomlevelMod <= 1.0:
+                            self.ZoomlevelMod = 1.0
+                        continue
+
                 if event.key == pygame.K_F11:
                     self.UI_Call_Request()
 
@@ -211,6 +246,21 @@ class Process():
 
         # Draw the Cursor
         self.DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+
+        if self.ZoomEnabled:
+            if self.Zoomlevel > self.ZoomlevelMod:
+                self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / self.DefaultContent.Get_RegKey("/options/zoom_animation_scale", int)
+
+            if self.Zoomlevel < self.ZoomlevelMod:
+                self.Zoomlevel += abs(self.Zoomlevel - self.ZoomlevelMod) / self.DefaultContent.Get_RegKey("/options/zoom_animation_scale", int)
+
+            if self.Zoomlevel < 1:
+                self.Zoomlevel = 1
+
+            WaxResult = pygame.Surface((Core.MAIN.ScreenWidth / self.Zoomlevel, Core.MAIN.ScreenHeight / self.Zoomlevel))
+            WaxResult.blit(DISPLAY, (0, 0), (pygame.mouse.get_pos()[0] - WaxResult.get_width() / 2, pygame.mouse.get_pos()[1] - WaxResult.get_height() / 2, WaxResult.get_width(), WaxResult.get_height()))
+            DISPLAY.blit(pygame.transform.scale(WaxResult, (800, 600)), (0, 0))
+
 
         pygame.display.flip()
 
