@@ -38,7 +38,7 @@ class Process():
 
         self.Taks[Index](self.TaksProcessAgrs[Index])
 
-        del self.TaskScheduler_Taks[Index]
+        del self.Taks[Index]
         del self.TaksKey[Index]
         del self.TaksProcessAgrs[Index]
 

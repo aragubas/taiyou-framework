@@ -16,8 +16,8 @@
 #
 import pygame
 from pygame import gfxdraw
-from Core import UTILS as utils
-from Core import CONTENT_MANAGER as cntMng
+from Core import UTILS as Utils
+from Core import CONTENT_MANAGER as CntMng
 import Core as tge
 
 print("Taiyou SHAPE version: " + tge.Get_ShapeVersion())
@@ -38,12 +38,12 @@ def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Bo
     :param DrawLines:Draw only rectangle line\n
     :return:
     """
-    if cntMng.RectangleRenderingDisabled:
+    if CntMng.RectangleRenderingDisabled:
         return
 
     if Rectangle[0] <= DISPLAY.get_width() and Rectangle[0] >= 0 - Rectangle[2] and Rectangle[1] <= DISPLAY.get_height() and Rectangle[1] >= 0 - Rectangle[3]:
         # -- Fix the Color Range -- #
-        Color = utils.FixColorRange(Color)
+        Color = Utils.FixColorRange(Color)
 
         # -- Border Radius-- #
         if BorderRadius > 0 and Border_TopRight_Radius == 0 and Border_TopLeft_Radius == 0 and Border_BottomLeft_Radius == 0 and Border_BottomRight_Radius == 0:
@@ -57,7 +57,7 @@ def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Bo
             pygame.draw.rect(DISPLAY, Color, Rectangle, BorderWidth, BorderRadius, Border_TopLeft_Radius,
                              Border_TopRight_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius)
         else:
-            gfxdraw.rectangle(DISPLAY, Rectangle, Color)
+            gFxdraw.rectangle(DISPLAY, Rectangle, Color)
 
 def Shape_Line(DISPLAY, Color, startX, startY, endX, endY, LineWidth, FoldLine=True):
     """
@@ -73,7 +73,7 @@ def Shape_Line(DISPLAY, Color, startX, startY, endX, endY, LineWidth, FoldLine=T
     :return:
     """
     # -- Fix the Color Range -- #
-    Color = utils.FixColorRange(Color)
+    Color = Utils.FixColorRange(Color)
 
     if FoldLine:
         if endX > DISPLAY.get_width():
@@ -105,6 +105,6 @@ def Shape_Circle(DISPLAY, X, Y, Radius, Color, Width=0, draw_top_right=False, dr
     :return:
     """
     if X - Radius < DISPLAY.get_width() and Y - Radius < DISPLAY.get_height() and X > -Radius and Y > -Radius and Radius > 1:
-        Color = utils.FixColorRange(Color)
+        Color = Utils.FixColorRange(Color)
 
         pygame.draw.circle(DISPLAY, Color, (X, Y), Radius, Width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)

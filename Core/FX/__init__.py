@@ -24,7 +24,7 @@ def Simple_BlurredRectangle(SourceSurface, Rectangle, BlurAmmount=100, Backgroun
     # Create new surface, blit SourceSurface
     ResultCeira = pygame.Surface((Rectangle[2], Rectangle[3]))
     ResultCeira.blit(SourceSurface, (0, 0), (Rectangle[0], Rectangle[1], Rectangle[2], Rectangle[3]))
-    ResultCeira = Core.fx.Surface_Blur(ResultCeira, BlurAmmount)
+    ResultCeira = Core.Fx.Surface_Blur(ResultCeira, BlurAmmount)
 
     # Copy the ResultCeira surface, fill with Fill Color then set a Alpha Value
     BlackBG = ResultCeira.copy()

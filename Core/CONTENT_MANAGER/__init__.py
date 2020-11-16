@@ -16,7 +16,7 @@
 #
 
 # -- Imports --
-from Core import UTILS as utils
+from Core import UTILS as Utils
 import Core as tge
 import pygame, sys, os
 from pygame import gfxdraw
@@ -135,7 +135,7 @@ class ContentManager:
         :param Transparency:Bool Value to import with transparency or not
         :return:
         """
-        if utils.Directory_Exists(ImagePath):
+        if Utils.Directory_Exists(ImagePath):
             self.Images_Name.append(tge.TaiyouPath_CorrectSlash + os.path.basename(ImagePath))
 
             if Transparency:
@@ -161,11 +161,11 @@ class ContentManager:
         :return:
         """
         print("Image.Unload : Unloading Images...")
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
         del self.Images_Data
         del self.Images_Name
         del CurrentLoadedFonts_Name
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
         self.Images_Data = list()
         self.Images_Name = list()
@@ -230,12 +230,12 @@ class ContentManager:
                             Image.set_alpha(Opacity)
                             Image.set_colorkey(ColorKey)
 
-                            DISPLAY.blit(pygame.transform.scale(Image, (Width, Height)), (X, Y))
+                            DISPLAY.blit(pygame.transform.scale(Image, (int(Width), int(Height))), (int(X), int(Y)))
                         else:  # -- Render Image with Smooth Scaling -- #
                             Image.set_alpha(Opacity)
                             Image.set_colorkey(ColorKey)
 
-                            DISPLAY.blit(pygame.transform.smoothscale(Image, (Width, Height)), (X, Y))
+                            DISPLAY.blit(pygame.transform.smoothscale(Image, (int(Width), int(Height))), (int(X), int(Y)))
 
             except Exception as ex:
                 print("Image.Render : Error while rendering sprite;\n" + str(ex))
@@ -296,7 +296,7 @@ class ContentManager:
 
         print("Taiyou.ContentManager.LoadRegistry : Loading Registry...")
 
-        temp_reg_keys = utils.Directory_FilesList(reg_dir)
+        temp_reg_keys = Utils.Directory_FilesList(reg_dir)
         index = -1
 
         for x in temp_reg_keys:
@@ -319,9 +319,9 @@ class ContentManager:
 
             print("Taiyou.ContentManager.LoadRegistry : KeyLoaded[" + CorrectKeyName + "]")
 
-        print("Taiyou.ContentManager.LoadRegistry : Total of {0} registry keys loaded. In {1} seconds.".format(str(len(self.reg_keys)), utils.FormatNumber(time.time() - start_time, 4)))
+        print("Taiyou.ContentManager.LoadRegistry : Total of {0} registry keys loaded. In {1} seconds.".format(str(len(self.reg_keys)), Utils.FormatNumber(time.time() - start_time, 4)))
 
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
     def ReloadRegistry(self):
         """
@@ -333,7 +333,7 @@ class ContentManager:
         
         self.LoadRegKeysInFolder()
 
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
     def UnloadRegistry(self):
         """
@@ -346,7 +346,7 @@ class ContentManager:
         self.reg_keys = list()
         self.reg_contents = list()
 
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
     def CorrectKeyName(self, keyEntred):
         """
@@ -445,7 +445,7 @@ class ContentManager:
         if not FontRenderingDisabled:
             # -- Get the FontFileObject, required for all functions here -- #
             FontFileObject = self.GetFont_object(FontFileLocation, Size)
-            ColorRGB = utils.FixColorRange(ColorRGB)
+            ColorRGB = Utils.FixColorRange(ColorRGB)
 
             if X <= DISPLAY.get_width() and Y <= DISPLAY.get_height() and X >= -FontFileObject.render(Text, antialias, ColorRGB).get_width() and Y >= -FontFileObject.render(Text, antialias, ColorRGB).get_height() and not Text == "":
                 # -- Fix Opacity Range -- #
@@ -542,7 +542,7 @@ class ContentManager:
         FolderName = self.Sound_Path
         self.InitSoundSystem()
 
-        temp_sound_files = utils.Directory_FilesList(FolderName)
+        temp_sound_files = Utils.Directory_FilesList(FolderName)
         index = -1
 
         print("ContentManager.LoadSoundsInFolder : Loading Sounds")
@@ -728,15 +728,15 @@ class ContentManager:
         print("ContentManager.UnloadSoundTuneCache : Clearing FrequencyGenerator Cache...")
         self.SoundTuneCache_Cache.clear()
         self.SoundTuneCache_Names.clear()
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
         del self.SoundTuneCache_Cache
         del self.SoundTuneCache_Names
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
         self.SoundTuneCache_Cache = list()
         self.SoundTuneCache_Names = list()
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
         print("ContentManager.UnloadSoundTuneCache : Done")
 
     def PlaySound(self, SourceName, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0):

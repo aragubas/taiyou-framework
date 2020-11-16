@@ -20,7 +20,7 @@ import os
 import Core as tge
 from Core import APPDATA as reg
 from Core import CONTENT_MANAGER as sprite
-from Core import UTILS as utils
+from Core import UTILS as Utils
 import pygame, sys, importlib, marshal, multiprocessing
 import traceback, threading
 from datetime import datetime
@@ -177,7 +177,7 @@ def SetDisplay():
     else:
         DISPLAY = pygame.display.set_mode((ScreenWidth, ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
 
-    pygame.display.set_caption("Taiyou Framework v" + utils.FormatNumber(tge.TaiyouGeneralVersion))
+    pygame.display.set_caption("Taiyou Framework v" + Utils.FormatNumber(tge.TaiyouGeneralVersion))
 
 def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
     """
@@ -211,7 +211,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
 
     if tge.Get_MainGameModuleName(Path) in sys.modules:
         sys.modules.pop(tge.Get_MainGameModuleName(Path))
-    utils.GarbageCollector_Collect()
+    Utils.GarbageCollector_Collect()
 
     # Inject Variables and Functions
     Index = ProcessList_PID.index(ProcessNextPID)
@@ -235,7 +235,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
         del ProcessList[-1]
         del ProcessList_PID[-1]
         del ProcessList_Names[-1]
-        utils.GarbageCollector_Collect()
+        Utils.GarbageCollector_Collect()
 
         raise ex
 
@@ -253,7 +253,7 @@ def KillProcessByPID(PID):
     ProcessList.pop(Index)
     ProcessList_PID.pop(Index)
     ProcessList_Names.pop(Index)
-    utils.GarbageCollector_Collect()
+    Utils.GarbageCollector_Collect()
 
     print("Taiyou : Finished process index: " + str(Index))
 
@@ -368,7 +368,7 @@ def GenerateCrashLog():
     print("Generating crash log...")
     # Create the directory for the Crash Logs
     CrashLogsDir = "./Logs/".replace("/", tge.TaiyouPath_CorrectSlash)
-    utils.Directory_MakeDir(CrashLogsDir)
+    Utils.Directory_MakeDir(CrashLogsDir)
 
     try:
         FilePath = CrashLogsDir + SystemFault_ProcessObject.NAME + ".txt"

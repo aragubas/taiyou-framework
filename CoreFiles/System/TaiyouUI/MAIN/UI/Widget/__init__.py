@@ -15,13 +15,14 @@
 #
 #
 import pygame
-from Core import utils
-from Core import shape
+from Core import Utils
+from Core import Convert
+from Core import Shape
 from CoreFiles.System.TaiyouUI.MAIN import UI
 
 class Widget_Controller:
     def __init__(self, pContentManager, Rectangle):
-        self.Rectangle = utils.Convert.List_PygameRect(Rectangle)
+        self.Rectangle = Convert.List_PygameRect(Rectangle)
         self.WidgetCollection = list()
         self.LastInteractionID = -1
         self.LastInteractionType = None
@@ -88,7 +89,7 @@ class Widget_PictureBox:
         if WidgetID == -1:
             raise ValueError("WidgetID cannot be -1")
 
-        self.Rectangle = utils.Convert.List_PygameRect(Rectangle)
+        self.Rectangle = Utils.Convert.List_PygameRect(Rectangle)
         self.ImageName = ImageName
         self.ID = WidgetID
         self.InteractionType = None
@@ -112,7 +113,7 @@ class Widget_ValueChanger:
         if WidgetID == -1:
             raise ValueError("WidgetID cannot be -1")
 
-        self.Rectangle = utils.Convert.List_PygameRect((Position[0], Position[1], 48, 34))
+        self.Rectangle = Utils.Convert.List_PygameRect((Position[0], Position[1], 48, 34))
         self.TitleName = TitleName
         self.ID = WidgetID
         self.Content = pContentManager
@@ -133,8 +134,8 @@ class Widget_ValueChanger:
             BGColor = UI.ThemesManager_GetProperty("Button_Inactive_BackgroundColor")
             LineColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
-        shape.Shape_Rectangle(DISPLAY, BGColor, self.Rectangle)
-        shape.Shape_Rectangle(DISPLAY, LineColor, self.Rectangle, 1)
+        Shape.Shape_Rectangle(DISPLAY, BGColor, self.Rectangle)
+        Shape.Shape_Rectangle(DISPLAY, LineColor, self.Rectangle, 1)
 
         # -- Render Change Title -- #
         TitleX = self.Rectangle[0] + self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", 12, self.TitleName) / 2
@@ -178,7 +179,7 @@ class Widget_Label:
         self.Color = Color
         self.X = X
         self.Y = Y
-        self.Rectangle = utils.Convert.List_PygameRect((X, Y, self.Content.GetFont_width(self.FontName, FontSize, self.Text), self.Content.GetFont_height(self.FontName, FontSize, self.Text)))
+        self.Rectangle = Utils.Convert.List_PygameRect((X, Y, self.Content.GetFont_width(self.FontName, FontSize, self.Text), self.Content.GetFont_height(self.FontName, FontSize, self.Text)))
         self.AwaysUpdate = False
         self.CursorOffset = (0, 0)
 
@@ -186,7 +187,7 @@ class Widget_Label:
         self.Content.FontRender(DISPLAY, self.FontName,self.FontSize, self.Text, self.Color, self.Rectangle[0], self.Rectangle[1])
 
     def Update(self):
-        self.Rectangle = utils.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
+        self.Rectangle = Utils.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
 
     def EventUpdate(self, event):
         pass
@@ -208,7 +209,7 @@ class Widget_Button:
         self.FontSize = FontSize
         self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-        self.Rectangle = utils.Convert.List_PygameRect((X - 2, Y - 2, self.TextWidth + 4, self.TextHeight + 4))
+        self.Rectangle = Convert.List_PygameRect((X - 2, Y - 2, self.TextWidth + 4, self.TextHeight + 4))
         self.LastRect = self.Rectangle
         self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
@@ -220,9 +221,9 @@ class Widget_Button:
 
     def Render(self, DISPLAY):
         # -- Render Background -- #
-        shape.Shape_Rectangle(self.Surface, self.BgColor, (0, 0, self.Rectangle[2], self.Rectangle[3]))
+        Shape.Shape_Rectangle(self.Surface, self.BgColor, (0, 0, self.Rectangle[2], self.Rectangle[3]))
         # -- Render Indicator -- #
-        shape.Shape_Rectangle(self.Surface, self.IndicatorColor, (0, 0, self.Rectangle[2], self.Rectangle[3]), 1)
+        Shape.Shape_Rectangle(self.Surface, self.IndicatorColor, (0, 0, self.Rectangle[2], self.Rectangle[3]), 1)
 
         # -- Render the Button Text -- #
         self.Content.FontRender(self.Surface, "/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text, (240, 240, 240), self.Centred_X, self.Centred_Y)
@@ -240,7 +241,7 @@ class Widget_Button:
             # -- Update all Size and Position Variables -- #
             self.TextWidth = UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
             self.TextHeight = UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-            self.Rectangle = utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
+            self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
             self.Centred_X = self.Rectangle[2] / 2 - UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
             self.Centred_Y = self.Rectangle[3] / 2 - UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
 

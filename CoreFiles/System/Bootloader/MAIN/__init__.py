@@ -15,7 +15,8 @@
 #
 #
 import Core, traceback, pygame, time
-from Core import shape
+from Core import Shape
+from Core import Utils
 
 class ApplicationSelector:
     def __init__(self, pContentManager, pX, pY):
@@ -39,7 +40,7 @@ class ApplicationSelector:
     def Draw(self, Surface):
         self.ObjectSurface.fill((0, 0, 0, 0))
 
-        shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
+        Shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
 
         index = -1
         for item in self.SeletorItems_Index:
@@ -48,7 +49,7 @@ class ApplicationSelector:
             ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
 
             if self.SelectedItemIndex == index:
-                shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
+                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
 
             if self.SeletorItems_Icon[index] == None:
                 self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)
@@ -144,13 +145,14 @@ class Process():
         self.TITLEBAR_TEXT = "Taiyou System Loader"
 
     def Initialize(self):
-        self.DefaultContent = Core.cntMng.ContentManager()
+        self.DefaultContent = Core.CntMng.ContentManager()
 
-        self.DefaultContent.SetSourceFolder("CoreFiles/System/Bootloader/")
-        self.DefaultContent.SetFontPath("Data/fonts")
-        self.DefaultContent.SetImageFolder("Data/img")
-        self.DefaultContent.SetRegKeysPath("Data/reg")
-        self.DefaultContent.SetSoundPath("Data/sound")
+        self.DefaultContent.SetSourceFolder("CoreFiles/res/")
+        self.DefaultContent.SetFontPath("fonts")
+        self.DefaultContent.SetImageFolder("img")
+        self.DefaultContent.SetRegKeysPath("reg/BOOTLOADER")
+        self.DefaultContent.SetSoundPath("sound")
+        self.DefaultContent.SetFontPath("fonts")
 
         self.DefaultContent.InitSoundSystem()
 
@@ -169,7 +171,7 @@ class Process():
         self.CenterY = self.DISPLAY.get_height() / 2
 
         self.ApplicationSeletor = False
-        self.ApplicationSeletorAnimatorStart = Core.utils.AnimationController(0.5, multiplierRestart=True)
+        self.ApplicationSeletorAnimatorStart = Core.Utils.AnimationController(0.5, multiplierRestart=True)
         self.ApplicationSelectorObj = ApplicationSelector(self.DefaultContent, self.CenterX - 550 / 2, self.CenterY - 120 / 2)
 
         self.NoFoldersFound = False
@@ -178,7 +180,7 @@ class Process():
         self.ApplicationSeletorWelcomeSound = False
 
         # List all valid folders
-        folder_list = Core.utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        folder_list = Core.Utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
             if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
@@ -326,14 +328,14 @@ class Process():
         # Draw the Logo
         LogoPos = (self.CenterX - 231 / 2, self.CenterY - 242, 231, 242)
 
-        self.DefaultContent.ImageRender(self.DISPLAY, "/logo.png", LogoPos[0], LogoPos[1], LogoPos[2], LogoPos[3])
+        self.DefaultContent.ImageRender(self.DISPLAY, "/framework_logo.png", LogoPos[0], LogoPos[1], LogoPos[2], LogoPos[3])
 
     def DrawProgressBar(self, DISPLAY):
         self.LoadingBarPos = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
-        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], max(10, Core.utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax)), 10)
+        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], max(10, Utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax)), 10)
 
-        Core.shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.LoadingBarPos, 0, self.LoadingBarPos[3])
-        Core.shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.LoadingBarProgress, 0, self.LoadingBarPos[3])
+        Shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.LoadingBarPos, 0, self.LoadingBarPos[3])
+        Shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.LoadingBarProgress, 0, self.LoadingBarPos[3])
 
     def EventUpdate(self, event):
         if self.ApplicationSeletor:
@@ -380,7 +382,7 @@ class Process():
         print("Generating crash log...")
         # Create the directory for the Crash Logs
         CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
-        Core.utils.Directory_MakeDir(CrashLogsDir)
+        Utils.Directory_MakeDir(CrashLogsDir)
 
         # Set the FileName
         FilePath = CrashLogsDir + ApplicationName + "_boot.txt"

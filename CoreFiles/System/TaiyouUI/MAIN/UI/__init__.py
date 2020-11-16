@@ -16,8 +16,8 @@
 #
 import pygame
 import Core as tge
-import Core.SHAPES as shape
-import Core.UTILS as utils
+import Core.SHAPES as Shape
+import Core.UTILS as Utils
 import CoreFiles.System.TaiyouUI.MAIN.UI.Widget as widget
 
 TaskBar_Version = "2.0"
@@ -47,7 +47,7 @@ def ThemesManager_LoadTheme(ContentManager, ThemeName):
         ThemeRawData = None
 
         if ThemeDataType == "tuple":
-            ThemeRawData = utils.Convert.Parse_Tuple(ThemeData)
+            ThemeRawData = Utils.Convert.Parse_Tuple(ThemeData)
 
         if ThemeDataType == "int":
             ThemeRawData = int(ThemeData)
@@ -129,10 +129,10 @@ class VerticalListWithDescription:
                 BorderColor = (255, 51, 102)
 
             # -- Background -- #
-            shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect)
+            Shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect)
 
             # -- Indicator Bar -- #
-            shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1)
+            Shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1)
 
             # -- Render Item Name -- #
             self.ContentManager.FontRender(self.ListSurface, "/Ubuntu_Bold.ttf", 14, itemNam, ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 5)
@@ -224,7 +224,7 @@ class ApplicationSelector:
     def Draw(self, Surface):
         self.ObjectSurface.fill((0, 0, 0, 0))
 
-        shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
+        Shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
 
         index = -1
         for item in self.SeletorItems_Index:
@@ -233,7 +233,7 @@ class ApplicationSelector:
             ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
 
             if self.SelectedItemIndex == index:
-                shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
+                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
 
             if self.SeletorItems_Icon[index] == None:
                 self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)

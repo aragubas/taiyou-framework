@@ -18,7 +18,7 @@ import Core, time, pygame, traceback, math
 from Core.MAIN import DISPLAY as DISPLAY
 from CoreFiles.System.TaiyouUI.MAIN import UI
 from CoreFiles.System.TaiyouUI.MAIN import TaskBar
-from Core import fx
+from Core import Fx
 
 class Process():
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
@@ -36,14 +36,14 @@ class Process():
         pygame.mouse.set_visible(False)
 
         # Initialize Content Manager
-        self.DefaultContent = Core.cntMng.ContentManager()
+        self.DefaultContent = Core.CntMng.ContentManager()
 
-        self.DefaultContent.SetSourceFolder("CoreFiles/System/TaiyouUI/")
-        self.DefaultContent.SetFontPath("Data/fonts")
-        self.DefaultContent.SetImageFolder("Data/img")
-        self.DefaultContent.SetRegKeysPath("Data/reg")
-        self.DefaultContent.SetSoundPath("Data/sound")
-        self.DefaultContent.SetFontPath("Data/fonts")
+        self.DefaultContent.SetSourceFolder("CoreFiles/res/")
+        self.DefaultContent.SetFontPath("fonts")
+        self.DefaultContent.SetImageFolder("img")
+        self.DefaultContent.SetRegKeysPath("reg/UI")
+        self.DefaultContent.SetSoundPath("sound")
+        self.DefaultContent.SetFontPath("fonts")
 
         self.DefaultContent.InitSoundSystem()
         self.DefaultContent.LoadRegKeysInFolder()
@@ -245,7 +245,7 @@ class Process():
         self.TaskBarInstance.Draw(DISPLAY)
 
         # Draw the Cursor
-        self.DefaultContent.ImageRender(DISPLAY, "/cursor.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        self.DefaultContent.ImageRender(DISPLAY, "/pointer.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
         if self.ZoomEnabled:
             if self.Zoomlevel > self.ZoomlevelMod:
@@ -303,7 +303,7 @@ class Process():
                     TitleBarColor = (39, 54, 159)
                     TextColor = (200, 200, 200)
 
-                    Core.shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
+                    Core.Shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
 
                     # Draw Title Bar Text
                     TitleBarText = process.TITLEBAR_TEXT
@@ -352,7 +352,7 @@ class Process():
             WindowBorderColor = UI.ThemesManager_GetProperty("WM_BorderInactiveColor")
 
         # Draw window titlebar
-        Core.shape.Shape_Rectangle(Surface, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
+        Core.Shape.Shape_Rectangle(Surface, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
 
         # Draw Title Bar Text
         TitleBarText = process.TITLEBAR_TEXT
@@ -366,7 +366,7 @@ class Process():
         self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
 
         # Draw the Window Borders
-        Core.shape.Shape_Rectangle(Surface, WindowBorderColor, (0, 0, Surface.get_width(), Surface.get_height()), 1)
+        Core.Shape.Shape_Rectangle(Surface, WindowBorderColor, (0, 0, Surface.get_width(), Surface.get_height()), 1)
 
         # Draw the Window Contents
         Surface.blit(pSurface, (1, process.TITLEBAR_RECTANGLE[3]))

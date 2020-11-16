@@ -16,7 +16,7 @@
 #
 import pygame
 import Core as tge
-import Core.SHAPES as shape
+import Core.SHAPES as Shape
 
 class VerticalListWithDescription:
     def __init__(self, Rectangle, pContentManager):
@@ -69,10 +69,10 @@ class VerticalListWithDescription:
                 BorderColor = (255, 51, 102)
 
             # -- Background -- #
-            shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect)
+            Shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect)
 
             # -- Indicator Bar -- #
-            shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1)
+            Shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1)
 
             # -- Render Item Name -- #
             self.ContentManager.FontRender(self.ListSurface, "/Ubuntu_Bold.ttf", 14, itemNam, ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 5)

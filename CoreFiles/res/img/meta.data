@@ -1,0 +1,8 @@
+# This assets is shared by all UI modules #
+
+/error.png:True
+/folder_question.png:True
+/framework_logo.png:True
+/pointer.png:True
+/warning.png:True
+

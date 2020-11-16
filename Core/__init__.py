@@ -17,34 +17,34 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.3"
+    return "3.5"
 
 def Get_ShapeVersion():
-    return "2.1"
+    return "2.2"
 
 def Get_AppDataVersion():
-    return "1.1"
+    return "1.2"
 
 def Get_UtilsVersion():
-    return "2.3"
+    return "2.4"
 
 def Get_TaiyouMainVersion():
-    return "3.7"
+    return "3.8"
 
 def Get_ContentManagerVersion():
-    return "3.2"
+    return "3.3"
 
 def Get_FXVersion():
-    return "1.2"
+    return "1.3"
 
 def Get_BootloaderVersion():
-    return "1.9"
+    return "2.0"
 
 def Get_MAINVersion():
-    return "1.6"
+    return "1.7"
 
 def Get_WindowManagerManagerVersion():
-    return "1.2"
+    return "1.3"
 
 
 
@@ -54,16 +54,6 @@ TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(
 # -- Print Runtime Version -- #
 print("\nTaiyou General version " + str(TaiyouGeneralVersion))
 print("\n")
-
-# -- Imports All Modules -- #
-from Core import CONTENT_MANAGER as cntMng
-from Core import APPDATA as appData
-from Core import FX as fx
-from Core import SHAPES as shape
-from Core import UTILS as utils
-from Core import MAIN
-from Core import WMM as wmm
-import os, pygame, platform, getpass
 
 # -- Arguments -- #
 IsGameRunning = False
@@ -182,11 +172,11 @@ def InitEngine():
             # -- Disable Sound System -- #
             elif SplitedParms[0] == "DisableSoundSystem":
                 if SplitedParms[1] == "True":
-                    cntMng.DisableSoundSystem = True
+                    CntMng.DisableSoundSystem = True
                 else:
-                    cntMng.DisableSoundSystem = False
+                    CntMng.DisableSoundSystem = False
 
-                print("Taiyou.Runtime.InitEngine : Disable sound system set to:" + str(cntMng.DisableSoundSystem))
+                print("Taiyou.Runtime.InitEngine : Disable sound system set to:" + str(CntMng.DisableSoundSystem))
 
             # -- SDL Option: Video Driver -- #
             elif SplitedParms[0] == "VideoDriver":
@@ -376,7 +366,7 @@ def InitEngine():
     pygame.transform.set_smoothscale_backend(SmoothScaleTransform)
 
     # -- Initialize Pygame and Sound System -- #
-    if cntMng.SoundDisabled:
+    if CntMng.SoundDisabled:
         # -- Set some Variables -- #
         Frequency = int(AudioFrequency)
         Size = int(AudioSize)
@@ -412,8 +402,8 @@ def GetAppDataFromAppName(AppName):
     Path = "{1}{0}".format(AppName, TaiyouPath_AppDataFolder)
     
     # Check if path exists
-    if not utils.Directory_Exists(Path):
-        utils.Directory_MakeDir(Path)
+    if not Utils.Directory_Exists(Path):
+        Utils.Directory_MakeDir(Path)
 
     return Path
 
@@ -428,3 +418,16 @@ def Get_MainGameModuleName(GameFolder):
     return "{0}{1}".format(GameFolder.replace(TaiyouPath_CorrectSlash, "."), ".MAIN")
 
 # endregion
+
+
+# -- Imports All Modules -- #
+import os, pygame, platform, getpass
+from Core import CONTENT_MANAGER as CntMng
+from Core import APPDATA as AppData
+from Core import FX as Fx
+from Core import SHAPES as Shape
+from Core import UTILS as Utils
+from Core.UTILS import Convert as Convert
+from Core.UTILS import CoreUtils as CoreUtils
+from Core import WMM as wmm
+from Core import MAIN

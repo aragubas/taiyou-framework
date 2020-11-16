@@ -15,7 +15,8 @@
 #
 #
 import Core, pygame, traceback
-from Core import utils
+from Core import Utils
+from Core import Fx
 from CoreFiles.System.TaiyouUI.MAIN import UI
 from CoreFiles.System.TaiyouUI.MAIN.UI import Widget
 from CoreFiles.System.Bootloader.MAIN import ListInstalledApplications
@@ -26,7 +27,7 @@ class TaskBarInstance:
         self.Enabled = False
         self.DisableToggle = False
         self.RootProcess = pRootProcess
-        self.Animation = utils.AnimationController(3, multiplierRestart=True)
+        self.Animation = Utils.AnimationController(3, multiplierRestart=True)
         self.CurrentMode = None
         self.Welcome = False
         self.GoToModeWhenReturning = None
@@ -99,7 +100,7 @@ class TaskBarInstance:
         if self.Animation.Value == 0 and not self.Animation.Enabled and not self.Workaround_RenderLastFrame:
             # Only blur the background wheen needed
             if self.Animation.Value != self.Animation.MaxValue:
-                self.BluredBackgroundResult = Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+                self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
 
             DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
@@ -112,7 +113,7 @@ class TaskBarInstance:
 
         # Only blur the background wheen needed
         if self.Animation.Value != self.Animation.MaxValue:
-            self.BluredBackgroundResult = Core.fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+            self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
 
         DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
@@ -168,8 +169,8 @@ class ApplicationSelectorMode_Instace:
         self.WindowList.Render(ContentsSurface)
 
         # Render TaskbarTools Background
-        Core.shape.Shape_Rectangle(ContentsSurface, (20, 20, 60), self.Tools)
-        Core.shape.Shape_Rectangle(ContentsSurface, (94, 114, 219), (self.Tools[0] - 2, self.Tools[1] - 2, self.Tools[2] + 4, self.Tools[3] + 4), BorderWidth=2)
+        Core.Shape.Shape_Rectangle(ContentsSurface, (20, 20, 60), self.Tools)
+        Core.Shape.Shape_Rectangle(ContentsSurface, (94, 114, 219), (self.Tools[0] - 2, self.Tools[1] - 2, self.Tools[2] + 4, self.Tools[3] + 4), BorderWidth=2)
 
         # Render Close Button
         self.Tools_WidgetController.Draw(ContentsSurface)
@@ -300,14 +301,14 @@ class SystemFault_Instance:
         except:
             ProcessName = "Unknown"
 
-        TitleText = "The process {0} has failed.".format(Core.utils.ShortString(ProcessName, 40))
+        TitleText = "The process {0} has failed.".format(Utils.ShortString(ProcessName, 40))
         TitleFontSize = 22
         TitleFont = "/Ubuntu_Bold.ttf"
         self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
 
         # Draw the SystemFault message
         try:
-            TitleText = "Title : {0}\nPID : {1}\nExecPath : {2}\n\nDetails about the crash has been saved on logs folder\nlocated in: <root>/logs/.".format(Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.TITLEBAR_TEXT, 35), str(Core.MAIN.SystemFault_ProcessObject.PID), Core.utils.ShortString(Core.MAIN.SystemFault_ProcessObject.ROOT_MODULE, 35))
+            TitleText = "Title : {0}\nPID : {1}\nExecPath : {2}\n\nDetails about the crash has been saved on logs folder\nlocated in: <root>/logs/.".format(Core.Utils.ShortString(Core.MAIN.SystemFault_ProcessObject.TITLEBAR_TEXT, 35), str(Core.MAIN.SystemFault_ProcessObject.PID), Core.Utils.ShortString(Core.MAIN.SystemFault_ProcessObject.ROOT_MODULE, 35))
         except:
             TitleText = "Cannot obtain process information."
         TitleFontSize = 14
@@ -345,10 +346,10 @@ class ApplicationDashboard_Instace:
         self.LoadApplicationsList()
 
         self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, Core.MAIN.ScreenHeight - 50 - 5, Core.MAIN.ScreenWidth - 10, 50))
-        self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
+        self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + Utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
 
         self.ApplicationManagerBarAnimatorDisableToggle = True
-        self.ApplicationManagerBarAnimator = utils.AnimationController(2)
+        self.ApplicationManagerBarAnimator = Utils.AnimationController(2)
         self.ApplicationManagerBarAnimator.Enabled = False
         self.ApplicationManagerBar = Widget.Widget_Controller(pDefaultContent, (5, 650, Core.MAIN.ScreenWidth - 10, 50))
         self.ApplicationManagerBar.Append(Widget.Widget_Button(pDefaultContent, "Open Application", 14, 5, 5, 0))
@@ -359,7 +360,7 @@ class ApplicationDashboard_Instace:
 
     def LoadApplicationsList(self):
         # List all valid folders
-        folder_list = Core.utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        folder_list = Core.Utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
             if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):

@@ -1,0 +1,33 @@
+### EDITOR: Button ###
+Button_Active_IndicatorColor;tuple;(46, 196, 182)
+Button_Inactive_IndicatorColor;tuple;(255, 51, 102)
+Button_BackgroundColor;tuple;(15, 27, 44)
+
+#== UI: Vertical List ### -- Inactive --
+VerticalListWithDescription_Inactive_BackgroundColor;tuple;(20, 42, 59, 50)
+VerticalListWithDescription_Inactive_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Inactive_BorderColor;tuple;(250, 250, 250)
+# -- Active --
+VerticalListWithDescription_Active_BackgroundColor;tuple;(20, 42, 59, 100)
+VerticalListWithDescription_Active_ItemNameFontColor;tuple;(255, 255, 255)
+VerticalListWithDescription_Active_BorderColor;tuple;(46, 196, 182)
+# -- Misc --
+VerticalListWithDescription_Selected_BackgroundColor;tuple;(30, 52, 69, 150)
+VerticalListWithDescription_Selected_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Selected_BorderColor;tuple;(255, 51, 102)
+# -- Font File Names -- 
+VerticalListWithDescription_ItemNameFont;str;/Ubuntu_Bold.ttf
+VerticalListWithDescription_ItemDescriptionFont;str;/Ubuntu.ttf
+
+#== Window Manager ### -- Inactive --
+WM_TitlebarInactiveColor;tuple;(39, 54, 159, 255)
+WM_TitlebarTextInactiveColor;tuple;(150, 150, 150, 255)
+WM_BorderInactiveColor;tuple;(20, 20, 58, 255)
+# -- Active --
+WM_TitlebarTextActiveColor;tuple;(240, 240, 240, 255)
+WM_BorderActiveColor;tuple;(94, 114, 219, 255)
+WM_TitlebarActiveColor;tuple;(20, 20, 58, 255)
+WM_WINDOWDRAG_TITLEBAR;str;||||||||||||||||||||
+WM_WINDOWDRAG_TITLEBAR_FONTFILE;str;/Ubuntu.ttf
+WM_WINDOWDRAG_TITLEBAR_FONTSIZE;int;12
+

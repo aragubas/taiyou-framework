@@ -82,8 +82,8 @@ def GetImage_DominantColor(Surface, Number_Clusters=5):
 
     ConvertedImage = ConvertedImage.resize((100, 100))  # optional, to reduce time
     ar = np.asarray(ConvertedImage)
-    shape = ar.shape
-    ar = ar.reshape(scipy.product(shape[:2]), shape[2]).astype(float)
+    Shape = ar.Shape
+    ar = ar.reshape(scipy.product(Shape[:2]), Shape[2]).astype(float)
 
     codes, dist = scipy.cluster.vq.kmeans(ar, Number_Clusters)
 

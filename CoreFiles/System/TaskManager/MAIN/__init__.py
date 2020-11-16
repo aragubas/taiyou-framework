@@ -36,7 +36,7 @@ class Process():
         self.WindowDragEnable = False
 
     def Initialize(self):
-        self.DefaultContent = Core.cntMng.ContentManager()
+        self.DefaultContent = Core.CntMng.ContentManager()
         self.DefaultContent.SetSourceFolder("CoreFiles/System/TaskManager/")
         self.DefaultContent.LoadRegKeysInFolder("Data/reg")
         self.DefaultContent.LoadImagesInFolder("Data/img")
