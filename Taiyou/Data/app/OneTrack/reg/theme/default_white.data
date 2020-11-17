@@ -1,0 +1,58 @@
+### EDITOR: Track Block ###
+# - Active
+TrackBlock_FrequencyBGColor_Active;tuple;(190, 184, 175)
+TrackBlock_DurationBGColor_Active;tuple;(140, 154, 175)
+TrackBlock_InstanceLabelActiveColor;tuple;(250, 250, 250)
+
+# - Deactive
+TrackBlock_FrequencyBGColor_Deactive;tuple;(50, 40, 57)
+TrackBlock_DurationBGColor_Deactive;tuple;(30, 30, 40)
+TrackBlock_InstanceLabelDeactiveColor;tuple;(75, 75, 75)
+
+# - Highlight 1
+TrackBlock_FrequencyBGColor_Hightlight1;tuple;(80, 60, 77)
+TrackBlock_DurationBGColor_Hightlight1;tuple;(48, 38, 49)
+# - Highlight 2
+TrackBlock_FrequencyBGColor_Hightlight2;tuple;(98, 77, 78)
+TrackBlock_DurationBGColor_Hightlight2;tuple;(45, 42, 55)
+
+TrackBlock_NoteLabel_UnknowNote;tuple;(210, 190, 225)
+TrackBlock_NoteLabel_KnowNote;tuple;(255, 255, 255)
+
+### EDITOR: EditableNumberView ###
+EditableNumberView_ColorSelected;tuple;(255, 255, 255)
+EditableNumberView_ColorActive;tuple;(70, 70, 75)
+EditableNumberView_ColorDeactive;tuple;(125, 125, 125)
+
+### EDITOR: Button ###
+Button_Active_IndicatorColor;tuple;(186, 130, 182)
+Button_Inactive_IndicatorColor;tuple;(255, 151, 102)
+Button_BackgroundColor;tuple;(35, 47, 64)
+
+### EDITOR: Input Box ###
+InputBox_COLOR_INACTIVE;tuple;(20, 42, 59)
+InputBox_COLOR_ACTIVE;tuple;(15, 27, 44)
+InputBox_FontFile;str;/Ubuntu.ttf
+
+### EDITOR: Misc ##
+TrackPointerColor;tuple;(140, 130, 145)
+TrackSelectedPattern_PlayMode_BackgroundColor;tuple;(10, 15, 15)
+TrackSelectedPattern_PlayMode_FontColor;tuple;(255, 255, 255)
+TrackSelectedPattern_BackgroundColor;tuple;(76, 76, 120)
+TrackSelectedPattern_FontColor;tuple;(250, 250, 250)
+BackgroundColor;tuple;(62, 62, 116)
+DropDownMenu_BorderColor;tuple;(110, 120, 135)
+
+### UI: Vertical List ###
+VerticalListWithDescription_Inactive_BackgroundColor;tuple;(20, 42, 59, 50)
+VerticalListWithDescription_Inactive_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Inactive_BorderColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Active_BackgroundColor;tuple;(20, 42, 59, 100)
+VerticalListWithDescription_Active_ItemNameFontColor;tuple;(255, 255, 255)
+VerticalListWithDescription_Active_BorderColor;tuple;(46, 196, 182)
+VerticalListWithDescription_Selected_BackgroundColor;tuple;(30, 52, 69, 150)
+VerticalListWithDescription_Selected_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Selected_BorderColor;tuple;(255, 51, 102)
+VerticalListWithDescription_ItemNameFont;str;/Ubuntu_Bold.ttf
+VerticalListWithDescription_ItemDescriptionFont;str;/Ubuntu.ttf
+

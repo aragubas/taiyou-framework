@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8
+#!/usr/bin/python3.7
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,26 +14,29 @@
 #   limitations under the License.
 #
 #
-import sys, os, sys
-print("Check for Taiyou Framework Instalation...")
+import pygame, Core
+from Core import CntMng
 
-if not os.path.exists("./Taiyou"):
-    print("\n\nFatal Error!\nCannot find Taiyou Instalation Folder!\n\nExecution cannot complete.")
-    sys.exit(1)
+BPM = 150
+Rows = 32
+Highlight = 4
+HighlightSecond = 16
+Editor_CurrentOctave = 4
+Patterns = 2
 
-print("Adding Required Path for All Modules...")
-sys.path.append("Taiyou/Applications/")
-sys.path.append("Taiyou/System/")
+FileMenuEnabled = False
+DisableControls = False
+GenerateSoundCache = True
+GenerateSoundCache_MessageSeen = False
+PlayMode = False
+SelectedTrack = 0
+PatternIsUpdating = False
+AwaysUpdate = False
+ProcessReference = None
+Volume = 0.1
+DefaultContent = CntMng.ContentManager
 
-import Core
+def LoadDefaultValues():
+    global Volume
 
-## Start the Application Loop ##
-LoopEnabled = True
-Core.MAIN.Initialize()
-
-
-while (LoopEnabled):
-    Core.MAIN.Run()
-
-print("\nSee you later!")
-
+    Volume = DefaultContent.Get_RegKey("/options/VolumeMultiplier", float)

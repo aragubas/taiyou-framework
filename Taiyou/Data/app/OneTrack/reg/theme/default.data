@@ -1,0 +1,55 @@
+### EDITOR: Track Block ###
+TrackBlock_FrequencyBGColor_Active;tuple;(90, 84, 75)
+TrackBlock_DurationBGColor_Active;tuple;(40, 54, 75)
+TrackBlock_FrequencyBGColor_Deactive;tuple;(30, 20, 37)
+TrackBlock_DurationBGColor_Deactive;tuple;(0, 0, 10)
+TrackBlock_FrequencyBGColor_Hightlight1;tuple;(50, 30, 47)
+TrackBlock_DurationBGColor_Hightlight1;tuple;(18, 8, 19)
+TrackBlock_FrequencyBGColor_Hightlight2;tuple;(98, 77, 78)
+TrackBlock_DurationBGColor_Hightlight2;tuple;(45, 42, 55)
+TrackBlock_InstanceLabelActiveColor;tuple;(250, 250, 250)
+TrackBlock_InstanceLabelDeactiveColor;tuple;(55, 55, 55)
+TrackBlock_NoteLabel_UnknowNote;tuple;(110, 90, 125)
+TrackBlock_NoteLabel_KnowNote;tuple;(220, 190, 225)
+
+### EDITOR: EditableNumberView ###
+EditableNumberView_ColorSelected;tuple;(255, 255, 255)
+EditableNumberView_ColorActive;tuple;(100, 100, 100)
+EditableNumberView_ColorDeactive;tuple;(50, 50, 50)
+
+### EDITOR: Button ###
+Button_Active_IndicatorColor;tuple;(46, 196, 182)
+Button_Inactive_IndicatorColor;tuple;(255, 51, 102)
+Button_BackgroundColor;tuple;(15, 27, 44)
+
+### EDITOR: Input Box ###
+InputBox_COLOR_INACTIVE;tuple;(1, 22, 39)
+InputBox_COLOR_ACTIVE;tuple;(15, 27, 44)
+InputBox_FontFile;str;/Ubuntu.ttf
+
+### EDITOR: Misc ##
+TrackPointerColor;tuple;(250, 70, 95)
+TrackSelectedPattern_PlayMode_BackgroundColor;tuple;(10, 15, 15)
+TrackSelectedPattern_PlayMode_FontColor;tuple;(255, 255, 255)
+TrackSelectedPattern_BackgroundColor;tuple;(76, 76, 120)
+TrackSelectedPattern_FontColor;tuple;(250, 250, 250)
+BackgroundColor;tuple;(62, 62, 116)
+DropDownMenu_BorderColor;tuple;(110, 120, 135)
+
+### UI: Vertical List ###
+VerticalListWithDescription_Inactive_BackgroundColor;tuple;(20, 42, 59, 50)
+VerticalListWithDescription_Inactive_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Inactive_BorderColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Active_BackgroundColor;tuple;(20, 42, 59, 100)
+VerticalListWithDescription_Active_ItemNameFontColor;tuple;(255, 255, 255)
+VerticalListWithDescription_Active_BorderColor;tuple;(46, 196, 182)
+VerticalListWithDescription_Selected_BackgroundColor;tuple;(30, 52, 69, 150)
+VerticalListWithDescription_Selected_ItemNameFontColor;tuple;(250, 250, 250)
+VerticalListWithDescription_Selected_BorderColor;tuple;(255, 51, 102)
+VerticalListWithDescription_ItemNameFont;str;/Ubuntu_Bold.ttf
+VerticalListWithDescription_ItemDescriptionFont;str;/Ubuntu.ttf
+
+### OneTrack Unatached Dialog ###
+Dialog_BG_Color;tuple;(20, 20, 38)
+
+

@@ -1,4 +1,4 @@
-#!/usr/bin/python3.8
+#!/usr/bin/python3.7
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,26 +14,16 @@
 #   limitations under the License.
 #
 #
-import sys, os, sys
-print("Check for Taiyou Framework Instalation...")
+import pygame
 
-if not os.path.exists("./Taiyou"):
-    print("\n\nFatal Error!\nCannot find Taiyou Instalation Folder!\n\nExecution cannot complete.")
-    sys.exit(1)
+def Initialize():
+    pass
 
-print("Adding Required Path for All Modules...")
-sys.path.append("Taiyou/Applications/")
-sys.path.append("Taiyou/System/")
+def EventUpdate(event):
+    pass
 
-import Core
+def Update():
+    pass
 
-## Start the Application Loop ##
-LoopEnabled = True
-Core.MAIN.Initialize()
-
-
-while (LoopEnabled):
-    Core.MAIN.Run()
-
-print("\nSee you later!")
-
+def Draw(DISPLAY):
+    pass
