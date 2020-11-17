@@ -279,48 +279,51 @@ class Process():
         return self.DISPLAY
 
     def DrawApplicationSelector(self):
-        self.DISPLAY.set_alpha(self.ApplicationSeletorAnimatorStart.Value)
+        DisplayWithWax = self.DISPLAY.copy()
+        DisplayWithWax.set_alpha(self.ApplicationSeletorAnimatorStart.Value)
 
         if not self.NoFoldersFound and not self.FatalErrorScreen:
-            self.ApplicationSelectorObj.Draw(self.DISPLAY)
+            self.ApplicationSelectorObj.Draw(DisplayWithWax)
 
             # Draw the Selected Application Title
             TitleBarText = self.ApplicationSelectorObj.SelectedItemTitle.rstrip()
             FontSize = 34
             Font = "/UbuntuMono.ttf"
             TextColor = (250, 250, 250)
-            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, TitleBarText, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, self.CenterY - 120)
+            self.DefaultContent.FontRender(DisplayWithWax, Font, FontSize, TitleBarText, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, self.CenterY - 120)
 
             # Draw the Select the Enter
             Text = self.DefaultContent.Get_RegKey("/seletor/down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
-            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+            self.DefaultContent.FontRender(DisplayWithWax, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
 
         elif not self.FatalErrorScreen:
             self.ApplicationSeletorAnimatorStart.Enabled = True
             self.ApplicationSeletorAnimatorStart.ValueMultiplierSpeed = 0.05
-            self.DefaultContent.ImageRender(self.DISPLAY, "/folder_question.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
+            self.DefaultContent.ImageRender(DisplayWithWax, "/folder_question.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
 
             # Draw the Select the Enter
             Text = self.DefaultContent.Get_RegKey("/seletor/no_folders_found_down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
-            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+            self.DefaultContent.FontRender(DisplayWithWax, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
 
         else:
             self.ApplicationSeletorAnimatorStart.Enabled = True
             self.ApplicationSeletorAnimatorStart.ValueMultiplierSpeed = 0.2
-            self.DefaultContent.ImageRender(self.DISPLAY, "/error.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
+            self.DefaultContent.ImageRender(DisplayWithWax, "/error.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
 
             # Draw the Select the Enter
             Text = self.DefaultContent.Get_RegKey("/seletor/fatal_error_down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
-            self.DefaultContent.FontRender(self.DISPLAY, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+            self.DefaultContent.FontRender(DisplayWithWax, Font, FontSize, Text, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, Text) / 2, self.CenterY + 250)
+
+        self.DISPLAY.blit(DisplayWithWax, (0, 0))
 
     def DrawLoadingPart(self):
         self.DrawProgressBar(self.DISPLAY)
