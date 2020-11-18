@@ -16,9 +16,9 @@
 #
 import pygame
 from pygame import gfxdraw
-from Core import UTILS as Utils
-from Core import CONTENT_MANAGER as CntMng
-import Core as tge
+from System.Core import UTILS as Utils
+from System.Core import CONTENT_MANAGER as CntMng
+import System.Core as tge
 
 print("Taiyou SHAPE version: " + tge.Get_ShapeVersion())
 

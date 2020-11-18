@@ -14,12 +14,13 @@
 #   limitations under the License.
 #
 #
-import Core, pygame, traceback
-from Core import Utils
-from Core import Fx
-from SystemApps.TaiyouUI.MAIN import UI
-from SystemApps.TaiyouUI.MAIN.UI import Widget
-from SystemApps.Bootloader.MAIN import ListInstalledApplications
+import System.Core as Core
+import pygame, traceback
+from System.Core import Utils
+from System.Core import Fx
+from System.SystemApps.TaiyouUI.MAIN import UI
+from System.SystemApps.TaiyouUI.MAIN.UI import Widget
+from System.SystemApps.Bootloader.MAIN import ListInstalledApplications
 
 
 class TaskBarInstance:

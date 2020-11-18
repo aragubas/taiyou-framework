@@ -16,7 +16,7 @@
 #
 
 # -- Imports -- #
-import Core as tge
+import System.Core as tge
 import os, shutil, requests, string, random, threading, zipfile, urllib.request, gc, psutil
 from pathlib import Path
 from urllib.error import HTTPError
@@ -28,7 +28,7 @@ import scipy
 import scipy.misc
 import scipy.cluster
 import glob
-import Core.UTILS.Convert as Convert
+import System.Core.UTILS.Convert as Convert
 
 print("Taiyou Utils version " + tge.Get_UtilsVersion())
 
@@ -50,6 +50,9 @@ def Directory_FilesList(dirName):
             allFiles.append(fullPath)
             
     return allFiles
+
+def Directory_Copy(source, dest, RaiseIfDirExists=False):
+    shutil.copytree(source, dest, dirs_exist_ok=not RaiseIfDirExists)
 
 def FormatNumber(num, precision=2, suffixes=['', 'K', 'M', 'G', 'T', 'P']):
     """
@@ -129,7 +132,6 @@ def FixColorRange(ColorArguments):
 
     return ColorArguments
 
-
 def File_Exists(path):
     """
     Returns true if file exist
@@ -158,8 +160,8 @@ def Directory_MakeDir(path):
 def Unzip_File(path, destination):
     """
     Unzip a Zip File
-    :param path:
-    :param destination:
+    :param path:Path of zip File
+    :param destination:Extract Destination
     :return:
     """
     with zipfile.ZipFile(path, 'r') as zip_ref:

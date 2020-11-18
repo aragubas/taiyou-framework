@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.6"
+    return "3.7"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -26,7 +26,7 @@ def Get_AppDataVersion():
     return "1.2"
 
 def Get_UtilsVersion():
-    return "2.4"
+    return "2.5"
 
 def Get_TaiyouMainVersion():
     return "3.8"
@@ -38,15 +38,13 @@ def Get_FXVersion():
     return "1.3"
 
 def Get_BootloaderVersion():
-    return "2.0"
+    return "2.1"
 
 def Get_MAINVersion():
-    return "1.7"
+    return "1.8"
 
 def Get_WindowManagerManagerVersion():
     return "1.3"
-
-
 
 # -- Calculate the Version of Taiyou Game Engine -- #
 TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion())
@@ -66,6 +64,7 @@ AudioFrequency = 0
 AudioSize = -0
 AudioChannels = 0
 AudioBufferSize = 0
+AudioPlayblackChannels = 0
 RunInFullScreen = False
 InputMouseDriver = "fbcon"
 InputDisableMouse = False
@@ -75,20 +74,28 @@ SmoothScaleTransform = "MMX"
 ThrowException = False
 
 # -- Taiyou Paths -- #
-TaiyouPath_SystemPath = "CoreFiles"
-TaiyouPath_SystemRootPath = "System"
-TaiyouPath_AppDataFolder = "AppData"
-TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemPath + "system.config"
-TaiyouPath_CorrectSlash = "/"
+TaiyouPath_SystemPath = ""
+TaiyouPath_SystemRootPath = ""
+TaiyouPath_AppDataFolder = ""
+TaiyouPath_TaiyouConfigFile = ""
+TaiyouPath_CorrectSlash = ""
 TaiyouPath_RootDevice = ""
 TaiyouPath_ApplicationsDataPath = ""
 TaiyouPath_SystemDataPath = ""
+TaiyouPath_UserPackpagesPath = ""
+TaiyouPath_UserPath = ""
+TaiyouPath_UserTempFolder = ""
+TaiyouPath_ApplicationsFolder = ""
+TaiyouPath_SystemApplicationsFolder = ""
+TaiyouPath_ApplicationsDataFolder = ""
+TaiyouPath_SystemApplicationsDataFolder = ""
+
 
 LastException = "null"
 CurrentPlatform = ""
 
 
-def InitEngine():
+def Init():
     """
     Initialize all engine
     :return:
@@ -119,6 +126,14 @@ def InitEngine():
     global TaiyouPath_SystemRootPath
     global ThrowException
     global CurrentPlatform
+    global AudioPlayblackChannels
+    global TaiyouPath_UserPackpagesPath
+    global TaiyouPath_UserPath
+    global TaiyouPath_UserTempFolder
+    global TaiyouPath_ApplicationsFolder
+    global TaiyouPath_SystemApplicationsFolder
+    global TaiyouPath_ApplicationsDataFolder
+    global TaiyouPath_SystemApplicationsDataFolder
 
     # -- Set the Correct Slash Directory -- #
     CurrentPlatform = platform.system()
@@ -127,24 +142,45 @@ def InitEngine():
         TaiyouPath_CorrectSlash = "/"
         TaiyouPath_RootDevice = "./Taiyou/"
         TaiyouPath_SystemPath = "{0}System/CoreFiles/".format(TaiyouPath_RootDevice)
-        TaiyouPath_AppDataFolder = "./Taiyou/User/{0}/AppsData/".format(getpass.getuser())
+        TaiyouPath_UserPath = "./Taiyou/User/{0}/".format(getpass.getuser())
+        TaiyouPath_AppDataFolder = "{0}AppsData/".format(TaiyouPath_UserPath)
+        TaiyouPath_UserPackpagesPath = TaiyouPath_UserPath + "Packpages/"
+        TaiyouPath_UserTempFolder = TaiyouPath_UserPath + "Temporary/"
         TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "Data/app/"
         TaiyouPath_SystemDataPath = TaiyouPath_RootDevice + "Data/system/"
         TaiyouPath_SystemRootPath = TaiyouPath_RootDevice + "System/"
         TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemRootPath + "system.config"
+        TaiyouPath_ApplicationsFolder = TaiyouPath_RootDevice + "Applications/"
+        TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System/SystemApps/"
+        TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data/app/"
+        TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data/system/"
 
     elif CurrentPlatform == "Windows":
-        TaiyouPath_CorrectSlash = ".\\"
+        TaiyouPath_CorrectSlash = "\\"
         TaiyouPath_RootDevice = ".\\Taiyou\\"
         TaiyouPath_SystemPath = "{0}System\\CoreFiles\\".format(TaiyouPath_RootDevice)
-        TaiyouPath_AppDataFolder = ".\\Taiyou\\User\\{0}\\AppsData\\".format(getpass.getuser())
+        TaiyouPath_UserPath = ".\\Taiyou\\User\\{0}\\".format(getpass.getuser())
+        TaiyouPath_AppDataFolder = "{0}AppsData\\".format(TaiyouPath_UserPath)
+        TaiyouPath_UserPackpagesPath = TaiyouPath_UserPath + "Packpages\\"
+        TaiyouPath_UserTempFolder = TaiyouPath_UserPath + "Temporary\\"
         TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "app\\"
         TaiyouPath_SystemDataPath = TaiyouPath_RootDevice + "Data\\system\\"
         TaiyouPath_SystemRootPath = TaiyouPath_RootDevice + "System\\"
         TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemRootPath + "system.config"
+        TaiyouPath_ApplicationsFolder = TaiyouPath_RootDevice + "Applications/"
+        TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System\\SystemApps\\"
+        TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\app\\"
+        TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\system\\"
 
     # -- Initialize Some Modules
     CntMng.InitModule()
+
+    # Check if User Temporary Directory Exists, then clean it
+    if Utils.Directory_Exists(TaiyouPath_UserTempFolder):
+        Utils.Directory_Remove(TaiyouPath_UserTempFolder)
+
+    else:
+        Utils.Directory_MakeDir(TaiyouPath_UserTempFolder)
 
     conf_file = open(TaiyouPath_TaiyouConfigFile)
 
@@ -160,7 +196,7 @@ def InitEngine():
                 else:
                     CONTENT_MANAGER.FontRenderingDisabled = False
 
-                print("Taiyou.Runtime.InitEngine : Disable font rendering set to:" + str(CONTENT_MANAGER.FontRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable font rendering set to:" + str(CONTENT_MANAGER.FontRenderingDisabled))
 
             # -- Disable Image Rendering -- #
             elif SplitedParms[0] == "DisableImageRendering":
@@ -169,7 +205,7 @@ def InitEngine():
                 else:
                     CONTENT_MANAGER.ImageRenderingDisabled = False
 
-                print("Taiyou.Runtime.InitEngine : Disable sprite rendering set to:" + str(CONTENT_MANAGER.ImageRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable sprite rendering set to:" + str(CONTENT_MANAGER.ImageRenderingDisabled))
 
             # -- Disable Rectangle Rendering -- #
             elif SplitedParms[0] == "DisableRectangleRendering":
@@ -178,7 +214,7 @@ def InitEngine():
                 else:
                     CONTENT_MANAGER.RectangleRenderingDisabled = False
 
-                print("Taiyou.Runtime.InitEngine : Disable rectangle rendering set to:" + str(CONTENT_MANAGER.RectangleRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable rectangle rendering set to:" + str(CONTENT_MANAGER.RectangleRenderingDisabled))
 
             # -- Disable Image Transparency -- #
             elif SplitedParms[0] == "DisableImageTransparency":
@@ -187,52 +223,52 @@ def InitEngine():
                 else:
                     CONTENT_MANAGER.ImageTransparency = False
 
-                print("Taiyou.Runtime.InitEngine : Disable sound system set to:" + str(CONTENT_MANAGER.ImageTransparency))
+                print("Taiyou.Runtime.Init : Disable sound system set to:" + str(CONTENT_MANAGER.ImageTransparency))
 
             # -- Disable Sound System -- #
             elif SplitedParms[0] == "DisableSoundSystem":
-                if SplitedParms[1] == "True":
+                if SplitedParms[1].rstrip() == "True":
                     CntMng.DisableSoundSystem = True
                 else:
                     CntMng.DisableSoundSystem = False
 
-                print("Taiyou.Runtime.InitEngine : Disable sound system set to:" + str(CntMng.DisableSoundSystem))
+                print("Taiyou.Runtime.Init : Disable sound system set to:" + str(CntMng.DisableSoundSystem))
 
             # -- SDL Option: Video Driver -- #
             elif SplitedParms[0] == "VideoDriver":
                 VideoDriver = SplitedParms[1].rstrip()
 
-                print("Taiyou.Runtime.InitEngine : Video Driver was set to:" + str(VideoDriver))
+                print("Taiyou.Runtime.Init : Video Driver was set to:" + str(VideoDriver))
 
             # -- SDL Option: Audio Driver -- #
             elif SplitedParms[0] == "AudioDriver":
                 AudioDriver = SplitedParms[1].rstrip()
 
-                print("Taiyou.Runtime.InitEngine : Audio Driver was set to:" + str(AudioDriver))
+                print("Taiyou.Runtime.Init : Audio Driver was set to:" + str(AudioDriver))
 
             # -- SoundSystem: Audio Device Frequency -- #
             elif SplitedParms[0] == "AudioFrequency":
                 AudioFrequency = int(SplitedParms[1].rstrip())
 
-                print("Taiyou.Runtime.InitEngine : Audio Frequency was set to:" + str(AudioFrequency))
+                print("Taiyou.Runtime.Init : Audio Frequency was set to:" + str(AudioFrequency))
 
             # -- SoundSystem: Audio Device Frame Size -- #
             elif SplitedParms[0] == "AudioSize":
                 AudioSize = int(SplitedParms[1].rstrip())
 
-                print("Taiyou.Runtime.InitEngine : Audio Size was set to:" + str(AudioSize))
+                print("Taiyou.Runtime.Init : Audio Size was set to:" + str(AudioSize))
 
             # -- SoundSystem: Audio Device Audio Channels -- #
             elif SplitedParms[0] == "AudioChannels":
                 AudioChannels = int(SplitedParms[1].rstrip())
 
-                print("Taiyou.Runtime.InitEngine : Audio Channels was set to:" + str(AudioChannels))
+                print("Taiyou.Runtime.Init : Audio Channels was set to:" + str(AudioChannels))
 
             # -- SoundSystem: Audio Device Buffer Size -- #
             elif SplitedParms[0] == "AudioBufferSize":
                 AudioBufferSize = int(SplitedParms[1].rstrip())
 
-                print("Taiyou.Runtime.InitEngine : Audio Buffer Size was set to:" + str(AudioBufferSize))
+                print("Taiyou.Runtime.Init : Audio Buffer Size was set to:" + str(AudioBufferSize))
 
             # -- Run in Fullscreen -- #
             elif SplitedParms[0] == "RunInFullScreen":
@@ -243,7 +279,7 @@ def InitEngine():
                 else:
                     RunInFullScreen = False
 
-                print("Taiyou.Runtime.InitEngine : Run in Fullscreen was set to:" + str(RunInFullScreen))
+                print("Taiyou.Runtime.Init : Run in Fullscreen was set to:" + str(RunInFullScreen))
 
             # -- SDL Option: Center Window -- #
             elif SplitedParms[0] == "VideoX11_CenterWindow":
@@ -254,7 +290,7 @@ def InitEngine():
                 else:
                     VideoX11CenterWindow = False
 
-                print("Taiyou.Runtime.InitEngine : VideoX11CenterWindow was set to:" + str(VideoX11CenterWindow))
+                print("Taiyou.Runtime.Init : VideoX11CenterWindow was set to:" + str(VideoX11CenterWindow))
 
             # -- SDL Option: DGA Mouse -- #
             elif SplitedParms[0] == "VideoX11_DGAMouse":
@@ -265,7 +301,7 @@ def InitEngine():
                 else:
                     VideoX11DGAMouse = False
 
-                print("Taiyou.Runtime.InitEngine : VideoX11DGAMouse was set to:" + str(VideoX11DGAMouse))
+                print("Taiyou.Runtime.Init : VideoX11DGAMouse was set to:" + str(VideoX11DGAMouse))
 
             # -- SDL Option: YUV Hardware Acelleration -- #
             elif SplitedParms[0] == "VideoX11_YUV_HWACCEL":
@@ -276,13 +312,13 @@ def InitEngine():
                 else:
                     VideoX11YUV_HWACCEL = False
 
-                print("Taiyou.Runtime.InitEngine : VideoX11YUV_HWACCEL was set to:" + str(VideoX11YUV_HWACCEL))
+                print("Taiyou.Runtime.Init : VideoX11YUV_HWACCEL was set to:" + str(VideoX11YUV_HWACCEL))
 
             # -- SDL Option: Mouse Driver -- #
             elif SplitedParms[0] == "InputMouseDriver":
                 InputMouseDriver = SplitedParms[1].rstrip()
 
-                print("Taiyou.Runtime.InitEngine : InputMouseDriver was set to:" + str(InputMouseDriver))
+                print("Taiyou.Runtime.Init : InputMouseDriver was set to:" + str(InputMouseDriver))
 
             # -- SDL Option: Disable Mouse -- #
             elif SplitedParms[0] == "InputDisableMouse":
@@ -293,7 +329,7 @@ def InitEngine():
                 else:
                     InputDisableMouse = False
 
-                print("Taiyou.Runtime.InitEngine : InputDisableMouse was set to:" + str(InputDisableMouse))
+                print("Taiyou.Runtime.Init : InputDisableMouse was set to:" + str(InputDisableMouse))
 
             # -- Ignore all SDL Parameters -- #
             elif SplitedParms[0] == "IgnoreSDL2Parameters":
@@ -304,13 +340,13 @@ def InitEngine():
                 else:
                     IgnoreSDL2Parameters = False
 
-                print("Taiyou.Runtime.InitEngine : IgnoreSDL2Parameters was set to:" + str(IgnoreSDL2Parameters))
+                print("Taiyou.Runtime.Init : IgnoreSDL2Parameters was set to:" + str(IgnoreSDL2Parameters))
 
             # -- Image: SmoothScaleBackend Backend -- #
             elif SplitedParms[0] == "SmoothScaleBackend":
                 SmoothScaleTransform = SplitedParms[1].rstrip()
 
-                print("Taiyou.Runtime.InitEngine : SmoothScaleBackend was set to:" + str(SmoothScaleTransform))
+                print("Taiyou.Runtime.Init : SmoothScaleBackend was set to:" + str(SmoothScaleTransform))
 
             # -- Pygame: FastEvent -- #
             elif SplitedParms[0] == "FastEvent":
@@ -321,7 +357,7 @@ def InitEngine():
                 else:
                     PygameFastEvent = False
 
-                print("Taiyou.Runtime.InitEngine : FastEvent was set to:" + str(PygameFastEvent))
+                print("Taiyou.Runtime.Init : FastEvent was set to:" + str(PygameFastEvent))
 
             elif SplitedParms[0] == "ThrowException":
                 if SplitedParms[1].rstrip() == "True":
@@ -333,10 +369,10 @@ def InitEngine():
                 else:
                     ThrowException = False
 
-                print("Taiyou.Runtime.InitEngine : ThrowException was set to:" + str(ThrowException))
+                print("Taiyou.Runtime.Init : ThrowException was set to:" + str(ThrowException))
 
             elif SplitedParms[0] == "ScreenRes":
-                ScreenResCode = SplitedParms[1].split("x")
+                ScreenResCode = SplitedParms[1].rstrip().split("x")
 
                 try:
                     ResWidth = int(ScreenResCode[0])
@@ -355,8 +391,12 @@ def InitEngine():
                 MAIN.ScreenWidth = ResWidth
                 MAIN.ScreenHeight = ResHeight
 
-                print("Taiyou.Runtime.InitEngine : ScreenResolution was set to:" + str(MAIN.ScreenWidth) + "x" + str(MAIN.ScreenHeight))
+                print("Taiyou.Runtime.Init : ScreenResolution was set to:" + str(MAIN.ScreenWidth) + "x" + str(MAIN.ScreenHeight))
 
+            elif SplitedParms[0] == "AudioPlaybackChannels":
+                AudioPlayblackChannels = int(SplitedParms[1].rstrip())
+
+                print("Taiyou.Runtime.Init : AudioPlaybackChannels was set to:" + str(AudioPlayblackChannels))
 
     if not IgnoreSDL2Parameters:  # -- Set SDL2 Parameters (if enabled) -- #
         # -- Set the Enviroments Variables -- #
@@ -377,30 +417,25 @@ def InitEngine():
 
             if VideoX11YUV_HWACCEL:
                 os.environ['SDL_VIDEO_YUV_HWACCEL'] = "1"  # -- Set the YUV HWACCEL Parameter
-        print("Taiyou.Runtime.InitEngine : SDL2 Parameters has been applyed")
+        print("Taiyou.Runtime.Init : SDL2 Parameters has been applyed")
 
     else:
-        print("Taiyou.Runtime.InitEngine : SDL2 Parameters has been disabled")
+        print("Taiyou.Runtime.Init : SDL2 Parameters has been disabled")
 
     # -- Set SmoothScaleMethod -- #
     pygame.transform.set_smoothscale_backend(SmoothScaleTransform)
 
     # -- Initialize Pygame and Sound System -- #
-    if CntMng.SoundDisabled:
-        # -- Set some Variables -- #
-        Frequency = int(AudioFrequency)
-        Size = int(AudioSize)
-        Channels = int(AudioChannels)
-        BufferSize = int(AudioBufferSize)
-
-        pygame.mixer.init(Frequency, Size, Channels, BufferSize)
-
+    if not CntMng.DisableSoundSystem:
+        InitSoundSystem()
         pygame.init()
     else:
+        print("Initializing with no sound\nSoundSystem has been disabled.")
         pygame.init()
 
-    if not pygame.mixer.get_init() and Get_IsSoundEnabled():
-        sound.DisableSoundSystem = True
+    if not pygame.mixer.get_init():
+        print("SoundSystem has been not initialized properly, setting DisableSoundSystem do true.")
+        CntMng.DisableSoundSystem = True
 
     # -- Initialize FastEvent -- #
     pygame.fastevent.init()
@@ -409,14 +444,40 @@ def InitEngine():
 
     InitializeBootloader()
 
+def InitSoundSystem():
+    global AudioFrequency
+    global AudioSize
+    global AudioChannels
+    global AudioBufferSize
+    global AudioPlayblackChannels
+
+    print("Initializing SoundSystem...")
+    if pygame.mixer.get_init():
+        print("SoundSystem was already initialized, quitting soundsystem...")
+        pygame.mixer.quit()
+
+    # -- Set some Variables -- #
+    Frequency = int(AudioFrequency)
+    Size = int(AudioSize)
+    Channels = int(AudioChannels)
+    BufferSize = int(AudioBufferSize)
+
+    pygame.mixer.init(Frequency, Size, Channels, BufferSize)
+    pygame.mixer.set_num_channels(AudioPlayblackChannels)
+
+    print("SoundSystem has been initialized.")
+
 def InitializeBootloader():
     global TaiyouPath_CorrectSlash
 
-    CurrentGame_Folder = "SystemApps{0}Bootloader".format(TaiyouPath_CorrectSlash)
+    CurrentGame_Folder = "System{0}SystemApps{0}Bootloader".format(TaiyouPath_CorrectSlash)
     MAIN.CreateProcess(CurrentGame_Folder, "bootloader", pPriority=1)
 
 def GetUserSelectedApplication():
-    return open("Selected.txt", "r").read().rstrip().replace("/", TaiyouPath_CorrectSlash)
+    global TaiyouPath_RootDevice
+    global TaiyouPath_CorrectSlash
+    Path = "{0}System{1}{2}".format(TaiyouPath_RootDevice, TaiyouPath_CorrectSlash, "Selected.txt")
+    return open(Path, "r").read().rstrip().replace("/", TaiyouPath_CorrectSlash)
 
 def GetAppDataFromAppName(AppName):
     Path = "{1}{0}".format(AppName, TaiyouPath_AppDataFolder)
@@ -429,25 +490,25 @@ def GetAppDataFromAppName(AppName):
 
     pass
 
-def Get_MainModuleName(GameFolder):
+def Get_MainModuleName(AppPath):
     """
     Returns the Main Game Module Name.
     :param GameFolder:
     :return:
     """
-    return "{0}{1}".format(GameFolder.replace(TaiyouPath_CorrectSlash, "."), ".MAIN")
+    return "{0}{1}".format(AppPath.replace(TaiyouPath_CorrectSlash, "."), ".MAIN")
 
 # endregion
 
 
 # -- Imports All Modules -- #
 import os, pygame, platform, getpass
-from Core import CONTENT_MANAGER as CntMng
-from Core import APPDATA as AppData
-from Core import FX as Fx
-from Core import SHAPES as Shape
-from Core import UTILS as Utils
-from Core.UTILS import Convert as Convert
-from Core.UTILS import CoreUtils as CoreUtils
-from Core import WMM as wmm
-from Core import MAIN
+from System.Core import CONTENT_MANAGER as CntMng
+from System.Core import APPDATA as AppData
+from System.Core import FX as Fx
+from System.Core import SHAPES as Shape
+from System.Core import UTILS as Utils
+from System.Core.UTILS import Convert as Convert
+from System.Core.UTILS import CoreUtils as CoreUtils
+from System.Core import WMM as wmm
+from System.Core import MAIN

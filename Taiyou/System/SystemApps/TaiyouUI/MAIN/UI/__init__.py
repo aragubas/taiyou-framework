@@ -15,10 +15,10 @@
 #
 #
 import pygame
-import Core as tge
-import Core.SHAPES as Shape
-import Core.UTILS as Utils
-import SystemApps.TaiyouUI.MAIN.UI.Widget as widget
+import System.Core as tge
+import System.Core.SHAPES as Shape
+import System.Core.UTILS as Utils
+import System.SystemApps.TaiyouUI.MAIN.UI.Widget as widget
 
 TaskBar_Version = "2.0"
 

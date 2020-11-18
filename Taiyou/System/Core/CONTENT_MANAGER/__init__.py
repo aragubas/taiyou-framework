@@ -16,8 +16,8 @@
 #
 
 # -- Imports --
-from Core import UTILS as Utils
-import Core
+from System.Core import UTILS as Utils
+import System.Core as Core
 import pygame, sys, os
 from pygame import gfxdraw
 import binascii
@@ -536,7 +536,6 @@ class ContentManager:
     # endregion
 
     # region Sound I/O Functions
-
     def SetSoundPath(self, pFolder):
         self.Sound_Path = (self.SourceFolder + pFolder).replace("/", Core.TaiyouPath_CorrectSlash)
 
@@ -579,9 +578,7 @@ class ContentManager:
         """
         self.SoundChannels.clear()
 
-        pygame.mixer.set_num_channels(255)
-
-        for i in range(0, 255):
+        for i in range(0, Core.AudioPlayblackChannels):
             self.SoundChannels.append(pygame.mixer.Channel(i))
 
     def UnloadSounds(self):

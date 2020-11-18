@@ -14,9 +14,10 @@
 #   limitations under the License.
 #
 #
-import Core, traceback, pygame, time
-from Core import Shape
-from Core import Utils
+import System.Core as Core
+import traceback, pygame, time, sys
+from System.Core import Shape
+from System.Core import Utils
 
 class ApplicationSelector:
     def __init__(self, pContentManager, pX, pY):
@@ -404,20 +405,21 @@ class Process():
 
         print("Crash log completed")
 
-    def InstallPackpagedApplication(self):
-        pass
-
     def FinishLoadingScreen(self):
         self.ProgressMax = self.Progress
 
     def LoadingSteps(self, CurrentProgres):
+        for module in sys.modules:
+            if module.startswith("System"):
+                print(module)
+
         if CurrentProgres == 0:
             # Start the SystemUI
-            Core.MAIN.CreateProcess("SystemApps/TaiyouUI", "system_ui", pPriority=1)
+            Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui", pPriority=1)
 
         if CurrentProgres == 1:
             # Start the Task Scheduler
-            Core.MAIN.CreateProcess("SystemApps/task_scheduler", "task_scheduler", pPriority=1)
+            Core.MAIN.CreateProcess("System{0}SystemApps{0}task_scheduler".format(Core.TaiyouPath_CorrectSlash), "task_scheduler", pPriority=1)
 
         if CurrentProgres == 2:
             # Finish the Loading

@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 #
-import Core
+import System.Core as Core
 
 # The main Entry Point
 print("Taiyou Window Manager Manager (WMM) version " + Core.Get_WindowManagerManagerVersion())

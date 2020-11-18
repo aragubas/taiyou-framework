@@ -15,10 +15,10 @@
 #
 #
 import pygame
-from Core import Utils
-from Core import Convert
-from Core import Shape
-from SystemApps.TaiyouUI.MAIN import UI
+from System.Core import Utils
+from System.Core import Convert
+from System.Core import Shape
+from System.SystemApps.TaiyouUI.MAIN import UI
 
 class Widget_Controller:
     def __init__(self, pContentManager, Rectangle):
@@ -29,6 +29,7 @@ class Widget_Controller:
         self.Active = False
         self.ContentManager = pContentManager
         self.Opacity = 255
+        self.ObjectOffset = (0, 0)
 
     def Draw(self, DISPLAY):
         WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
@@ -48,7 +49,8 @@ class Widget_Controller:
         self.WidgetCollection.append(Widget)
 
     def Update(self):
-        self.Active = self.Rectangle.collidepoint(pygame.mouse.get_pos())
+        ColideRect = pygame.Rect(self.ObjectOffset[0] + self.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1], self.Rectangle[2], self.Rectangle[3])
+        self.Active = ColideRect.collidepoint(pygame.mouse.get_pos())
 
         if not self.Active:
             for widget in self.WidgetCollection:
@@ -70,10 +72,10 @@ class Widget_Controller:
                     continue
             else:  # -- If not, only update when mouse is hovering it
                 if self.Active:
-                    ColideRect = pygame.Rect(self.Rectangle[0] + widget.Rectangle[0], self.Rectangle[1] + widget.Rectangle[1], widget.Rectangle[2], widget.Rectangle[3])
+                    ColideRect = pygame.Rect(self.ObjectOffset[0] + self.Rectangle[0] + widget.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1] + widget.Rectangle[1], widget.Rectangle[2], widget.Rectangle[3])
                     if ColideRect.collidepoint(pygame.mouse.get_pos()):
                         if widget.EventUpdateable:
-                            widget.CursorOffset = (self.Rectangle[0] + widget.Rectangle[0], self.Rectangle[1] + widget.Rectangle[1])
+                            widget.CursorOffset = (self.ObjectOffset[0] + self.Rectangle[0] + widget.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1] + widget.Rectangle[1])
                             widget.EventUpdate(event)
                         widget.Active = True
                     else:
@@ -239,11 +241,11 @@ class Widget_Button:
             self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
 
             # -- Update all Size and Position Variables -- #
-            self.TextWidth = UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-            self.TextHeight = UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+            self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+            self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
             self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
-            self.Centred_X = self.Rectangle[2] / 2 - UI.ContentManager.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
-            self.Centred_Y = self.Rectangle[3] / 2 - UI.ContentManager.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+            self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+            self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
 
             self.LastRect = self.Rectangle
 
@@ -252,7 +254,6 @@ class Widget_Button:
 
         if not self.Active:
             self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
-
             return
 
         if self.ButtonState == 0:
@@ -261,12 +262,21 @@ class Widget_Button:
         elif self.ButtonState == 1:
             self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
+        if self.Active:
+            print("Active")
+            print(self.ButtonState)
+
     def EventUpdate(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            print("Click Down")
             self.ButtonState = 1
 
         if event.type == pygame.MOUSEBUTTONUP:
+            print("Up")
             self.ButtonState = 0
             self.InteractionType = True
-            self.Content.PlaySound("/click.wav")
 
+            try:
+                self.Content.PlaySound("/click.wav")
+            except:
+                pass

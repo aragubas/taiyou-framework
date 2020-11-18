@@ -14,10 +14,10 @@
 #   limitations under the License.
 #
 #
-import Core
+import System.Core as Core
 import pygame
-from SystemApps.TaiyouUI.MAIN import UI
-from Core.MAIN import DISPLAY as DISPLAY
+from System.SystemApps.TaiyouUI.MAIN import UI
+from System.Core.MAIN import DISPLAY as DISPLAY
 
 class Process():
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):

@@ -17,10 +17,10 @@
 
 # Import some stuff
 import os
-import Core as tge
-from Core import APPDATA as reg
-from Core import CONTENT_MANAGER as sprite
-from Core import UTILS as Utils
+import System.Core as tge
+from System.Core import APPDATA as reg
+from System.Core import CONTENT_MANAGER as sprite
+from System.Core import UTILS as Utils
 import pygame, sys, importlib, marshal, multiprocessing
 import traceback, threading
 from datetime import datetime
@@ -71,7 +71,7 @@ def Initialize():
     print("TaiyouFramework.Initialize : Initializing Taiyou...")
 
     # -- Load Engine -- #
-    tge.InitEngine()
+    tge.Init()
 
     EngineInitialized = True
     print("TaiyouFramework.Initialize : Initialization complete.")
@@ -202,6 +202,7 @@ def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
     ProcessNextPID += 1
 
     ProcessList_Names.append(ProcessName)
+    print(tge.Get_MainModuleName(Path))
     Module = importlib.import_module(tge.Get_MainModuleName(Path))
     ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainModuleName(Path), pInitArgs))
     ProcessList_PID.append(ProcessNextPID)

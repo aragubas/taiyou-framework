@@ -15,8 +15,8 @@
 #
 #
 import pygame
-import Core as tge
-import Core.SHAPES as Shape
+import System.Core as tge
+import System.Core.SHAPES as Shape
 
 class VerticalListWithDescription:
     def __init__(self, Rectangle, pContentManager):

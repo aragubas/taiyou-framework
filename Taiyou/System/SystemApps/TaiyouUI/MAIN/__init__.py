@@ -14,11 +14,12 @@
 #   limitations under the License.
 #
 #
-import Core, time, pygame, traceback, math
-from Core.MAIN import DISPLAY as DISPLAY
-from SystemApps.TaiyouUI.MAIN import UI
-from SystemApps.TaiyouUI.MAIN import TaskBar
-from Core import Fx
+import System.Core as Core
+import time, pygame, traceback, math
+from System.Core.MAIN import DISPLAY as DISPLAY
+from System.SystemApps.TaiyouUI.MAIN import UI
+from System.SystemApps.TaiyouUI.MAIN import TaskBar
+from System.Core import Fx
 
 class Process():
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):

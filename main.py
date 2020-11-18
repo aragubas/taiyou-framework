@@ -23,9 +23,8 @@ if not os.path.exists("./Taiyou"):
 
 print("Adding Required Path for All Modules...")
 sys.path.append("Taiyou/Applications/")
-sys.path.append("Taiyou/System/")
 
-import Core
+import System.Core as Core
 
 ## Start the Application Loop ##
 LoopEnabled = True

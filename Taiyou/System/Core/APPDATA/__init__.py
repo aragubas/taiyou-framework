@@ -17,8 +17,8 @@
 
 # -- Imports --
 import glob
-from Core import UTILS as Utils
-import Core as tge
+from System.Core import UTILS as Utils
+import System.Core as tge
 import os, time
 print("Taiyou AppData version " + tge.Get_AppDataVersion())
 

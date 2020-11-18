@@ -15,7 +15,7 @@
 #
 #
 import pygame
-import Core
+import System.Core as Core
 
 
 print("Taiyou FX version " + Core.Get_FXVersion())
