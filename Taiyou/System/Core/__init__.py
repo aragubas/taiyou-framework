@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.7"
+    return "3.8"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -26,22 +26,22 @@ def Get_AppDataVersion():
     return "1.2"
 
 def Get_UtilsVersion():
-    return "2.5"
+    return "2.6"
 
 def Get_TaiyouMainVersion():
-    return "3.8"
+    return "3.9"
 
 def Get_ContentManagerVersion():
-    return "3.4"
+    return "3.5"
 
 def Get_FXVersion():
     return "1.3"
 
 def Get_BootloaderVersion():
-    return "2.1"
+    return "2.2"
 
 def Get_MAINVersion():
-    return "1.8"
+    return "1.9"
 
 def Get_WindowManagerManagerVersion():
     return "1.3"
