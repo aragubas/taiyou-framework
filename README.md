@@ -6,10 +6,15 @@ Taiyou Framework is a re-creation of Taiyou Game Engine built for buiding cross-
 ## Instalation Guide
 Download this fresh copy of Taiyou Framework
 Make sure you have at least Python 3.8 or upper installed
-For opening an application made for Taiyou Framework you will need to download its content and place inside an folder on the Root path of Taiyou Framework **SubFolders is not supported**
-Warning: everthing related to program names is case sensetive, aways check spelling affter reporting issues
-And then. you just need to open main.py
+
+## How to install Packpages
+First, download a Taiyou Packpage
+a Taiyou Packpage is just a zip file .w.
+
+Then, you drop this zipfile inside Taiyou/User/<your_user_name>/Packpages/
+Then, open Packpage installer and it will do everthing for you.
+
 
 ## Required Packpages
-**pygame==2.0.0.dev10**, os, time, binascii, struct, pillow, numpy, scipy, glob, math, sys, importlib, marshal, traceback, threading, datetime, multiprocessing, gc
+**pygame==2.0.0.dev20**, os, time, binascii, struct, pillow, numpy, scipy, glob, math, sys, importlib, marshal, traceback, threading, datetime, multiprocessing, gc
 shutil, requests, string, random, zipfile, urllib, psutil, pathlib, 
