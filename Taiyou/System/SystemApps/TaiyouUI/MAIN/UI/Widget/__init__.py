@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -194,6 +194,38 @@ class Widget_Label:
     def EventUpdate(self, event):
         pass
 
+class Widget_ProgressBar:
+    def __init__(self, pContentManager, pInitialProgress, pMaxValue, pRectangle, pWidgetID):
+        if pWidgetID == -1:
+            raise ValueError("WidgetID cannot be -1")
+        self.ID = pWidgetID
+        self.InteractionType = None
+        self.Content = pContentManager
+        self.Active = True
+        self.EventUpdateable = False
+        self.AwaysUpdate = True
+        self.IsVisible = True
+        self.Progress = pInitialProgress
+        self.ProgressMax = pMaxValue
+        self.Rectangle = Convert.List_PygameRect(pRectangle)
+        self.ProgressRect = pygame.Rect(0, 0, 0, 0)
+
+    def Render(self, DISPLAY):
+        if not self.IsVisible:
+            return
+
+        if self.Progress >= self.ProgressMax:
+            self.Progress = self.ProgressMax
+
+        self.Rectangle = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
+        self.ProgressRect = (self.Rectangle[0], self.Rectangle[1], max(10, Utils.Get_Percentage(self.Progress, self.Rectangle[2], self.ProgressMax)), 10)
+
+        Shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.Rectangle, 0, self.Rectangle[3])
+        Shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.ProgressRect, 0, self.ProgressRect[3])
+
+    def Update(self):
+        pass
+
 
 class Widget_Button:
     def __init__(self, pContentManager,Text, FontSize, X, Y, WidgetID):
@@ -205,6 +237,7 @@ class Widget_Button:
         self.Active = True
         self.EventUpdateable = True
         self.AwaysUpdate = False
+        self.IsVisible = True
         self.X = X
         self.Y = Y
         self.Text = Text
@@ -222,6 +255,9 @@ class Widget_Button:
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
 
     def Render(self, DISPLAY):
+        if not self.IsVisible:
+            return
+
         # -- Render Background -- #
         Shape.Shape_Rectangle(self.Surface, self.BgColor, (0, 0, self.Rectangle[2], self.Rectangle[3]))
         # -- Render Indicator -- #
@@ -236,6 +272,9 @@ class Widget_Button:
             self.ButtonState = 0
 
     def Update(self):
+        if not self.IsVisible:
+            return
+
         # -- Check if surface has the correct size -- #
         if not self.LastRect == self.Rectangle:
             self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
@@ -246,6 +285,8 @@ class Widget_Button:
             self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
             self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
             self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+
+            print("Button Rect Updated")
 
             self.LastRect = self.Rectangle
 
@@ -262,17 +303,14 @@ class Widget_Button:
         elif self.ButtonState == 1:
             self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Active_IndicatorColor")
 
-        if self.Active:
-            print("Active")
-            print(self.ButtonState)
-
     def EventUpdate(self, event):
+        if not self.IsVisible:
+            return
+
         if event.type == pygame.MOUSEBUTTONDOWN:
-            print("Click Down")
             self.ButtonState = 1
 
         if event.type == pygame.MOUSEBUTTONUP:
-            print("Up")
             self.ButtonState = 0
             self.InteractionType = True
 

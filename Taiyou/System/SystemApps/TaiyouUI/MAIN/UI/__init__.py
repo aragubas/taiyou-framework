@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ import System.Core.SHAPES as Shape
 import System.Core.UTILS as Utils
 import System.SystemApps.TaiyouUI.MAIN.UI.Widget as widget
 
-TaskBar_Version = "2.0"
+TaskBar_Version = "2.1"
 
 #region Theme Manager
 ThemesList_Properties = list()
@@ -81,6 +81,7 @@ class VerticalListWithDescription:
         self.ItemsDescription = list()
         self.ItemIndexes = list()
         self.ItemSprite = list()
+        self.ItemSpriteIsUnloaded = list()
         self.ItemSelected = list()
         self.ItemProperties = list()
         self.LastItemClicked = "null"
@@ -115,7 +116,7 @@ class VerticalListWithDescription:
             ItemNameFontColor = (250, 250, 250)
             BorderColor = (32, 164, 243)
             TextsX = 5
-            if self.ItemSprite[i] != "null":
+            if self.ItemSprite[i] is not None:
                 TextsX = 45
 
             if self.LastItemIndex == self.ItemIndexes[i]:  # -- When the Item is Selected
@@ -141,8 +142,8 @@ class VerticalListWithDescription:
             self.ContentManager.FontRender(self.ListSurface, "/Ubuntu.ttf", 12, self.ItemsDescription[i], ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 25)
 
             # -- Render the Item Sprite -- #
-            if self.ItemSprite[i] != "null":
-                self.ContentManager.ImageRender(self.ListSurface, self.ItemSprite[i], ItemRect[0] + 4, ItemRect[1] + 4, 36, 32)
+            if self.ItemSprite[i] is not None:
+                self.ContentManager.ImageRender(self.ListSurface, self.ItemSprite[i], ItemRect[0] + 4, ItemRect[1] + 4, 36, 32, ImageNotLoaded=self.ItemSpriteIsUnloaded[i], SmoothScaling=True)
 
         # -- Blit All Work to Screen -- #
         DISPLAY.blit(self.ListSurface, (self.Rectangle[0], self.Rectangle[1]))
@@ -185,10 +186,11 @@ class VerticalListWithDescription:
     def Set_H(self, Value):
         self.Rectangle[3] = int(Value)
 
-    def AddItem(self, ItemName, ItemDescription, ItemSprite = "null", ItemProperties = None):
+    def AddItem(self, ItemName, ItemDescription, ItemSprite=None, ItemProperties=None, ItemSpriteIsUnloaded=False):
         self.ItemsName.append(ItemName)
         self.ItemsDescription.append(ItemDescription)
         self.ItemSprite.append(ItemSprite)
+        self.ItemSpriteIsUnloaded.append(ItemSpriteIsUnloaded)
         self.ItemSelected.append(False)
         self.ItemIndexes.append((len(self.ItemIndexes)))
         self.ItemProperties.append(ItemProperties)

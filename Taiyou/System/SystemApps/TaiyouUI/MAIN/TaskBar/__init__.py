@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,7 +179,6 @@ class ApplicationSelectorMode_Instace:
         self.RenderBottomText(ContentsSurface)
         self.RenderBottomInfosText(ContentsSurface)
 
-
         # Center Window list
         self.WindowList.Set_X(ContentsSurface.get_width() / 2 - self.WindowList.Rectangle[2] / 2)
         self.WindowList.Set_Y(ContentsSurface.get_height() / 2 - self.WindowList.Rectangle[3] / 2)
@@ -233,7 +232,12 @@ class ApplicationSelectorMode_Instace:
             if not process.IS_GRAPHICAL:
                 continue
 
-            self.WindowList.AddItem(process.NAME, "PID: " + str(process.PID), ItemProperties=process.PID)
+            ProcessHasIcon = False
+
+            if process.ICON is not None:
+                ProcessHasIcon = True
+
+            self.WindowList.AddItem(process.TITLEBAR_TEXT, "PID: " + str(process.PID), ItemProperties=process.PID, ItemSprite=process.ICON, ItemSpriteIsUnloaded=ProcessHasIcon)
 
     def CloseSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
@@ -384,7 +388,7 @@ class ApplicationDashboard_Instace:
 
         self.UpdateApplicationManager()
 
-        if self.ApplicationManagerBar.LastInteractionID == 0 and self.ApplicationManagerBar.LastInteractionType == True:
+        if self.ApplicationManagerBar.LastInteractionID == 0 and self.ApplicationManagerBar.LastInteractionType is True:
             self.OpenSelectedApp()
 
     def UpdateApplicationManager(self):
@@ -461,8 +465,6 @@ class ApplicationDashboard_Instace:
 
             self.RootObj.Toggle()
         except Exception:
-            self.DisableInput = False
-            Core.MAIN.SystemFault_Trigger = True
             Core.MAIN.SystemFault_Traceback = traceback.format_exc()
             Core.MAIN.SystemFault_ProcessObject = None
             Core.wmm.WindowManagerSignal(None, 4)

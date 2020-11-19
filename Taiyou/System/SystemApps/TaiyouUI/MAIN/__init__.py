@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -179,12 +179,13 @@ class Process():
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             pos = pygame.mouse.get_pos()
-            MouseColisionRectangle = pygame.Rect(pos[0], pos[1], 2, 2)
 
-            if MouseColisionRectangle.colliderect(process.TITLEBAR_RECTANGLE):
+            if process.TITLEBAR_RECTANGLE.collidepoint(pos):
                 process.WINDOW_DRAG_ENABLED = True
                 self.SomeWindowIsBeingMoved = True
                 self.SomeWindowIsBeingMoved_PID = process.PID
+                process.WINDOW_DRAG_SP = (process.TITLEBAR_RECTANGLE[0] - pos[0], process.TITLEBAR_RECTANGLE[1] - pos[1])
+
                 Core.wmm.WindowManagerSignal(process, 0)
 
         elif event.type == pygame.MOUSEBUTTONUP:
@@ -199,7 +200,7 @@ class Process():
             self.SomeWindowIsBeingMoved = True
             self.SomeWindowIsBeingMoved_PID = process.PID
 
-            process.POSITION = (pos[0] - process.TITLEBAR_RECTANGLE[2] / 2, pos[1] - process.TITLEBAR_RECTANGLE[3] / 2)
+            process.POSITION = (process.WINDOW_DRAG_SP[0] + pos[0], process.WINDOW_DRAG_SP[1] + pos[1])
 
     def Update(self):
         # Check if SystemFault has been occurred
@@ -208,6 +209,7 @@ class Process():
             self.TaskBarInstance.SetMode(1)
             self.UI_Call_Request()
 
+        DISPLAY.fill((0, 0, 0))
         # Draw the Applications Window
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process

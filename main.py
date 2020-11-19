@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 #
-import sys, os, sys
+import sys, os, sys, platform
 print("Check for Taiyou Framework Instalation...")
 
 if not os.path.exists("./Taiyou"):
@@ -22,7 +22,16 @@ if not os.path.exists("./Taiyou"):
     sys.exit(1)
 
 print("Adding Required Path for All Modules...")
-sys.path.append("Taiyou/Applications/")
+if platform.system() == "Linux":
+    sys.path.append("Taiyou/Applications/")
+    sys.path.append("Taiyou/")
+    
+    print("Added linux compatible dir.")
+
+if platform.system() == "Windows":
+    sys.path.append("Taiyou\\Applications\\")
+    sys.path.append("Taiyou")
+    print("Added windows compatible dir.")
 
 import System.Core as Core
 

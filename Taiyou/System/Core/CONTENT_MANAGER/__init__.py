@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -239,15 +239,13 @@ class ContentManager:
                         DISPLAY.blit(Image, (X, Y))
 
                     else:
+                        Image.set_alpha(Opacity)
+                        Image.set_colorkey(ColorKey)
+
                         if not SmoothScaling:  # -- Render Images with Fast Scaling -- #
-                            Image.set_alpha(Opacity)
-                            Image.set_colorkey(ColorKey)
-
                             DISPLAY.blit(pygame.transform.scale(Image, (int(Width), int(Height))), (int(X), int(Y)))
-                        else:  # -- Render Image with Smooth Scaling -- #
-                            Image.set_alpha(Opacity)
-                            Image.set_colorkey(ColorKey)
 
+                        else:  # -- Render Image with Smooth Scaling -- #
                             DISPLAY.blit(pygame.transform.smoothscale(Image, (int(Width), int(Height))), (int(X), int(Y)))
 
             except Exception as ex:
@@ -288,6 +286,11 @@ class ContentManager:
     # region Registry I/O functions
     def SetRegKeysPath(self, pFolder):
         self.Reg_Path = self.SourceFolder + pFolder.replace("/", Core.TaiyouPath_CorrectSlash)
+
+        if self.Reg_Path.endswith(Core.TaiyouPath_CorrectSlash):
+            self.Reg_Path = self.Reg_Path[:-1]
+
+        print("RegPath was set to:\n" + self.Reg_Path)
 
     def LoadRegKeysInFolder(self):
         """

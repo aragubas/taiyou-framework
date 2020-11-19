@@ -1,4 +1,4 @@
-#!/usr/bin/python3.7
+#!/usr/bin/python3.8
 #   Copyright 2020 Aragubas
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ def Get_TaiyouMainVersion():
     return "3.9"
 
 def Get_ContentManagerVersion():
-    return "3.5"
+    return "3.6"
 
 def Get_FXVersion():
     return "1.3"
