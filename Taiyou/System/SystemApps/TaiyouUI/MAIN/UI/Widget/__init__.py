@@ -30,14 +30,18 @@ class Widget_Controller:
         self.ContentManager = pContentManager
         self.Opacity = 255
         self.ObjectOffset = (0, 0)
+        self.WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
+
+    def UpdateRect(self):
+        self.WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
 
     def Draw(self, DISPLAY):
-        WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
-        WidgetSurface.set_alpha(self.Opacity)
+        self.WidgetSurface.fill((0, 0, 0, 0))
+        self.WidgetSurface.set_alpha(self.Opacity)
         for widget in self.WidgetCollection:
-            widget.Render(WidgetSurface)
+            widget.Render(self.WidgetSurface)
 
-        DISPLAY.blit(WidgetSurface, (self.Rectangle[0], self.Rectangle[1]))
+        DISPLAY.blit(self.WidgetSurface, (self.Rectangle[0], self.Rectangle[1]))
 
         if not self.LastInteractionID == -1:
             self.WidgetCollection[self.LastInteractionID].InteractionType = None
@@ -75,7 +79,7 @@ class Widget_Controller:
                     ColideRect = pygame.Rect(self.ObjectOffset[0] + self.Rectangle[0] + widget.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1] + widget.Rectangle[1], widget.Rectangle[2], widget.Rectangle[3])
                     if ColideRect.collidepoint(pygame.mouse.get_pos()):
                         if widget.EventUpdateable:
-                            widget.CursorOffset = (self.ObjectOffset[0] + self.Rectangle[0] + widget.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1] + widget.Rectangle[1])
+                            widget.CursorOffset = (ColideRect[0], ColideRect[1])
                             widget.EventUpdate(event)
                         widget.Active = True
                     else:
@@ -184,15 +188,18 @@ class Widget_Label:
         self.Rectangle = Utils.Convert.List_PygameRect((X, Y, self.Content.GetFont_width(self.FontName, FontSize, self.Text), self.Content.GetFont_height(self.FontName, FontSize, self.Text)))
         self.AwaysUpdate = False
         self.CursorOffset = (0, 0)
+        self.IsVisible = True
 
     def Render(self, DISPLAY):
+        if not self.IsVisible:
+            return
         self.Content.FontRender(DISPLAY, self.FontName,self.FontSize, self.Text, self.Color, self.Rectangle[0], self.Rectangle[1])
 
     def Update(self):
-        self.Rectangle = Utils.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
+        if not self.IsVisible:
+            return
 
-    def EventUpdate(self, event):
-        pass
+        self.Rectangle = Utils.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
 
 class Widget_ProgressBar:
     def __init__(self, pContentManager, pInitialProgress, pMaxValue, pRectangle, pWidgetID):
@@ -228,7 +235,7 @@ class Widget_ProgressBar:
 
 
 class Widget_Button:
-    def __init__(self, pContentManager,Text, FontSize, X, Y, WidgetID):
+    def __init__(self, pContentManager, Text, FontSize, X, Y, WidgetID):
         if WidgetID == -1:
             raise ValueError("WidgetID cannot be -1")
         self.ID = WidgetID
@@ -245,7 +252,6 @@ class Widget_Button:
         self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.Rectangle = Convert.List_PygameRect((X, Y, self.TextWidth + 2, self.TextHeight + 2))
-        self.LastRect = self.Rectangle
         self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
@@ -253,10 +259,12 @@ class Widget_Button:
         self.CursorOffset = (0, 0)
         self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
+        self.UpdateRectangle()
+        self.ColideRect = pygame.Rect(0, 0, 5, 5)
 
     def SetText(self, text):
         self.Text = str(text)
-        self.UpdateRectangle()
+        self.UpdateRectangle(True)
 
     def Render(self, DISPLAY):
         if not self.IsVisible:
@@ -275,7 +283,7 @@ class Widget_Button:
         if self.ButtonState == 2:
             self.ButtonState = 0
 
-    def UpdateRectangle(self):
+    def UpdateRectangle(self, UpdateSurface=False):
         # -- Update all Size and Position Variables -- #
         self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
@@ -283,17 +291,12 @@ class Widget_Button:
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
 
-        self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
+        if UpdateSurface:
+            self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
 
     def Update(self):
         if not self.IsVisible:
             return
-
-        # -- Check if surface has the correct size -- #
-        if not self.LastRect == self.Rectangle:
-            self.UpdateRectangle()
-
-            self.LastRect = self.Rectangle
 
         self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")

@@ -653,6 +653,8 @@ class ContentManager:
             if FrequencyType == "sine":
                 Value = int(round(max_sample * math.sin(2 * math.pi * Frequency * t)))
 
+            if FrequencyType == "sine_square":
+                Value = int(round(max_sample * np.sign(math.sin(2 * math.pi * Frequency * t)))) - int(round(max_sample * math.sin(2 * math.pi * Frequency * t)))
 
             # Mono Sound Output
             buf[s][0] = Value

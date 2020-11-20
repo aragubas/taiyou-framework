@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.8"
+    return "3.9"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -32,7 +32,7 @@ def Get_TaiyouMainVersion():
     return "3.9"
 
 def Get_ContentManagerVersion():
-    return "3.6"
+    return "3.7"
 
 def Get_FXVersion():
     return "1.3"
@@ -404,6 +404,9 @@ def Init():
                 AudioPlayblackChannels = int(SplitedParms[1].rstrip())
 
                 print("Taiyou.Runtime.Init : AudioPlaybackChannels was set to:" + str(AudioPlayblackChannels))
+
+    # WORKAROUND : Fix bug to run at new Pygame 2.0
+    os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
 
     if not IgnoreSDL2Parameters:  # -- Set SDL2 Parameters (if enabled) -- #
         # -- Set the Enviroments Variables -- #
