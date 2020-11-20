@@ -172,8 +172,15 @@ def Init():
         TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\app\\"
         TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\system\\"
 
+    # Create directory for User Paths
+    Utils.Directory_MakeDir(TaiyouPath_UserPath)
+    Utils.Directory_MakeDir(TaiyouPath_UserPackpagesPath)
+    Utils.Directory_MakeDir(TaiyouPath_UserTempFolder)
+
+
     # -- Initialize Some Modules
     CntMng.InitModule()
+
 
     # Check if User Temporary Directory Exists, then clean it
     if Utils.Directory_Exists(TaiyouPath_UserTempFolder):
