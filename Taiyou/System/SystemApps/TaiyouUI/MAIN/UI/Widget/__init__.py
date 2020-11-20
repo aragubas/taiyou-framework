@@ -244,7 +244,7 @@ class Widget_Button:
         self.FontSize = FontSize
         self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-        self.Rectangle = Convert.List_PygameRect((X - 2, Y - 2, self.TextWidth + 4, self.TextHeight + 4))
+        self.Rectangle = Convert.List_PygameRect((X, Y, self.TextWidth + 2, self.TextHeight + 2))
         self.LastRect = self.Rectangle
         self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
@@ -253,6 +253,10 @@ class Widget_Button:
         self.CursorOffset = (0, 0)
         self.BgColor = UI.ThemesManager_GetProperty("Button_BackgroundColor")
         self.IndicatorColor = UI.ThemesManager_GetProperty("Button_Inactive_IndicatorColor")
+
+    def SetText(self, text):
+        self.Text = str(text)
+        self.UpdateRectangle()
 
     def Render(self, DISPLAY):
         if not self.IsVisible:
@@ -271,22 +275,23 @@ class Widget_Button:
         if self.ButtonState == 2:
             self.ButtonState = 0
 
+    def UpdateRectangle(self):
+        # -- Update all Size and Position Variables -- #
+        self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+        self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
+        self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0], self.Rectangle[1], self.TextWidth + 2, self.TextHeight + 2))
+        self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+        self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
+
+        self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
+
     def Update(self):
         if not self.IsVisible:
             return
 
         # -- Check if surface has the correct size -- #
         if not self.LastRect == self.Rectangle:
-            self.Surface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]))
-
-            # -- Update all Size and Position Variables -- #
-            self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-            self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-            self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0] - 2, self.Rectangle[1] - 2, self.TextWidth + 4, self.TextHeight + 4))
-            self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
-            self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
-
-            print("Button Rect Updated")
+            self.UpdateRectangle()
 
             self.LastRect = self.Rectangle
 

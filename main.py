@@ -35,7 +35,7 @@ if platform.system() == "Windows":
 
 import System.Core as Core
 
-## Start the Application Loop ##
+# Start the Application Loop #
 LoopEnabled = True
 Core.MAIN.Initialize()
 
