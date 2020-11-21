@@ -15,6 +15,6 @@ Then, you drop this zipfile inside Taiyou/User/<your_user_name>/Packpages/
 Then, open Packpage installer and it will do everthing for you.
 
 
-## Required Packpages
+## Required Libraries
 To install all requirements, just execute:
-pip install -r requirements.txt
+``pip install -r requirements.txt``
