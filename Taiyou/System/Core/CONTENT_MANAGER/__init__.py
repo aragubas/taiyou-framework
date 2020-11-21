@@ -76,9 +76,9 @@ class ContentManager:
         Root = Core.TaiyouPath_ApplicationsDataPath
 
         if not pSourceFolder.endswith("/"):
-            pSourceFolder = pSourceFolder + "/"
-
-        self.SourceFolder = ''.join((Root, pSourceFolder.replace("/", Core.TaiyouPath_CorrectSlash)))
+            pSourceFolder = pSourceFolder + Core.TaiyouPath_CorrectSlash
+        
+        self.SourceFolder = "{0}{1}".format(Root, pSourceFolder.replace("/", Core.TaiyouPath_CorrectSlash))
         print("Taiyou.ContentManager.LoadUserAppContents : Source Directory has been set to ({0}).".format(self.SourceFolder))
 
     # region Image I/O Functions

@@ -127,10 +127,11 @@ def ListInstalledApplications(BootFolders, ApplicationSelector):
         if AppTitle is None or IconPath is None or ModulePath is None:
             continue
 
-        BootIconPath = boot.replace("/boot", "") + IconPath
+        BootIconPath = boot.replace("{0}boot".format(Core.TaiyouPath_CorrectSlash), "") + IconPath.replace("/", Core.TaiyouPath_CorrectSlash)
         print(BootIconPath)
-        print("ceira")
-
+        
+        
+        
         ApplicationSelector.AddItem(AppTitle, ModulePath, BootIconPath)
 
 
@@ -409,10 +410,6 @@ class Process():
         self.ProgressMax = self.Progress
 
     def LoadingSteps(self, CurrentProgres):
-        for module in sys.modules:
-            if module.startswith("System"):
-                print(module)
-
         if CurrentProgres == 0:
             # Start the SystemUI
             Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui", pPriority=1)

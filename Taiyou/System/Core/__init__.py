@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.0"
+    return "4.1"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -32,13 +32,13 @@ def Get_TaiyouMainVersion():
     return "3.9"
 
 def Get_ContentManagerVersion():
-    return "3.7"
+    return "3.8"
 
 def Get_FXVersion():
     return "1.3"
 
 def Get_BootloaderVersion():
-    return "2.2"
+    return "2.3"
 
 def Get_MAINVersion():
     return "1.9"
@@ -157,13 +157,13 @@ def Init():
 
     elif CurrentPlatform == "Windows":
         TaiyouPath_CorrectSlash = "\\"
-        TaiyouPath_RootDevice = ".\\Taiyou\\"
+        TaiyouPath_RootDevice = os.getcwd() + "\\Taiyou\\"
         TaiyouPath_SystemPath = "{0}System\\CoreFiles\\".format(TaiyouPath_RootDevice)
-        TaiyouPath_UserPath = ".\\Taiyou\\User\\{0}\\".format(getpass.getuser())
+        TaiyouPath_UserPath = "Taiyou\\User\\{0}\\".format(getpass.getuser())
         TaiyouPath_AppDataFolder = "{0}AppsData\\".format(TaiyouPath_UserPath)
         TaiyouPath_UserPackpagesPath = TaiyouPath_UserPath + "Packpages\\"
         TaiyouPath_UserTempFolder = TaiyouPath_UserPath + "Temporary\\"
-        TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "app\\"
+        TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "Data\\app\\"
         TaiyouPath_SystemDataPath = TaiyouPath_RootDevice + "Data\\system\\"
         TaiyouPath_SystemRootPath = TaiyouPath_RootDevice + "System\\"
         TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemRootPath + "system.config"
@@ -400,26 +400,31 @@ def Init():
     os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
 
     if not IgnoreSDL2Parameters:  # -- Set SDL2 Parameters (if enabled) -- #
-        # -- Set the Enviroments Variables -- #
-        os.environ['SDL_VIDEODRIVER'] = str(VideoDriver)  # -- Set the Video Driver
-        os.environ['SDL_AUDIODRIVER'] = str(AudioDriver)  # -- Set the Audio Driver
+        if not CurrentPlatform == "Windows":        
+            # -- Set the Enviroments Variables -- #
+            os.environ['SDL_VIDEODRIVER'] = str(VideoDriver)  # -- Set the Video Driver
+            os.environ['SDL_AUDIODRIVER'] = str(AudioDriver)  # -- Set the Audio Driver
 
-        # -- Set Input Enviroments -- #
-        os.environ['SDL_MOUSEDRV'] = str(InputMouseDriver)  # -- Set the Mouse Driver
-        os.environ['SDL_NOMOUSE'] = str(InputDisableMouse)  # -- Set the Mouse Driver
+            # -- Set Input Enviroments -- #
+            os.environ['SDL_MOUSEDRV'] = str(InputMouseDriver)  # -- Set the Mouse Driver
+            os.environ['SDL_NOMOUSE'] = str(InputDisableMouse)  # -- Set the Mouse Driver
 
-        # -- Set X11 Environment -- #
-        if VideoDriver == "x11":
-            if VideoX11CenterWindow:
-                os.environ['SDL_VIDEO_CENTERED'] = "1"  # -- Set the Centered Window
+            # -- Set X11 Environment Variables -- #
+            if VideoDriver == "x11":
+                if VideoX11CenterWindow:
+                    os.environ['SDL_VIDEO_CENTERED'] = "1"  # -- Set the Centered Window
 
-            if VideoX11DGAMouse:
-                os.environ['SDL_VIDEO_X11_DGAMOUSE'] = "1"  # -- Set the DGA Mouse Parameter
+                if VideoX11DGAMouse:
+                    os.environ['SDL_VIDEO_X11_DGAMOUSE'] = "1"  # -- Set the DGA Mouse Parameter
 
-            if VideoX11YUV_HWACCEL:
-                os.environ['SDL_VIDEO_YUV_HWACCEL'] = "1"  # -- Set the YUV HWACCEL Parameter
-        print("Taiyou.Runtime.Init : SDL2 Parameters has been applyed")
-
+                if VideoX11YUV_HWACCEL:
+                    os.environ['SDL_VIDEO_YUV_HWACCEL'] = "1"  # -- Set the YUV HWACCEL Parameter
+                    
+            print("Taiyou.Runtime.Init : SDL2 Parameters has been applyed")
+            
+        else:
+            print("Taiyou.Runtime.Init : SDL2 Parameters will be not set because Windows does not support SDL2 Parameters.")
+        
     else:
         print("Taiyou.Runtime.Init : SDL2 Parameters has been disabled")
 
@@ -488,8 +493,6 @@ def GetAppDataFromAppName(AppName):
         Utils.Directory_MakeDir(Path)
 
     return Path
-
-    pass
 
 def Get_MainModuleName(AppPath):
     """
