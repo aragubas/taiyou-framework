@@ -275,8 +275,8 @@ def Directory_Rename(sourcePath, newName):
 class Downloader:
     def __init__(self):
         self.Url = ""
-        self.DownloadState = "STOPPED"
-        self.InstanceFileName = "Taiyou/HOME/Webcache/" + Random_String(20) + ".temp"
+        self.DownloadState = "INACTIVE"
+        self.InstanceFileName = ""
         self.DownloadThread = threading.Thread
         self.DownloadMetaData = list()
 
@@ -309,11 +309,11 @@ class Downloader:
 
             self.DownloadState = "FINISHED"
 
-    def StartDownload(self, Url, FileLocation="default"):
-        if FileLocation == "default":
-            self.InstanceFileName = "Taiyou/HOME/Webcache/" + Random_String(50) + ".temp"
-        else:
-            self.InstanceFileName = FileLocation
+    def SetInactiveState(self):
+        self.DownloadState = "INACTIVE"
+
+    def StartDownload(self, Url, FileLocation):
+        self.InstanceFileName = FileLocation
         # -- Set Download State -- #
         self.DownloadState = "STOPPED"
         # -- Set the Url -- #

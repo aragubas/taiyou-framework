@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "3.9"
+    return "4.0"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -177,17 +177,8 @@ def Init():
     Utils.Directory_MakeDir(TaiyouPath_UserPackpagesPath)
     Utils.Directory_MakeDir(TaiyouPath_UserTempFolder)
 
-
     # -- Initialize Some Modules
     CntMng.InitModule()
-
-
-    # Check if User Temporary Directory Exists, then clean it
-    if Utils.Directory_Exists(TaiyouPath_UserTempFolder):
-        Utils.Directory_Remove(TaiyouPath_UserTempFolder)
-
-    else:
-        Utils.Directory_MakeDir(TaiyouPath_UserTempFolder)
 
     conf_file = open(TaiyouPath_TaiyouConfigFile)
 

@@ -96,22 +96,24 @@ class Widget_PictureBox:
             raise ValueError("WidgetID cannot be -1")
 
         self.Rectangle = Utils.Convert.List_PygameRect(Rectangle)
-        self.ImageName = ImageName
+        self.Image = ImageName
         self.ID = WidgetID
         self.InteractionType = None
         self.Active = False
+        self.IsVisible = False
         self.EventUpdateable = False
         self.AwaysUpdate = False
         self.CursorOffset = (0, 0)
         self.Content = pContentManager
+        self.IsUnloadedImage = False
 
     def Render(self, DISPLAY):
-        self.Content.ImageRender(DISPLAY, self.ImageName, self.Rectangle[0], self.Rectangle[1], self.Rectangle[2], self.Rectangle[3])
+        if not self.IsVisible:
+            return
+
+        self.Content.ImageRender(DISPLAY, self.Image, self.Rectangle[0], self.Rectangle[1], self.Rectangle[2], self.Rectangle[3], ImageNotLoaded=self.IsUnloadedImage)
 
     def Update(self):
-        pass
-
-    def EventUpdate(self, event):
         pass
 
 class Widget_ValueChanger:
@@ -224,7 +226,6 @@ class Widget_ProgressBar:
         if self.Progress >= self.ProgressMax:
             self.Progress = self.ProgressMax
 
-        self.Rectangle = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
         self.ProgressRect = (self.Rectangle[0], self.Rectangle[1], max(10, Utils.Get_Percentage(self.Progress, self.Rectangle[2], self.ProgressMax)), 10)
 
         Shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.Rectangle, 0, self.Rectangle[3])

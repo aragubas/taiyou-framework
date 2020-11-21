@@ -20,7 +20,7 @@ import System.Core.SHAPES as Shape
 import System.Core.UTILS as Utils
 import System.SystemApps.TaiyouUI.MAIN.UI.Widget as widget
 
-TaskBar_Version = "2.1"
+TaskBar_Version = "2.2"
 
 #region Theme Manager
 ThemesList_Properties = list()
@@ -139,7 +139,7 @@ class VerticalListWithDescription:
             self.ContentManager.FontRender(self.ListSurface, "/Ubuntu_Bold.ttf", 14, itemNam, ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 5)
 
             # -- Render Item Description -- #
-            self.ContentManager.FontRender(self.ListSurface, "/Ubuntu.ttf", 12, self.ItemsDescription[i], ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 25)
+            self.ContentManager.FontRender(self.ListSurface, "/Ubuntu_Bold.ttf", 10, self.ItemsDescription[i], ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 25)
 
             # -- Render the Item Sprite -- #
             if self.ItemSprite[i] is not None:

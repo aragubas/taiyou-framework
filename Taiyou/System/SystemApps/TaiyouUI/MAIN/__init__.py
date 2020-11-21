@@ -177,7 +177,12 @@ class Process():
             if self.SomeWindowIsBeingMoved_PID != process.PID:
                 return
 
+        FocusedProcessColisor = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width(), self.FocusedProcess.DISPLAY.get_height())
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if process != self.FocusedProcess and FocusedProcessColisor.collidepoint(pygame.mouse.get_pos()):
+                return
+
             pos = pygame.mouse.get_pos()
 
             if process.TITLEBAR_RECTANGLE.collidepoint(pos):
