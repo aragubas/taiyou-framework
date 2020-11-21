@@ -16,5 +16,5 @@ Then, open Packpage installer and it will do everthing for you.
 
 
 ## Required Packpages
-**pygame==2.0.0.dev20**, os, time, binascii, struct, pillow, numpy, scipy, glob, math, sys, importlib, marshal, traceback, threading, datetime, multiprocessing, gc
-shutil, requests, string, random, zipfile, urllib, psutil, pathlib, 
+To install all requirements, just execute:
+pip install -r requirements.txt
