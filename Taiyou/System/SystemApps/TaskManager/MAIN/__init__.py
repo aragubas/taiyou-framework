@@ -20,7 +20,7 @@ from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core.MAIN import DISPLAY as DISPLAY
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
@@ -34,6 +34,11 @@ class Process():
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
         self.TITLEBAR_TEXT = "Task Manager"
         self.WindowDragEnable = False
+        self.ProcessIndex = pProcessIndex
+
+        Core.ProcessAccess.append(self)
+        Core.ProcessAccess_PID.append(self.PID)
+
 
     def Initialize(self):
         self.DefaultContent = Core.CntMng.ContentManager()

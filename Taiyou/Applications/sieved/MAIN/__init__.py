@@ -24,7 +24,7 @@ from Applications.sieved.MAIN import LoadingScreen
 from Applications.sieved.MAIN import MainScreen
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
@@ -40,6 +40,14 @@ class Process():
         self.WindowDragEnable = False
         self.DefaultContents = CntMng.ContentManager()
         self.ICON = None
+        self.ProcessIndex = pProcessIndex
+        self.WINDOW_DRAG_ENABLED = False
+        self.Running = True
+        self.Timer = pygame.time.Clock()
+
+        Core.RegisterToCoreAccess(self)
+
+        self.Initialize()
 
     def Initialize(self):
         self.POSITION = (Core.MAIN.ScreenWidth / 2 - self.DISPLAY.get_width() / 2, Core.MAIN.ScreenHeight / 2 - self.DISPLAY.get_height() / 2)
@@ -146,19 +154,22 @@ class Process():
         self.DownloadQueue.append((url, DownloadPath, tag))
 
     def Update(self):
-        if not self.APPLICATION_HAS_FOCUS:
-            return
+        while self.Running:
+            self.Timer.tick(100)
 
-        if self.IsDownloading:
-            self.UpdateDownloaderStatusBar()
+            if not self.APPLICATION_HAS_FOCUS:
+                return
 
-            self.UpdateDownloadQueue()
+            if self.IsDownloading:
+                self.UpdateDownloaderStatusBar()
 
-        if not self.RequiredFilesDownloaded:
-            if self.LastFinishedDownload == "news_file":
-                self.ReadCachedHeaderInfos()
+                self.UpdateDownloadQueue()
 
-        self.SelectedScreen.Update()
+            if not self.RequiredFilesDownloaded:
+                if self.LastFinishedDownload == "news_file":
+                    self.ReadCachedHeaderInfos()
+
+            self.SelectedScreen.Update()
 
     def ReadCachedHeaderInfos(self):
         self.RequiredFilesDownloaded = True

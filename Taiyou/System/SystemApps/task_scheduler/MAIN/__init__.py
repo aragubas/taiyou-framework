@@ -17,12 +17,13 @@
 import pygame
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
         self.IS_GRAPHICAL = False
         self.INIT_ARGS = pInitArgs
+        self.ProcessIndex = pProcessIndex
 
         self.Taks = list()
         self.TaksKey = list()

@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.1"
+    return "4.2"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -32,16 +32,16 @@ def Get_TaiyouMainVersion():
     return "3.9"
 
 def Get_ContentManagerVersion():
-    return "3.8"
+    return "3.9"
 
 def Get_FXVersion():
     return "1.3"
 
 def Get_BootloaderVersion():
-    return "2.3"
+    return "2.4"
 
 def Get_MAINVersion():
-    return "1.9"
+    return "2.1"
 
 def Get_WindowManagerManagerVersion():
     return "1.3"
@@ -94,6 +94,11 @@ TaiyouPath_SystemApplicationsDataFolder = ""
 LastException = "null"
 CurrentPlatform = ""
 
+# -- Global Variables -- #
+ProcessAccess = list()
+ProcessAccess_PID = list()
+
+IsRunning = True
 
 def Init():
     """
@@ -476,8 +481,8 @@ def InitSoundSystem():
 def InitializeBootloader():
     global TaiyouPath_CorrectSlash
 
-    CurrentGame_Folder = "System{0}SystemApps{0}Bootloader".format(TaiyouPath_CorrectSlash)
-    MAIN.CreateProcess(CurrentGame_Folder, "bootloader", pPriority=1)
+    CurrentApp_Folder = "System{0}SystemApps{0}Bootloader".format(TaiyouPath_CorrectSlash)
+    MAIN.CreateProcess(CurrentApp_Folder, "bootloader")
 
 def GetUserSelectedApplication():
     global TaiyouPath_RootDevice
@@ -503,6 +508,10 @@ def Get_MainModuleName(AppPath):
     return "{0}{1}".format(AppPath.replace(TaiyouPath_CorrectSlash, "."), ".MAIN")
 
 # endregion
+
+def RegisterToCoreAccess(self):
+    ProcessAccess.append(self)
+    ProcessAccess_PID.append(self.PID)
 
 
 # -- Imports All Modules -- #

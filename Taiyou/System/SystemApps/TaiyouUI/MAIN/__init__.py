@@ -16,13 +16,14 @@
 #
 import System.Core as Core
 import time, pygame, traceback, math
-from System.Core.MAIN import DISPLAY as DISPLAY
 from System.SystemApps.TaiyouUI.MAIN import UI
+from System.Core.MAIN import DISPLAY
 from System.SystemApps.TaiyouUI.MAIN import TaskBar
+from System.Core import Utils
 from System.Core import Fx
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.INIT_ARGS = pInitArgs
         self.NAME = pProcessName
@@ -30,9 +31,18 @@ class Process():
         self.IS_GRAPHICAL = False
         self.APPLICATION_HAS_FOCUS = True
         self.POSITION = (0, 0)
+        self.ProcessIndex = pProcessIndex
         self.FULLSCREEN = False
+        self.Running = True
+        self.Timer = pygame.time.Clock()
+
+        self.Initialize()
+
+        Core.RegisterToCoreAccess(self)
+
 
     def Initialize(self):
+        print("Initializing TaiyouUI...")
         # Set Invisible Mouse
         pygame.mouse.set_visible(False)
 
@@ -46,9 +56,10 @@ class Process():
         self.DefaultContent.SetSoundPath("sound")
         self.DefaultContent.SetFontPath("fonts")
 
+        self.ImagesResLoaded = False
+
         self.DefaultContent.InitSoundSystem()
         self.DefaultContent.LoadRegKeysInFolder()
-        self.DefaultContent.LoadImagesInFolder()
         self.DefaultContent.LoadSoundsInFolder()
 
         # Load the default Theme File
@@ -65,8 +76,6 @@ class Process():
 
         self.GUI_ALLOW_TASKMANAGER = True
 
-        self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
-
         self.Zoomlevel = 1.0
         self.ZoomlevelMod = 1.0
 
@@ -74,6 +83,8 @@ class Process():
 
         # Set this process as the WindowManager Process
         Core.wmm.TaskBarUIProcessID = self.PID
+
+        self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
 
     def EventUpdate(self):
         pygame.fastevent.pump()
@@ -122,7 +133,7 @@ class Process():
                     self.UI_Call_Request()
 
             if not self.TaskBarInstance.Enabled:
-                for process in Core.MAIN.ProcessList:
+                for process in Core.ProcessAccess:
                     # Check if current process is not TaiyouUI itself
                     if process.PID == self.PID:
                         continue
@@ -153,7 +164,7 @@ class Process():
 
     def SingleInstanceFocus(self):
         if len(Core.MAIN.ProcessList) == 2:
-            for process in Core.MAIN.ProcessList:
+            for process in Core.ProcessAccess:
                 if process.PID != self.PID:
                     process.APPLICATION_HAS_FOCUS = True
                     process.PRIORITY = -1
@@ -208,17 +219,37 @@ class Process():
             process.POSITION = (process.WINDOW_DRAG_SP[0] + pos[0], process.WINDOW_DRAG_SP[1] + pos[1])
 
     def Update(self):
-        # Check if SystemFault has been occurred
-        if Core.MAIN.SystemFault_Trigger:
-            Core.MAIN.SystemFault_Trigger = False
-            self.TaskBarInstance.SetMode(1)
-            self.UI_Call_Request()
+        while self.Running:
+            self.Timer.tick(100)
 
-        DISPLAY.fill((0, 0, 0))
+            if not self.ImagesResLoaded:
+                self.ImagesResLoaded = True
+                self.DefaultContent.LoadImagesInFolder()
+
+            # Check if SystemFault has been occurred
+            if Core.MAIN.SystemFault_Trigger:
+                Core.MAIN.SystemFault_Trigger = False
+                self.TaskBarInstance.SetMode(1)
+                self.UI_Call_Request()
+
+            # Update Applications Events
+            self.EventUpdate()
+
+            Core.MAIN.DrawingCode = self.DrawScreen
+
+            # Single-Instance Application Focus
+            self.SingleInstanceFocus()
+
+            # Play Notify Sound
+            if self.PlayNotifySound:
+                self.PlayNotifySound = False
+                self.DefaultContent.PlaySound("/notify.wav")
+
+    def DrawScreen(self):
         # Draw the Applications Window
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
-            for process in Core.MAIN.ProcessList:
+            for process in Core.ProcessAccess:
                 # Skip Non-Graphical Process
                 if not process.IS_GRAPHICAL:
                     continue
@@ -239,7 +270,7 @@ class Process():
 
             # Draw the focused process
             try:
-                ProcessExists = Core.MAIN.ProcessList_PID.index(self.FocusedProcess.PID)
+                ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
                 self.DrawProcess(self.FocusedProcess)
 
@@ -252,8 +283,7 @@ class Process():
         self.TaskBarInstance.Update()
         self.TaskBarInstance.Draw(DISPLAY)
 
-        # Draw the Cursor
-        self.DefaultContent.ImageRender(DISPLAY, "/pointer.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        self.DrawCursor()
 
         if self.ZoomEnabled:
             if self.Zoomlevel > self.ZoomlevelMod:
@@ -269,18 +299,9 @@ class Process():
             WaxResult.blit(DISPLAY, (0, 0), (pygame.mouse.get_pos()[0] - WaxResult.get_width() / 2, pygame.mouse.get_pos()[1] - WaxResult.get_height() / 2, WaxResult.get_width(), WaxResult.get_height()))
             DISPLAY.blit(pygame.transform.scale(WaxResult, (800, 600)), (0, 0))
 
-        pygame.display.flip()
-
-        # Update Applications Events
-        self.EventUpdate()
-
-        # Single-Instance Application Focus
-        self.SingleInstanceFocus()
-
-        # Play Notify Sound
-        if self.PlayNotifySound:
-            self.PlayNotifySound = False
-            self.DefaultContent.PlaySound("/notify.wav")
+    def DrawCursor(self):
+        # Draw the Cursor
+        self.DefaultContent.ImageRender(DISPLAY, "/pointer.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
     def DrawProcess(self, process):
         if process is None:
@@ -321,7 +342,11 @@ class Process():
                 return
 
             # If not, draw window decoration
-            DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
+            try:
+                DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
+
+            except AttributeError:
+                pass
 
         except:
             Core.MAIN.SystemFault_Trigger = True

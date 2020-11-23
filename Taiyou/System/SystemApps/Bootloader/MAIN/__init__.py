@@ -136,7 +136,7 @@ def ListInstalledApplications(BootFolders, ApplicationSelector):
 
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.NAME = pProcessName
         self.INIT_ARGS = pInitArgs
@@ -149,6 +149,16 @@ class Process():
         self.FULLSCREEN = True
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
         self.TITLEBAR_TEXT = "Taiyou System Loader"
+        self.Timer = pygame.time.Clock()
+        self.ProcessIndex = pProcessIndex
+        self.WINDOW_DRAG_ENABLED = False
+        self.Running = True
+        self.ImagesHasBeenLoaded = False
+
+        self.Initialize()
+
+        Core.ProcessAccess.append(self)
+        Core.ProcessAccess_PID.append(self.PID)
 
     def Initialize(self):
         self.DefaultContent = Core.CntMng.ContentManager()
@@ -163,7 +173,6 @@ class Process():
         self.DefaultContent.InitSoundSystem()
 
         self.DefaultContent.LoadRegKeysInFolder()
-        self.DefaultContent.LoadImagesInFolder()
         self.DefaultContent.LoadSoundsInFolder()
 
         self.Progress = 0
@@ -200,69 +209,80 @@ class Process():
         self.InitialSignal = False
 
     def Update(self):
-        if self.ApplicationSeletor:
-            self.ApplicationSeletorAnimatorStart.Update()
+        while self.Running:
+            self.Timer.tick(60)
 
-            if self.ApplicationSeletorAnimatorStart.Value <= 10 and not self.FatalErrorScreen:
-                self.ApplicationSeletorAnimatorStart.Enabled = True
+            if self.ApplicationSeletor:
+                self.ApplicationSeletorAnimatorStart.Update()
 
-            if not self.ApplicationSeletorWelcomeSound and not self.FatalErrorScreen:
-                self.ApplicationSeletorWelcomeSound = True
+                if self.ApplicationSeletorAnimatorStart.Value <= 10 and not self.FatalErrorScreen:
+                    self.ApplicationSeletorAnimatorStart.Enabled = True
 
-                self.DefaultContent.PlaySound("/intro.wav")
-                Core.wmm.WindowManagerSignal(None, 5)
-            return
+                if not self.ApplicationSeletorWelcomeSound and not self.FatalErrorScreen:
+                    self.ApplicationSeletorWelcomeSound = True
 
-        if self.ProgressProgression and not self.LoadingComplete:
-            self.ProgressAddDelay += 1
+                    self.DefaultContent.PlaySound("/intro.wav")
+                    Core.wmm.WindowManagerSignal(None, 5)
+                continue
 
-            if self.ProgressAddDelay == 5:
-                self.ProgressAddDelay = 0
-                self.Progress += 1
+            if self.ProgressProgression and not self.LoadingComplete:
+                self.ProgressAddDelay += 1
 
-            if self.ProgressAddDelay == 1:
-                self.LoadingSteps(self.Progress)
+                if self.ProgressAddDelay == 5:
+                    self.ProgressAddDelay = 0
+                    self.Progress += 1
 
-            if self.Progress >= self.ProgressMax and not self.LoadingComplete:
-                self.LoadingComplete = True
+                if self.ProgressAddDelay == 1:
+                    self.LoadingSteps(self.Progress)
 
-                print("Bootloader : Loading Complete")
+                if self.Progress >= self.ProgressMax and not self.LoadingComplete:
+                    self.LoadingComplete = True
 
-                # Start the Default Application
-                try:
-                    # Create the Application Process
-                    Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
+                    print("Taiyou.Bootloader :  : Loading Complete")
 
-                    # Allow Window Manager do receive request
-                    Core.wmm.WindowManagerSignal(None, 4)
-
-                    # Kills the Bootloader process
-                    Core.MAIN.KillProcessByPID(self.PID)
-
-                except Exception:
-                    print("Fatal Error : Error while creating the process to the Auto-Start Application.")
-
-                    Traceback = traceback.format_exc()
-
-                    # Check if SelectedFile wax exists
+                    # Start the Default Application
                     try:
-                        UserSelectedApplication = Core.GetUserSelectedApplication()
+                        print("Taiyou.Bootloader : Loading has been completed\nStarting user selected applicaton...")
+                        # Create the Application Process
+                        Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
 
-                        self.GenerateCrashLog(Traceback, UserSelectedApplication)
-                        print(Traceback)
-                        print("Something bad happened while creating the process for the default application.")
+                        # Allow Window Manager do receive request
+                        Core.wmm.WindowManagerSignal(None, 4)
 
-                        self.FatalErrorScreen = False
-                        self.ApplicationSeletor = True
-                        self.APPLICATION_HAS_FOCUS = True
+                        # Kills the Bootloader process
+                        print("Taiyou.Bootloader : I am done at the time...\ni think i will just exit the conversation.")
+                        Core.MAIN.KillProcessByPID(self.PID)
 
-                    except:
-                        print("Selected application file is not readable.")
-                        self.ApplicationSeletor = True
-                        self.APPLICATION_HAS_FOCUS = True
+                    except Exception:
+                        print("Taiyou.Bootloader : Fatal Error : Error while creating the process to the Auto-Start Application.")
+
+                        Traceback = traceback.format_exc()
+
+                        # Check if SelectedFile wax exists
+                        try:
+                            UserSelectedApplication = Core.GetUserSelectedApplication()
+
+                            self.GenerateCrashLog(Traceback, UserSelectedApplication)
+                            print(Traceback)
+                            print("Something bad happened while creating the process for the default application.")
+
+                            self.FatalErrorScreen = False
+                            self.ApplicationSeletor = True
+                            self.APPLICATION_HAS_FOCUS = True
+
+                        except:
+                            print("Selected application file is not readable.")
+                            self.ApplicationSeletor = True
+                            self.APPLICATION_HAS_FOCUS = True
 
     def Draw(self):
+        if not self.ImagesHasBeenLoaded:
+            self.ImagesHasBeenLoaded = True
+            self.DefaultContent.LoadImagesInFolder()
+            print("Loaded image resouces")
+
         if not self.InitialSignal:
+            print("Initial Signal Sent")
             self.InitialSignal = True
 
             # Disable Window manager Requests
@@ -410,13 +430,14 @@ class Process():
         self.ProgressMax = self.Progress
 
     def LoadingSteps(self, CurrentProgres):
+        print("Taiyou.Bootloader.LoadingSteps : Running Step {0}.".format(CurrentProgres))
         if CurrentProgres == 0:
             # Start the SystemUI
-            Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui", pPriority=1)
+            Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui")
 
         if CurrentProgres == 1:
             # Start the Task Scheduler
-            Core.MAIN.CreateProcess("System{0}SystemApps{0}task_scheduler".format(Core.TaiyouPath_CorrectSlash), "task_scheduler", pPriority=1)
+            Core.MAIN.CreateProcess("System{0}SystemApps{0}task_scheduler".format(Core.TaiyouPath_CorrectSlash), "task_scheduler")
 
         if CurrentProgres == 2:
             # Finish the Loading

@@ -49,10 +49,12 @@ def WindowManagerSignal(self, Signal):
     if TaskBarUIProcessID == -1:
         raise Exception("Cant send signal to TaskBarGUI because it is not running.")
 
+    print("WindowManagerManager : TaskBAR ProcessID {0}".format(TaskBarUIProcessID))
+
     if Signal == 0:
         OriginalDragValue = self.WINDOW_DRAG_ENABLED
 
-        for process in Core.MAIN.ProcessList:
+        for process in Core.ProcessAccess:
             process.APPLICATION_HAS_FOCUS = False
             process.WINDOW_DRAG_ENABLED = False
 
@@ -66,17 +68,17 @@ def WindowManagerSignal(self, Signal):
         return
 
     elif Signal == 2:
-        Core.MAIN.ProcessList[TaskBarUIProcessID].PlayNotifySound = True
+        Core.ProcessAccess[TaskBarUIProcessID].PlayNotifySound = True
         return
 
     elif Signal == 3:
-        Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
+        Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
         return
 
     elif Signal == 4:
-        Core.MAIN.ProcessList[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
+        Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
         return
 
     elif Signal == 5:
-        Core.MAIN.ProcessList[TaskBarUIProcessID].WelcomeScreenAppered = True
+        Core.ProcessAccess[TaskBarUIProcessID].WelcomeScreenAppered = True
         return

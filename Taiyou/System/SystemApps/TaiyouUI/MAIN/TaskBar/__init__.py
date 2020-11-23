@@ -47,13 +47,15 @@ class TaskBarInstance:
             self.CurrentMode = ApplicationSelectorMode_Instace(self.DefaultContent, self)
             return
 
-        if pModeID == 1:
+        elif pModeID == 1:
             self.CurrentMode = SystemFault_Instance(self.DefaultContent, self)
             return
 
-        if pModeID == 2:
+        elif pModeID == 2:
             self.CurrentMode = ApplicationDashboard_Instace(self.DefaultContent, self)
             return
+        else:
+            raise Exception("The mode ID {0} is invalid.".format(pModeID))
 
     def Set_LastDisplayFrame(self, pDisplay):
         self.LastDisplayFrame = pDisplay.copy()
@@ -94,7 +96,9 @@ class TaskBarInstance:
             return
 
         self.Animation.Update()
-        self.CurrentMode.Update()
+
+        if hasattr(self, "CurrentMode"):
+            self.CurrentMode.Update()
 
     def Draw(self, DISPLAY):
         # Draw the Blurred Background
@@ -118,13 +122,14 @@ class TaskBarInstance:
 
         DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
-        # Contents Surface
-        ContentsSurface = pygame.Surface((self.LastDisplayFrame.get_width(), self.LastDisplayFrame.get_height()), pygame.SRCALPHA)
-        ContentsSurface.set_alpha(self.Animation.Value)
+        if hasattr(self, "CurrentMode"):
+            # Contents Surface
+            ContentsSurface = pygame.Surface((self.LastDisplayFrame.get_width(), self.LastDisplayFrame.get_height()), pygame.SRCALPHA)
+            ContentsSurface.set_alpha(self.Animation.Value)
 
-        self.CurrentMode.Draw(ContentsSurface)
+            self.CurrentMode.Draw(ContentsSurface)
 
-        DISPLAY.blit(ContentsSurface, (0, 0))
+            DISPLAY.blit(ContentsSurface, (0, 0))
 
     def EventUpdate(self, event):
         if not self.Enabled:
@@ -225,7 +230,7 @@ class ApplicationSelectorMode_Instace:
         # Update WindowList Contents
         self.WindowList.ClearItems()
 
-        for process in Core.MAIN.ProcessList:
+        for process in Core.ProcessAccess:
             if process.PID == self.RootObj.RootProcess.PID:
                 continue
             # Skip non-graphical processes
@@ -233,11 +238,17 @@ class ApplicationSelectorMode_Instace:
                 continue
 
             ProcessHasIcon = False
+            ProcessIcon = None
 
-            if process.ICON is not None:
-                ProcessHasIcon = True
+            try:
+                if process.ICON is not None:
+                    ProcessHasIcon = True
+                    ProcessIcon = process.ICON
 
-            self.WindowList.AddItem(process.TITLEBAR_TEXT, "PID: " + str(process.PID), ItemProperties=process.PID, ItemSprite=process.ICON, ItemSpriteIsUnloaded=ProcessHasIcon)
+            except AttributeError:
+                ProcessHasIcon = False
+
+            self.WindowList.AddItem(process.TITLEBAR_TEXT, "PID: " + str(process.PID), ItemProperties=process.PID, ItemSprite=ProcessIcon, ItemSpriteIsUnloaded=ProcessHasIcon)
 
     def CloseSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
@@ -272,7 +283,7 @@ class ApplicationSelectorMode_Instace:
         if self.WindowList.LastItemIndex is not None:
             try:
                 ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
-                Process = Core.MAIN.ProcessList[Core.MAIN.GetProcessIndexByPID(ProcessPID)]
+                Process = Core.ProcessAccess[Core.ProcessAccess_PID.index(ProcessPID)]
 
                 Core.wmm.WindowManagerSignal(Process, 0)
 

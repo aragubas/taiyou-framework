@@ -22,7 +22,7 @@ from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core import CntMng
 
 class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         self.PID = pPID
         self.NAME = pProcessName
         self.ROOT_MODULE = pROOT_MODULE
@@ -38,6 +38,14 @@ class Process():
         self.WindowDragEnable = False
         self.WINDOW_OPACITY = 255
         self.ICON = None
+        self.ProcessIndex = pProcessIndex
+        self.WINDOW_DRAG_ENABLED = False
+        self.Running = True
+        self.Timer = pygame.time.Clock()
+
+        Core.RegisterToCoreAccess(self)
+
+        self.Initialize()
 
     def Initialize(self):
         # Initialize Content Manager
@@ -102,68 +110,70 @@ class Process():
         return self.DISPLAY
 
     def Update(self):
-        if not self.APPLICATION_HAS_FOCUS:
-            return
+        while self.Running:
+            self.Timer.tick(100)
+            if not self.APPLICATION_HAS_FOCUS:
+                continue
 
-        self.UpdateDownToolbar()
+            self.UpdateDownToolbar()
 
-        if self.NoPackpagesFoundMode:
-            self.DownToolbar.GetWidget(1).IsVisible = True
-            self.DownToolbar.GetWidget(2).IsVisible = False
-            self.DownToolbar.GetWidget(3).IsVisible = False
-            self.DownToolbar.GetWidget(4).IsVisible = False
-            return
+            if self.NoPackpagesFoundMode:
+                self.DownToolbar.GetWidget(1).IsVisible = True
+                self.DownToolbar.GetWidget(2).IsVisible = False
+                self.DownToolbar.GetWidget(3).IsVisible = False
+                self.DownToolbar.GetWidget(4).IsVisible = False
+                continue
 
-        if self.PackpageInstalationEnabled and not self.InstalationCompleteDeletePackpage:
-            self.PackpageInstalationStepNextDelay += 1
+            if self.PackpageInstalationEnabled and not self.InstalationCompleteDeletePackpage:
+                self.PackpageInstalationStepNextDelay += 1
 
-            if self.PackpageReplaceWarning:
-                self.SetStatusText(self.ContentManager.Get_RegKey("/strings/application_already_installed_warning"))
-                # Set progress bar Invisible
+                if self.PackpageReplaceWarning:
+                    self.SetStatusText(self.ContentManager.Get_RegKey("/strings/application_already_installed_warning"))
+                    # Set progress bar Invisible
+                    self.DownToolbar.GetWidget(2).IsVisible = False
+
+                    # Set Yes Button Visible
+                    self.DownToolbar.GetWidget(4).IsVisible = True
+
+                    # Set No Button Visible
+                    self.DownToolbar.GetWidget(3).IsVisible = True
+
+                if self.PackpageInstalationStepNextDelay >= 5 and not self.PackpageReplaceWarning:
+                    self.PackpageInstalationStepNextDelay = 0
+                    if not self.BackFromPackpageReplaceWarning:
+                        self.PackpageInstalationStep += 1
+                    else:
+                        self.BackFromPackpageReplaceWarning = False
+
+                    self.ApplicationInstallingUpdateProgress()
+
+                # Set the Progress Bar Value and Status Text
+                if self.PackpageInstalationEnabled and not self.PackpageReplaceWarning:
+                    self.SetStatusText(self.ContentManager.Get_RegKey("/strings/progress_text").format(self.SelectedPackpage, str(self.PackpageInstalationStep), str(self.PackpageInstalationStepMax)))
+                    self.DownToolbar.GetWidget(2).Progress = self.PackpageInstalationStep
+
+                    if self.PackpageInstalationStep >= self.PackpageInstalationStepMax + 1:
+                        print("Instalation steps has been reached its limit")
+                        self.PackpageInstalationStep = self.PackpageInstalationStepMax
+                        self.FinishInstalation(False)
+
+            elif not self.InstalationCompleteDeletePackpage:
+                self.PackpageVerticalList.ColisionXOffset = self.POSITION[0]
+                self.PackpageVerticalList.ColisionYOffset = self.POSITION[1] + self.TITLEBAR_RECTANGLE[3]
+
+                if self.PackpageVerticalList.LastItemClicked != "null":
+                    self.SetSelectedPackpage(self.PackpageVerticalList.LastItemClicked)
+            else:
+                self.SetStatusText(self.ContentManager.Get_RegKey("/strings/packpage_installed_want_remove"))
+
+                # Set progress bar Visible
                 self.DownToolbar.GetWidget(2).IsVisible = False
 
-                # Set Yes Button Visible
+                # Set Yes Button Invisible
                 self.DownToolbar.GetWidget(4).IsVisible = True
 
-                # Set No Button Visible
+                # Set No Button Invisible
                 self.DownToolbar.GetWidget(3).IsVisible = True
-
-            if self.PackpageInstalationStepNextDelay >= 5 and not self.PackpageReplaceWarning:
-                self.PackpageInstalationStepNextDelay = 0
-                if not self.BackFromPackpageReplaceWarning:
-                    self.PackpageInstalationStep += 1
-                else:
-                    self.BackFromPackpageReplaceWarning = False
-
-                self.ApplicationInstallingUpdateProgress()
-
-            # Set the Progress Bar Value and Status Text
-            if self.PackpageInstalationEnabled and not self.PackpageReplaceWarning:
-                self.SetStatusText(self.ContentManager.Get_RegKey("/strings/progress_text").format(self.SelectedPackpage, str(self.PackpageInstalationStep), str(self.PackpageInstalationStepMax)))
-                self.DownToolbar.GetWidget(2).Progress = self.PackpageInstalationStep
-
-                if self.PackpageInstalationStep >= self.PackpageInstalationStepMax + 1:
-                    print("Instalation steps has been reached its limit")
-                    self.PackpageInstalationStep = self.PackpageInstalationStepMax
-                    self.FinishInstalation(False)
-
-        elif not self.InstalationCompleteDeletePackpage:
-            self.PackpageVerticalList.ColisionXOffset = self.POSITION[0]
-            self.PackpageVerticalList.ColisionYOffset = self.POSITION[1] + self.TITLEBAR_RECTANGLE[3]
-
-            if self.PackpageVerticalList.LastItemClicked != "null":
-                self.SetSelectedPackpage(self.PackpageVerticalList.LastItemClicked)
-        else:
-            self.SetStatusText(self.ContentManager.Get_RegKey("/strings/packpage_installed_want_remove"))
-
-            # Set progress bar Visible
-            self.DownToolbar.GetWidget(2).IsVisible = False
-
-            # Set Yes Button Invisible
-            self.DownToolbar.GetWidget(4).IsVisible = True
-
-            # Set No Button Invisible
-            self.DownToolbar.GetWidget(3).IsVisible = True
 
     def UpdateDownToolbar(self):
         self.DownToolbar.ObjectOffset = (self.POSITION[0], self.POSITION[1] + self.TITLEBAR_RECTANGLE[3])

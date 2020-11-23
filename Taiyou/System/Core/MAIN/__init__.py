@@ -17,7 +17,7 @@
 
 # Import some stuff
 import os
-import System.Core as tge
+import System.Core as Core
 from System.Core import APPDATA as reg
 from System.Core import CONTENT_MANAGER as sprite
 from System.Core import UTILS as Utils
@@ -28,12 +28,11 @@ from multiprocessing import Process
 import gc
 
 # The main Entry Point
-print("Taiyou Main version " + tge.Get_TaiyouMainVersion())
+print("Taiyou Main version " + Core.Get_TaiyouMainVersion())
 
 # -- Variables -- #
 clock = pygame.time.Clock()
 FPS = 75
-DISPLAY = pygame.display
 ScreenWidth = 1024
 ScreenHeight = 720
 WorkObject = None
@@ -51,16 +50,13 @@ ProcessNextPID = -1
 SystemFault_Trigger = False
 SystemFault_Traceback = ""
 SystemFault_ProcessObject = None
-
+timer = pygame.time.Clock()
 
 # Delta Time
 getTicksLastFrame = 0
 deltaTime = 0
 
-# Priority List
-HigherPriorityProcess = list()
-NormalPriorityProcess = list()
-LowerPriorityProcess = list()
+DISPLAY = False
 
 
 def Initialize():
@@ -71,7 +67,7 @@ def Initialize():
     print("TaiyouFramework.Initialize : Initializing Taiyou...")
 
     # -- Load Engine -- #
-    tge.Init()
+    Core.Init()
 
     EngineInitialized = True
     print("TaiyouFramework.Initialize : Initialization complete.")
@@ -166,20 +162,7 @@ def ReceiveCommand(Command, Arguments=None):
         Txt = "TaiyouMessage EXCEPTION\nThe Command {0}\ndoes not have the necessary number of arguments.".format(str(Command))
         print(Txt)
 
-def SetDisplay():
-    global DISPLAY
-    global ScreenWidth
-    global ScreenHeight
-
-    if not tge.RunInFullScreen:
-        DISPLAY = pygame.display.set_mode((ScreenWidth, ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE)
-
-    else:
-        DISPLAY = pygame.display.set_mode((ScreenWidth, ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
-
-    pygame.display.set_caption("Taiyou Framework v" + Utils.FormatNumber(tge.TaiyouGeneralVersion))
-
-def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
+def CreateProcess(Path, ProcessName, pInitArgs=None):
     """
      Set the Game Object
     :param GameFolder:Folder Path
@@ -187,60 +170,40 @@ def CreateProcess(Path, ProcessName, pInitArgs = None, pPriority=0):
     """
     global ProcessList
     global ProcessList_Names
+    global ProcessList_PID
     global DISPLAY
     global ProcessListChanged
     global ProcessNextPID
 
     print("TaiyouFramework.CreateProcess : Creating Process: [" + ProcessName + "]")
 
-    Path = Path.replace("/", tge.TaiyouPath_CorrectSlash)
+    Path = Path.replace("/", Core.TaiyouPath_CorrectSlash)
     ProcessIndex = len(ProcessList_Names)
+    ProcessNextPID += 1
+
     print("ProcessIndex: " + str(ProcessIndex))
     print("Path: " + Path)
     print("ProcessName: " + ProcessName)
+    print("ProcessPID : " + str(ProcessNextPID))
 
-    ProcessNextPID += 1
-
-    ProcessList_Names.append(ProcessName)
-    print(tge.Get_MainModuleName(Path))
-    Module = importlib.import_module(tge.Get_MainModuleName(Path))
-    ProcessList.append(Module.Process(ProcessNextPID, ProcessName, tge.Get_MainModuleName(Path), pInitArgs))
-    ProcessList_PID.append(ProcessNextPID)
+    Module = importlib.import_module(Core.Get_MainModuleName(Path))
+    ProcessWax = Module.Process(ProcessNextPID, ProcessName, Core.Get_MainModuleName(Path), pInitArgs, ProcessIndex)
 
     importlib.reload(Module)
     del Module
 
-    if tge.Get_MainModuleName(Path) in sys.modules:
-        sys.modules.pop(tge.Get_MainModuleName(Path))
+    if Core.Get_MainModuleName(Path) in sys.modules:
+        sys.modules.pop(Core.Get_MainModuleName(Path))
     Utils.GarbageCollector_Collect()
 
-    # Inject Variables and Functions
-    Index = ProcessList_PID.index(ProcessNextPID)
-    ProcessList[Index].PROCESS_INDEX = ProcessIndex
-    ProcessList[Index].WINDOW_DRAG_ENABLED = False
-    ProcessList[Index].APPLICATION_HAS_FOCUS = True
-    ProcessList[Index].EXECUTABLE_PATH = Path
-    ProcessList[Index].PRIORITY = pPriority
+    Thread = threading.Thread(target=ProcessWax.Update)
+    Thread.daemon = True
+    Thread.name = ProcessName
+    Thread.start()
 
-    ProcessListChanged = True
-
-    # Initialize
-    try:
-        # Intialize Process Code
-        ProcessList[Index].Initialize()
-
-    except Exception as ex:
-        # Remove the last item from the lists
-        print("TaiyouFramework.CreateProcess : Process: [" + ProcessName + "] thrown an error on while trying to initialize")
-
-        del ProcessList[-1]
-        del ProcessList_PID[-1]
-        del ProcessList_Names[-1]
-        Utils.GarbageCollector_Collect()
-
-        raise ex
-
-    print("TaiyouFramework.CreateProcess : Process: [" + ProcessName + "] created successfully.")
+    ProcessList.append(Thread)
+    ProcessList_PID.append(ProcessNextPID)
+    ProcessList_Names.append(ProcessName)
 
     return ProcessNextPID
 
@@ -250,6 +213,14 @@ def SendSigKillToProcessByPID(PID):
 def KillProcessByPID(PID):
     global ProcessListChanged
     Index = GetProcessIndexByPID(PID)
+
+    Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].Running = False
+    if hasattr(Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)], "SIG_KILL"):
+        Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].SIG_KILL()
+
+    index = Core.ProcessAccess_PID.index(PID)
+    Core.ProcessAccess.pop(index)
+    Core.ProcessAccess_PID.pop(index)
 
     ProcessList.pop(Index)
     ProcessList_PID.pop(Index)
@@ -267,107 +238,10 @@ def GetProcessIndexByPID(PID):
     except ValueError:
         raise ModuleNotFoundError("The process {0} could not be found".format(PID))
 
-def UpdateProcessPriorityList():
-    global HigherPriorityProcess
-    global NormalPriorityProcess
-    global LowerPriorityProcess
-
-    HigherPriorityProcess.clear()
-    NormalPriorityProcess.clear()
-    LowerPriorityProcess.clear()
-
-    for process in ProcessList:
-        if process.PRIORITY == 1:
-            HigherPriorityProcess.append(process)
-        elif process.PRIORITY == 0:
-            NormalPriorityProcess.append(process)
-
-        elif process.PRIORITY == -1:
-            LowerPriorityProcess.append(process)
-
-        else:
-            raise Exception("Invalid priority value: {0}".format(str(process.PRIORITY)))
-
-
-def Run():
-    global WorkObject
-    global FPS
-    global DISPLAY
-    global deltaTime
-    global getTicksLastFrame
-    global ProcessListChanged
-    global ProcessListChanged_Delay
-    global SystemFault_Trigger
-    global SystemFault_Traceback
-    global SystemFault_ProcessObject
-    global HigherPriorityProcess
-    global NormalPriorityProcess
-    global LowerPriorityProcess
-
-    # -- Run the Update Code -- #
-    if ProcessListChanged:
-        UpdateProcessPriorityList()
-
-    # Update high priority process
-    for process in HigherPriorityProcess:
-        try:
-            process.Update()
-
-        except Exception:
-            UpdateProcessError(process)
-
-    # Limit the application to the designed FPS
-    clock.tick(FPS)
-
-    # Update Normal Priority process
-    for process in NormalPriorityProcess:
-        try:
-            process.Update()
-
-        except Exception:
-            UpdateProcessError(process)
-
-    # Update Lower Priority process
-    for process in LowerPriorityProcess:
-        try:
-            process.Update()
-
-        except Exception:
-            UpdateProcessError(process)
-
-    if ProcessListChanged_Delay:
-        ProcessListChanged_Delay = False
-        ProcessListChanged = False
-
-    if ProcessListChanged:
-        ProcessListChanged_Delay = True
-
-def UpdateProcessError(process):
-    global SystemFault_Trigger
-    global SystemFault_Traceback
-    global SystemFault_ProcessObject
-
-    SystemFault_Trigger = True
-    SystemFault_Traceback = traceback.format_exc()
-    SystemFault_ProcessObject = process
-    print("TaiyouApplicationLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
-    print("Traceback:\n" + SystemFault_Traceback)
-
-    # Call the Window Manager to Toggle the UI Mode
-    tge.wmm.WindowManagerSignal(None, 4)
-    tge.wmm.CallWindowManagerUI()
-
-    # Kill the Process
-    KillProcessByPID(process.PID)
-
-    # Generate the Crash Log
-    GenerateCrashLog()
-
-
 def GenerateCrashLog():
     print("Generating crash log...")
     # Create the directory for the Crash Logs
-    CrashLogsDir = "./Logs/".replace("/", tge.TaiyouPath_CorrectSlash)
+    CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
     Utils.Directory_MakeDir(CrashLogsDir)
 
     try:
@@ -424,5 +298,31 @@ def GenerateCrashLog():
 
 
 def Destroy():
+    Core.IsRunning = False
     pygame.quit()
     sys.exit()
+
+DrawingCode = None
+
+def UpdateDisplayDevice():
+    global DrawingCode
+
+    timer.tick(75)
+
+    if DrawingCode is not None:
+        DrawingCode()
+
+    try:
+        pygame.display.flip()
+    except Exception as ex:
+        print("Error while rendering screen.\n{0}".format(str(ex)))
+
+def SetDisplay():
+    global DISPLAY
+    if not Core.RunInFullScreen:
+        DISPLAY = pygame.display.set_mode((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE)
+
+    else:
+        DISPLAY = pygame.display.set_mode((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
+
+    pygame.display.set_caption("Taiyou Framework v" + Utils.FormatNumber(Core.TaiyouGeneralVersion))

@@ -67,6 +67,10 @@ class ContentManager:
         self.SoundTuneCache_Names = list()
         self.SoundTuneCache_Cache = list()
         self.SourceFolder = ""
+        self.StopLongOperations = False
+
+        if not pygame.font.get_init():
+            pygame.font.init()
 
     def SetSourceFolder(self, pSourceFolder, SystemDataFolder=False):
         if SystemDataFolder:
@@ -105,6 +109,9 @@ class ContentManager:
         print("ContentManager.LoadImagesInFolder : Loading all Images...")
 
         for line in sprite_meta_lines:
+            if self.StopLongOperations:
+                break
+
             line = line.rstrip()
             if not line.startswith('#') and not line == "":
                 currentLine = line.split(':')
@@ -316,6 +323,9 @@ class ContentManager:
         index = -1
 
         for x in temp_reg_keys:
+            if self.StopLongOperations:
+                break
+
             index += 1
 
             CorrectKeyName = x.replace(reg_dir, "").replace(".data", "")
@@ -516,7 +526,11 @@ class ContentManager:
         TotalSize = 0
         for i, l in enumerate(Text.splitlines()):
             CurrentSize = 0
-            CurrentSize += self.GetFont_object(FontFileLocation, FontSize).render(l, True, (255, 255, 255)).get_width()
+            try:
+                CurrentSize += self.GetFont_object(FontFileLocation, FontSize).render(l, True, (255, 255, 255)).get_width()
+
+            except:
+                pass
 
             if CurrentSize > TotalSize:
                 TotalSize = CurrentSize
@@ -534,7 +548,10 @@ class ContentManager:
         if Text == "" or FontFileLocation == "" or FontSize == 0:
             return 0
 
-        return self.GetFont_object(FontFileLocation, FontSize).render(Text, True, (255, 255, 255)).get_height() * len(Text.splitlines())
+        try:
+            return self.GetFont_object(FontFileLocation, FontSize).render(Text, True, (255, 255, 255)).get_height() * len(Text.splitlines())
+        except pygame.error:
+            return 0
 
     # endregion
 
@@ -562,6 +579,9 @@ class ContentManager:
 
         print("ContentManager.LoadSoundsInFolder : Loading Sounds")
         for x in temp_sound_files:
+            if self.StopLongOperations:
+                break
+
             try:
                 index += 1
                 print("\nContentManager.LoadSoundsInFolder : File[" + x + "] detected; Index[" + str(index) + "]")
@@ -642,6 +662,9 @@ class ContentManager:
         max_sample = 2 ** (16 - 1) - 1
 
         for s in range(n_samples):
+            if self.StopLongOperations:
+                break
+
             t = float(s) / SampleRate  # time in seconds
 
             # grab the x-coordinate of the sine wave at a given time, while constraining the sample to what our mixer is set to with "bits"
