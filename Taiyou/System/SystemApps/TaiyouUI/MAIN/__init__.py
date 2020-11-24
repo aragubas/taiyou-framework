@@ -207,7 +207,7 @@ class Process(Core.Process):
 
     def Update(self):
         while self.Running:
-            self.Timer.tick(100)
+            time.sleep((1000 / 60) / 1000)
 
             if not self.ImagesResLoaded:
                 self.ImagesResLoaded = True
