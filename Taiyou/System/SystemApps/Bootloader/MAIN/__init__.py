@@ -189,8 +189,8 @@ class Process(Core.Process):
 
     def Update(self):
         while self.Running:
-            self.Timer.tick(60)
-
+            self.Timer.tick(100)
+            
             if self.ApplicationSeletor:
                 self.ApplicationSeletorAnimatorStart.Update()
 
@@ -414,10 +414,6 @@ class Process(Core.Process):
         if CurrentProgres == 0:
             # Start the SystemUI
             Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui")
-
-        if CurrentProgres == 1:
-            # Start the Task Scheduler
-            Core.MAIN.CreateProcess("System{0}SystemApps{0}task_scheduler".format(Core.TaiyouPath_CorrectSlash), "task_scheduler")
 
         if CurrentProgres == 2:
             # Finish the Loading

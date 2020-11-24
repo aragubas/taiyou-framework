@@ -19,27 +19,7 @@ import pygame
 from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core.MAIN import DISPLAY as DISPLAY
 
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.NAME = pProcessName
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = True
-        self.INIT_ARGS = pInitArgs
-        self.DISPLAY = pygame.Surface((250, 300))
-        self.LAST_SURFACE = self.DISPLAY.copy()
-        self.APPLICATION_HAS_FOCUS = True
-        self.POSITION = (0, 0)
-        self.FULLSCREEN = False
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
-        self.TITLEBAR_TEXT = "Task Manager"
-        self.WindowDragEnable = False
-        self.ProcessIndex = pProcessIndex
-
-        Core.ProcessAccess.append(self)
-        Core.ProcessAccess_PID.append(self.PID)
-
-
+class Process(Core.Process):
     def Initialize(self):
         self.DefaultContent = Core.CntMng.ContentManager()
         self.DefaultContent.SetSourceFolder("CoreFiles/System/TaskManager/")

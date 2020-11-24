@@ -39,9 +39,8 @@ import System.Core as Core
 LoopEnabled = True
 Core.MAIN.Initialize()
 
-
-while (LoopEnabled):
-    Core.MAIN.Run()
+while Core.IsRunning:
+    Core.MAIN.UpdateDisplayDevice()
 
 print("\nSee you later!")
 

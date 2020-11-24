@@ -41,7 +41,7 @@ def Get_BootloaderVersion():
     return "2.4"
 
 def Get_MAINVersion():
-    return "2.1"
+    return "2.2"
 
 def Get_WindowManagerManagerVersion():
     return "1.3"
@@ -542,7 +542,7 @@ class Process(object):
         self.ProcessIndex = pProcessIndex
         self.INIT_ARGS = pInitArgs
         self.ICON = None
-        self.IS_GRAPHICAL = True
+        self.IS_GRAPHICAL = False
         self.DISPLAY = pygame.Surface((320, 240))
         self.LAST_SURFACE = self.DISPLAY.copy()
         self.APPLICATION_HAS_FOCUS = True
@@ -574,6 +574,7 @@ class Process(object):
         :return:
         """
         self.FULLSCREEN = Fullscreen
+        self.IS_GRAPHICAL = True
 
         if not maxResolution:
             ResW = Resolution[0]
@@ -583,6 +584,13 @@ class Process(object):
             ResH = MAIN.ScreenHeight
 
         self.DISPLAY = pygame.Surface((ResW, ResH))
+
+    def SetAsNonGraphical(self):
+        """
+        Set application as non-graphical
+        :return:
+        """
+        self.IS_GRAPHICAL = False
 
     def Initialize(self):
         """
@@ -603,8 +611,8 @@ class Process(object):
         The main Update Loop
         :return:
         """
-        pass
-
+        return
+    
     def EventUpdate(self, event):
         """
         The main EventUpdate for the process, called by the Window manager

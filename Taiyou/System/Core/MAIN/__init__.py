@@ -21,8 +21,7 @@ import System.Core as Core
 from System.Core import APPDATA as reg
 from System.Core import CONTENT_MANAGER as sprite
 from System.Core import UTILS as Utils
-import pygame, sys, importlib, multiprocessing
-import traceback, threading
+import pygame, sys, importlib, multiprocessing, traceback, threading, time
 from datetime import datetime
 from multiprocessing import Process
 import gc
@@ -31,7 +30,6 @@ import gc
 print("Taiyou Main version " + Core.Get_TaiyouMainVersion())
 
 # -- Variables -- #
-clock = pygame.time.Clock()
 FPS = 75
 ScreenWidth = 1024
 ScreenHeight = 720
@@ -75,7 +73,7 @@ def Initialize():
 
 def ReceiveCommand(Command, Arguments=None):
     """
-    Sends a command to the Game Engine
+    Sends a command to the Application Engine
     \n
     Command:                   Argument\n
     0 - Set FPS:                Integer\n
@@ -117,11 +115,11 @@ def ReceiveCommand(Command, Arguments=None):
 
             SetDisplay()
 
-        elif Command == 2:   #-- Kill Game
+        elif Command == 2:   #-- Kill Application
             CommandWasValid = True
             IsSpecialEvent = True
 
-            print("TaiyouFramework.ReceiveCommand : Killing Game Process")
+            print("TaiyouFramework.ReceiveCommand : Killing Application Process")
 
             Destroy()
 
@@ -164,8 +162,8 @@ def ReceiveCommand(Command, Arguments=None):
 
 def CreateProcess(Path, ProcessName, pInitArgs=None):
     """
-     Set the Game Object
-    :param GameFolder:Folder Path
+     Set the Application Object
+    :param ApplicationFolder:Folder Path
     :return:
     """
     global ProcessList
@@ -197,10 +195,7 @@ def CreateProcess(Path, ProcessName, pInitArgs=None):
         sys.modules.pop(Core.Get_MainModuleName(Path))
     Utils.GarbageCollector_Collect()
 
-    Thread = threading.Thread(target=ProcessWax.Update)
-    Thread.daemon = True
-    Thread.name = ProcessName
-    Thread.start()
+    Thread = threading.Thread(target=ProcessWax.Update).start()
 
     ProcessList.append(Thread)
     ProcessList_PID.append(ProcessNextPID)
@@ -313,14 +308,24 @@ def Destroy():
     sys.exit()
 
 DrawingCode = None
+EventUpdateCode = None
 
 def UpdateDisplayDevice():
     global DrawingCode
+    global timer
+    global EventUpdateCode
 
-    timer.tick(75)
+    timer.tick(100)
 
     if DrawingCode is not None:
         DrawingCode()
+
+    if EventUpdateCode is not None:
+        if not pygame.fastevent.get_init():
+            return
+            
+        else:
+            EventUpdateCode()
 
     try:
         pygame.display.flip()

@@ -23,24 +23,38 @@ from System.Core import Utils
 from System.Core import Fx
 
 class Process(Core.Process):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
+        self.SomeWindowIsBeingMoved = False
+        self.SomeWindowIsBeingMoved_PID = -1
+        self.FocusedProcess = None
+        self.PlayNotifySound = False
+        self.TaskBarSystemFault = False
+        self.GUI_ALLOW_TASKMANAGER = True
+        self.Zoomlevel = 1.0
+        self.ZoomlevelMod = 1.0
+        self.ZoomEnabled = False
+        self.Timer = pygame.time.Clock()
+        self.ImagesResLoaded = False
+        self.DefaultContent = Core.CntMng.ContentManager()
+        self.TaskBarInstance = TaskBar.TaskBarInstance
+
+        super(Process, self).__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
+
+        Core.wmm.TaskBarUIProcessID = self.PID
+
     def Initialize(self):
         print("Initializing TaiyouUI...")
         # Set Invisible Mouse
         pygame.mouse.set_visible(False)
 
-        self.Timer = pygame.time.Clock()
-
-        # Initialize Content Manager
+        # -- Default Content --
         self.DefaultContent = Core.CntMng.ContentManager()
-
         self.DefaultContent.SetSourceFolder("", True)
         self.DefaultContent.SetFontPath("fonts")
         self.DefaultContent.SetImageFolder("img")
         self.DefaultContent.SetRegKeysPath("reg/UI")
         self.DefaultContent.SetSoundPath("sound")
         self.DefaultContent.SetFontPath("fonts")
-
-        self.ImagesResLoaded = False
 
         self.DefaultContent.InitSoundSystem()
         self.DefaultContent.LoadRegKeysInFolder()
@@ -49,25 +63,7 @@ class Process(Core.Process):
         # Load the default Theme File
         UI.ThemesManager_LoadTheme(self.DefaultContent, self.DefaultContent.Get_RegKey("/selected_theme"))
 
-        self.SomeWindowIsBeingMoved = False
-        self.SomeWindowIsBeingMoved_PID = -1
-
-        self.FocusedProcess = None
-
-        self.PlayNotifySound = False
-
-        self.TaskBarSystemFault = False
-
-        self.GUI_ALLOW_TASKMANAGER = True
-
-        self.Zoomlevel = 1.0
-        self.ZoomlevelMod = 1.0
-
-        self.ZoomEnabled = False
-
-        # Set this process as the WindowManager Process
-        Core.wmm.TaskBarUIProcessID = self.PID
-
+        # Create TaskBar Instance
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
 
     def EventUpdate(self):
@@ -223,11 +219,9 @@ class Process(Core.Process):
                 self.TaskBarInstance.SetMode(1)
                 self.UI_Call_Request()
 
-            # Update Applications Events
-            self.EventUpdate()
-
             Core.MAIN.DrawingCode = self.DrawScreen
-
+            Core.MAIN.EventUpdateCode = self.EventUpdate
+            
             # Single-Instance Application Focus
             self.SingleInstanceFocus()
 
@@ -259,13 +253,14 @@ class Process(Core.Process):
 
                 try:
                     self.DrawProcess(process)
+
                 except:
                     print("TaiyouUI.ApplicationError at (Non-Active application rendering).")
                     print(traceback.format_exc())
 
             # Draw the focused process
             try:
-                if not self.FocusedProcess == None:
+                if not self.FocusedProcess is None:
                     ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
                     self.DrawProcess(self.FocusedProcess)

@@ -15,23 +15,15 @@
 #
 #
 import pygame
+import System.Core as Core
 
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.NAME = pProcessName
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = False
-        self.INIT_ARGS = pInitArgs
-        self.ProcessIndex = pProcessIndex
-
+class Process(Core.Process):
+    def Initialize(self):
         self.Taks = list()
         self.TaksKey = list()
         self.TaksProcessAgrs = list()
         self.TaskExecutionCycle = False
-
-    def Initialize(self):
-        pass
+        self.Timer = pygame.time.Clock()
 
     def RunScheduledTask(self, key):
         print("Running task {0}".format(key))
@@ -44,8 +36,10 @@ class Process():
         del self.TaksProcessAgrs[Index]
 
     def Update(self):
-        if len(self.TaksKey) != 0:
-            self.RunScheduledTask(self.TaksKey[0])
+        while self.Running:
+            self.Timer.tick(100)
+            if len(self.TaksKey) != 0:
+                self.RunScheduledTask(self.TaksKey[0])
 
     def AddTask(self, function, key, process_args=()):
         self.Taks.append(function)
