@@ -315,7 +315,7 @@ def UpdateDisplayDevice():
     global timer
     global EventUpdateCode
 
-    timer.tick(100)
+    timer.tick(Core.DisplayRefreshRate)
 
     if DrawingCode is not None:
         DrawingCode()
@@ -327,10 +327,7 @@ def UpdateDisplayDevice():
         else:
             EventUpdateCode()
 
-    try:
-        pygame.display.flip()
-    except Exception as ex:
-        print("Error while rendering screen.\n{0}".format(str(ex)))
+    pygame.display.flip()
 
 def SetDisplay():
     global DISPLAY

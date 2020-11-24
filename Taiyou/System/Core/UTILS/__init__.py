@@ -17,7 +17,7 @@
 
 # -- Imports -- #
 import System.Core as tge
-import os, shutil, requests, string, random, threading, zipfile, urllib.request, gc, psutil
+import os, shutil, requests, string, random, threading, zipfile, urllib.request, gc, psutil, collections, time
 from pathlib import Path
 from urllib.error import HTTPError
 import binascii
@@ -424,3 +424,17 @@ def Is_Multiple(x, y):
     x = int(x)
     y = int(y)
     return x and (y % x) == 0
+
+class FPS:
+    def __init__(self, avarageof=50):
+        self.frametimestamps = collections.deque(maxlen=avarageof)
+        self.times_called = 0
+
+    def __call__(self):
+        self.times_called += 1
+
+        self.frametimestamps.append(time.time())
+        if len(self.frametimestamps) > 1:
+            return len(self.frametimestamps)/(self.frametimestamps[-1]-self.frametimestamps[0])
+        else:
+            return 0.0

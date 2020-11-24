@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.2"
+    return "4.3"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -41,7 +41,7 @@ def Get_BootloaderVersion():
     return "2.4"
 
 def Get_MAINVersion():
-    return "2.2"
+    return "2.3"
 
 def Get_WindowManagerManagerVersion():
     return "1.3"
@@ -72,6 +72,7 @@ IgnoreSDL2Parameters = True
 PygameFastEvent = True
 SmoothScaleTransform = "MMX"
 ThrowException = False
+DisplayRefreshRate = 0
 
 # -- Taiyou Paths -- #
 TaiyouPath_SystemPath = ""
@@ -139,6 +140,7 @@ def Init():
     global TaiyouPath_SystemApplicationsFolder
     global TaiyouPath_ApplicationsDataFolder
     global TaiyouPath_SystemApplicationsDataFolder
+    global DisplayRefreshRate
 
     # -- Set the Correct Slash Directory -- #
     CurrentPlatform = platform.system()
@@ -400,6 +402,12 @@ def Init():
                 AudioPlayblackChannels = int(SplitedParms[1].rstrip())
 
                 print("Taiyou.Runtime.Init : AudioPlaybackChannels was set to:" + str(AudioPlayblackChannels))
+
+            elif SplitedParms[0] == "DisplayRefreshRate":
+                DisplayRefreshRate = int(SplitedParms[1].rstrip())
+
+                print("Taiyou.Runtime.Init : DisplayRefreshRate was set to:" + str(DisplayRefreshRate))
+
 
     # WORKAROUND : Fix bug to run at new Pygame 2.0
     os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
