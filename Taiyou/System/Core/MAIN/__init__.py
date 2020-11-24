@@ -21,7 +21,7 @@ import System.Core as Core
 from System.Core import APPDATA as reg
 from System.Core import CONTENT_MANAGER as sprite
 from System.Core import UTILS as Utils
-import pygame, sys, importlib, marshal, multiprocessing
+import pygame, sys, importlib, multiprocessing
 import traceback, threading
 from datetime import datetime
 from multiprocessing import Process
@@ -187,6 +187,7 @@ def CreateProcess(Path, ProcessName, pInitArgs=None):
     print("ProcessPID : " + str(ProcessNextPID))
 
     Module = importlib.import_module(Core.Get_MainModuleName(Path))
+
     ProcessWax = Module.Process(ProcessNextPID, ProcessName, Core.Get_MainModuleName(Path), pInitArgs, ProcessIndex)
 
     importlib.reload(Module)
@@ -205,6 +206,9 @@ def CreateProcess(Path, ProcessName, pInitArgs=None):
     ProcessList_PID.append(ProcessNextPID)
     ProcessList_Names.append(ProcessName)
 
+    ProcessWax.THIS_THREAD = Thread
+
+
     return ProcessNextPID
 
 def SendSigKillToProcessByPID(PID):
@@ -214,14 +218,20 @@ def KillProcessByPID(PID):
     global ProcessListChanged
     Index = GetProcessIndexByPID(PID)
 
+    # Call SIG_KILL Function on Process
     Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].Running = False
     if hasattr(Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)], "SIG_KILL"):
         Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].SIG_KILL()
 
+    # Remove Thread Object
+    del Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].THIS_THREAD
+
+    # Delete from CoreAcess
     index = Core.ProcessAccess_PID.index(PID)
     Core.ProcessAccess.pop(index)
     Core.ProcessAccess_PID.pop(index)
 
+    # Remove from Process List
     ProcessList.pop(Index)
     ProcessList_PID.pop(Index)
     ProcessList_Names.pop(Index)

@@ -22,29 +22,13 @@ from System.SystemApps.TaiyouUI.MAIN import TaskBar
 from System.Core import Utils
 from System.Core import Fx
 
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.INIT_ARGS = pInitArgs
-        self.NAME = pProcessName
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = False
-        self.APPLICATION_HAS_FOCUS = True
-        self.POSITION = (0, 0)
-        self.ProcessIndex = pProcessIndex
-        self.FULLSCREEN = False
-        self.Running = True
-        self.Timer = pygame.time.Clock()
-
-        self.Initialize()
-
-        Core.RegisterToCoreAccess(self)
-
-
+class Process(Core.Process):
     def Initialize(self):
         print("Initializing TaiyouUI...")
         # Set Invisible Mouse
         pygame.mouse.set_visible(False)
+
+        self.Timer = pygame.time.Clock()
 
         # Initialize Content Manager
         self.DefaultContent = Core.CntMng.ContentManager()
@@ -87,6 +71,8 @@ class Process():
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
 
     def EventUpdate(self):
+        if not pygame.fastevent.get_init():
+            return
         pygame.fastevent.pump()
 
         # -- Update Event -- #
@@ -148,7 +134,12 @@ class Process():
 
                         # Process EventUpdate for the process
                         if process.APPLICATION_HAS_FOCUS and ProcessGeometry.colliderect(CursorColision) and not process.WINDOW_DRAG_ENABLED:
-                            process.EventUpdate(event)
+                            try:
+                                process.EventUpdate(event)
+
+                            except:
+                                print("TaiyouUI.ApplicationError at (EventUpdate)")
+                                print(traceback.format_exc())
 
                         # Play beep sound when clicking on Inactive Window
                         if self.FocusedProcess is not None:
@@ -266,15 +257,22 @@ class Process():
                     self.FocusedProcess = process
                     continue
 
-                self.DrawProcess(process)
+                try:
+                    self.DrawProcess(process)
+                except:
+                    print("TaiyouUI.ApplicationError at (Non-Active application rendering).")
+                    print(traceback.format_exc())
 
             # Draw the focused process
             try:
-                ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
+                if not self.FocusedProcess == None:
+                    ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
-                self.DrawProcess(self.FocusedProcess)
+                    self.DrawProcess(self.FocusedProcess)
 
             except Exception:
+                print("TaiyouUI.ApplicationError at (Active application rendering).")
+                print(traceback.format_exc())
                 self.FocusedProcess = None
 
             self.TaskBarInstance.Set_LastDisplayFrame(DISPLAY)
@@ -312,20 +310,25 @@ class Process():
             if process.FULLSCREEN:
                 # If application has focus, draw again it's content
                 if process.APPLICATION_HAS_FOCUS:
-                    Surface = process.Draw()
+                    try:
+                        Surface = process.Draw()
 
-                    # Check if Application Surface has maximum size
-                    if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
-                        Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
-                        process.DISPLAY = Surface
+                        # Check if Application Surface has maximum size
+                        if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
+                            Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
+                            process.DISPLAY = Surface
 
-                    DISPLAY.blit(Surface, (0, 0))
-                    return
+                        DISPLAY.blit(Surface, (0, 0))
+                        return
+
+                    except:
+                        return
 
                 # If not, just draw a copy of its screen
                 DISPLAY.blit(process.LAST_SURFACE, (0, 0))
                 if not process.APPLICATION_HAS_FOCUS:
                     WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
+                    process.TITLEBAR_RECTANGLE = pygame.Rect(WindowGeometry[0], WindowGeometry[1], WindowGeometry[2], 15)
 
                     # Draw the title bar
                     TitleBarColor = (39, 54, 159)
@@ -342,11 +345,7 @@ class Process():
                 return
 
             # If not, draw window decoration
-            try:
-                DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
-
-            except AttributeError:
-                pass
+            DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
 
         except:
             Core.MAIN.SystemFault_Trigger = True
@@ -372,6 +371,7 @@ class Process():
     def DrawWindow(self, pSurface, process):
         WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
         Surface = pygame.Surface((WindowGeometry[2] + 1, WindowGeometry[3] + process.TITLEBAR_RECTANGLE[3] + 1))
+        process.TITLEBAR_RECTANGLE = pygame.Rect(WindowGeometry[0], WindowGeometry[1], WindowGeometry[2], 15)
 
         # Draw the title bar
         TitleBarColor = UI.ThemesManager_GetProperty("WM_TitlebarActiveColor")

@@ -129,38 +129,15 @@ def ListInstalledApplications(BootFolders, ApplicationSelector):
 
         BootIconPath = boot.replace("{0}boot".format(Core.TaiyouPath_CorrectSlash), "") + IconPath.replace("/", Core.TaiyouPath_CorrectSlash)
         print(BootIconPath)
-        
-        
-        
+
         ApplicationSelector.AddItem(AppTitle, ModulePath, BootIconPath)
 
-
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.NAME = pProcessName
-        self.INIT_ARGS = pInitArgs
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = True
-        self.DISPLAY = pygame.Surface((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
-        self.LAST_SURFACE = self.DISPLAY.copy()
-        self.APPLICATION_HAS_FOCUS = True
-        self.POSITION = (0, 0)
-        self.FULLSCREEN = True
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), self.DISPLAY.get_height())
-        self.TITLEBAR_TEXT = "Taiyou System Loader"
-        self.Timer = pygame.time.Clock()
-        self.ProcessIndex = pProcessIndex
-        self.WINDOW_DRAG_ENABLED = False
-        self.Running = True
-        self.ImagesHasBeenLoaded = False
-
-        self.Initialize()
-
-        Core.ProcessAccess.append(self)
-        Core.ProcessAccess_PID.append(self.PID)
-
+class Process(Core.Process):
     def Initialize(self):
+        self.SetVideoMode(True, None, True)
+
+        self.Timer = pygame.time.Clock()
+
         self.DefaultContent = Core.CntMng.ContentManager()
 
         self.DefaultContent.SetSourceFolder("", True)
@@ -193,6 +170,8 @@ class Process():
         self.FatalErrorScreen = False
 
         self.ApplicationSeletorWelcomeSound = False
+
+        self.ImagesHasBeenLoaded = False
 
         # List all valid folders
         folder_list = Core.Utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
@@ -252,6 +231,7 @@ class Process():
                         # Kills the Bootloader process
                         print("Taiyou.Bootloader : I am done at the time...\ni think i will just exit the conversation.")
                         Core.MAIN.KillProcessByPID(self.PID)
+                        self.Running = False
 
                     except Exception:
                         print("Taiyou.Bootloader : Fatal Error : Error while creating the process to the Auto-Start Application.")

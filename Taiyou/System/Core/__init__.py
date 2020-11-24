@@ -525,3 +525,100 @@ from System.Core.UTILS import Convert as Convert
 from System.Core.UTILS import CoreUtils as CoreUtils
 from System.Core import WMM as wmm
 from System.Core import MAIN
+
+class Process(object):
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
+        """
+        a TaiyouProcess Object
+        :param pPID:Process PID
+        :param pProcessName:Process Name
+        :param pROOT_MODULE:Root Module
+        :param pInitArgs:Initialization Arguments
+        :param pProcessIndex:Process Index
+        """
+        self.PID = pPID
+        self.NAME = pProcessName
+        self.ROOT_MODULE = pROOT_MODULE
+        self.ProcessIndex = pProcessIndex
+        self.INIT_ARGS = pInitArgs
+        self.ICON = None
+        self.IS_GRAPHICAL = True
+        self.DISPLAY = pygame.Surface((320, 240))
+        self.LAST_SURFACE = self.DISPLAY.copy()
+        self.APPLICATION_HAS_FOCUS = True
+        self.POSITION = (0, 0)
+        self.FULLSCREEN = False
+        self.Running = True
+        self.TITLEBAR_TEXT = "empty"
+        self.TITLEBAR_RECTANGLE = pygame.Rect(0, 0, 320, 15)
+        self.WINDOW_DRAG_ENABLED = False
+        self.THIS_THREAD = None
+        self.Initialize()
+
+        RegisterToCoreAccess(self)
+
+    def SetTitle(self, title):
+        """
+        Set the process title
+        :param title:Process Title
+        :return:
+        """
+        self.TITLEBAR_TEXT = str(title)
+
+    def SetVideoMode(self, Fullscreen, Resolution, maxResolution=False):
+        """
+        Set process video mode
+        :param Fullscreen:Set to True if process is Fullscreen.
+        :param Resolution:Process Resolution
+        :param maxResolution:Set true if process will have max resolution of current display device.
+        :return:
+        """
+        self.FULLSCREEN = Fullscreen
+
+        if not maxResolution:
+            ResW = Resolution[0]
+            ResH = Resolution[1]
+        else:
+            ResW = MAIN.ScreenWidth
+            ResH = MAIN.ScreenHeight
+
+        self.DISPLAY = pygame.Surface((ResW, ResH))
+
+    def Initialize(self):
+        """
+        Process Initialization code
+        :return:
+        """
+        pass
+
+    def Draw(self):
+        """
+        The main Draw Function, called by Window Manager
+        :return:
+        """
+        pass
+
+    def Update(self):
+        """
+        The main Update Loop
+        :return:
+        """
+        pass
+
+    def EventUpdate(self, event):
+        """
+        The main EventUpdate for the process, called by the Window manager
+        :param event:pygame event
+        :return:
+        """
+        pass
+
+    def SIG_KILL(self):
+        """
+        This function is called when the processing is being closed by Taiyou
+        :return:
+        """
+        pass
+
+
+
