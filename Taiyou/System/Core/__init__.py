@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.3"
+    return "4.4"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -29,7 +29,7 @@ def Get_UtilsVersion():
     return "2.6"
 
 def Get_TaiyouMainVersion():
-    return "3.9"
+    return "4.0"
 
 def Get_ContentManagerVersion():
     return "3.9"
@@ -38,13 +38,13 @@ def Get_FXVersion():
     return "1.3"
 
 def Get_BootloaderVersion():
-    return "2.4"
+    return "2.5"
 
 def Get_MAINVersion():
-    return "2.3"
+    return "2.4"
 
 def Get_WindowManagerManagerVersion():
-    return "1.3"
+    return "1.4"
 
 # -- Calculate the Version of Taiyou Game Engine -- #
 TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion())
@@ -90,7 +90,7 @@ TaiyouPath_ApplicationsFolder = ""
 TaiyouPath_SystemApplicationsFolder = ""
 TaiyouPath_ApplicationsDataFolder = ""
 TaiyouPath_SystemApplicationsDataFolder = ""
-
+WindowManagerShared_Event = None
 
 LastException = "null"
 CurrentPlatform = ""
@@ -523,7 +523,7 @@ def RegisterToCoreAccess(self):
 
 
 # -- Imports All Modules -- #
-import os, pygame, platform, getpass
+import os, pygame, platform, getpass, threading
 from System.Core import CONTENT_MANAGER as CntMng
 from System.Core import APPDATA as AppData
 from System.Core import FX as Fx
@@ -557,13 +557,20 @@ class Process(object):
         self.POSITION = (0, 0)
         self.FULLSCREEN = False
         self.Running = True
-        self.TITLEBAR_TEXT = "empty"
+        self.TITLEBAR_TEXT = "Untitled Window"
         self.TITLEBAR_RECTANGLE = pygame.Rect(0, 0, 320, 15)
         self.WINDOW_DRAG_ENABLED = False
         self.THIS_THREAD = None
+        self.WINDOW_SURFACE = None
+        self.WINDOW_SURFACE_LAST_DRAG_STATE = None
+        self.WINDOW_SURFACE_LAST_DRAG_STATE_BORDER_UPDATE_NEXT_FRAME = False
+        self.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY = None
         self.Initialize()
 
         RegisterToCoreAccess(self)
+
+        if self.IS_GRAPHICAL:
+            self.StartDrawThread()
 
     def SetTitle(self, title):
         """
@@ -592,6 +599,7 @@ class Process(object):
             ResH = MAIN.ScreenHeight
 
         self.DISPLAY = pygame.Surface((ResW, ResH))
+        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], ResW, 15)
 
     def SetAsNonGraphical(self):
         """
@@ -599,6 +607,42 @@ class Process(object):
         :return:
         """
         self.IS_GRAPHICAL = False
+        self.KillDrawThread()
+
+    def StartDrawThread(self):
+        """
+        Start draw thread
+        :return:
+        """
+        # Initialize Drawing Thread
+        self.DRAW_STOP = False
+        self.DRAW_KILL = False
+        self.DRAW_FRAMERATE = 60
+
+        self.DRAW_THEREAD = threading.Thread(target=self.DrawRequest).start()
+        self.EVENT_THREAD = threading.Thread(target=self.EventUpdateRequest).start()
+
+    def KillDrawThread(self):
+        """
+        KIll draw thread
+        :return:
+        """
+        self.DRAW_KILL = True
+        self.DRAW_STOP = True
+
+    def StopDrawThread(self):
+        """
+        Stops draw thread
+        :return:
+        """
+        self.DRAW_STOP = True
+
+    def ContinueDrawThread(self):
+        """
+        Resumes draw thread
+        :return:
+        """
+        self.DRAW_STOP = False
 
     def Initialize(self):
         """
@@ -606,6 +650,32 @@ class Process(object):
         :return:
         """
         pass
+
+    def DrawRequest(self):
+        """
+        Main function called by Draw Thread
+        :return:
+        """
+        # Defines Clock
+        Clock = pygame.time.Clock()
+
+        # Main Draw Loop
+        while not self.DRAW_KILL:
+            # Stop Drawing when requested
+            if self.DRAW_STOP:
+                # Immediately stop drawing when killed
+                if self.DRAW_KILL:
+                    return
+                continue
+
+            # Tick to Framerate
+            Clock.tick(self.DRAW_FRAMERATE)
+
+            # Call draw function
+            self.Draw()
+
+            # Copy Screen to Draw Buffer
+            self.LAST_SURFACE = self.DISPLAY.copy()
 
     def Draw(self):
         """
@@ -620,21 +690,63 @@ class Process(object):
         :return:
         """
         return
-    
+
+    def EventUpdateRequest(self):
+        """
+        Every pygame event should be processed here.
+        :return:
+        """
+        Clock = pygame.time.Clock()
+        while not self.DRAW_KILL:
+            Event = WindowManagerShared_Event
+            Clock.tick(self.DRAW_FRAMERATE)
+
+            # Stop Drawing when requested
+            if self.DRAW_STOP:
+                # Immediately stop drawing when killed
+                if self.DRAW_KILL:
+                    return
+                continue
+
+            if Event is None:
+                continue
+
+            self.EventUpdate(Event)
+
+    def CenterWindow(self):
+        """
+        Center window to screen
+        :return:
+        """
+        if self.FULLSCREEN:
+            raise Exception("Cannot center a window in Fullscreen mode.")
+
+        self.POSITION = (MAIN.ScreenWidth / 2 - self.DISPLAY.get_width() / 2, MAIN.ScreenHeight / 2 - self.DISPLAY.get_height() / 2)
+
     def EventUpdate(self, event):
         """
-        The main EventUpdate for the process, called by the Window manager
+        The main EventUpdate for the process
         :param event:pygame event
         :return:
         """
         pass
 
-    def SIG_KILL(self):
+    def KillProcess(self):
         """
         This function is called when the processing is being closed by Taiyou
         :return:
         """
+        print("Process [{0}] has received kill request.".format(self.TITLEBAR_TEXT))
+        self.KillDrawThread()
+        self.WhenKilled()
+
+    def WhenKilled(self):
+        """
+        This function is called when the process is being killed
+        :return:
+        """
         pass
+
 
 
 

@@ -14,7 +14,7 @@
 #   limitations under the License.
 #
 #
-import pygame
+import pygame, threading
 from System import Core
 from System.Core import Utils
 from System.Core import CntMng
@@ -48,6 +48,11 @@ class Process():
         Core.RegisterToCoreAccess(self)
 
         self.Initialize()
+
+        # Initialize Drawing Thread
+        self.InterruptDrawing = False
+        self.TerminateDrawing = False
+        self.DrawThread = threading.Thread(target=self.Draw).start()
 
     def Initialize(self):
         self.POSITION = (Core.MAIN.ScreenWidth / 2 - self.DISPLAY.get_width() / 2, Core.MAIN.ScreenHeight / 2 - self.DISPLAY.get_height() / 2)
@@ -227,15 +232,23 @@ class Process():
             self.DownloadQueue.pop(0)
 
     def Draw(self):
-        self.DISPLAY.fill(UI.ThemesManager_GetProperty("WM_BorderInactiveColor"))
+        Clock = pygame.time.Clock()
 
-        self.SelectedScreen.Render(self.DISPLAY)
+        while not self.TerminateDrawing:
+            if self.InterruptDrawing:
+                continue
 
-        # Downloading Overlay
-        if self.IsDownloading:
-            self.DrawDownloaderStatusBar()
+            Clock.tick(60)
 
-        return self.DISPLAY
+            self.DISPLAY.fill(UI.ThemesManager_GetProperty("WM_BorderInactiveColor"))
+
+            self.SelectedScreen.Render(self.DISPLAY)
+
+            # Downloading Overlay
+            if self.IsDownloading:
+                self.DrawDownloaderStatusBar()
+
+            self.LAST_SURFACE = self.DISPLAY.copy()
 
     def UpdateDownloaderStatusBar(self):
         self.IsDownloadingWidgetController.Update()

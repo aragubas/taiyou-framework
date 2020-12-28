@@ -15,7 +15,7 @@
 #
 #
 import System.Core as Core
-import traceback, pygame, time, sys
+import traceback, pygame, time, sys, threading
 from System.Core import Shape
 from System.Core import Utils
 
@@ -190,7 +190,7 @@ class Process(Core.Process):
     def Update(self):
         while self.Running:
             self.Timer.tick(100)
-            
+
             if self.ApplicationSeletor:
                 self.ApplicationSeletorAnimatorStart.Update()
 
@@ -261,13 +261,6 @@ class Process(Core.Process):
             self.DefaultContent.LoadImagesInFolder()
             print("Loaded image resouces")
 
-        if not self.InitialSignal:
-            print("Initial Signal Sent")
-            self.InitialSignal = True
-
-            # Disable Window manager Requests
-            Core.wmm.WindowManagerSignal(None, 3)
-
         # Fill the screen
         self.DISPLAY.fill((18, 10, 38))
 
@@ -276,9 +269,6 @@ class Process(Core.Process):
 
         else:
             self.DrawApplicationSelector()
-
-        self.LAST_SURFACE = self.DISPLAY.copy()
-        return self.DISPLAY
 
     def DrawApplicationSelector(self):
         DisplayWithWax = self.DISPLAY.copy()
@@ -414,6 +404,8 @@ class Process(Core.Process):
         if CurrentProgres == 0:
             # Start the SystemUI
             Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui")
+            self.InterruptDrawing = False
+
 
         if CurrentProgres == 2:
             # Finish the Loading

@@ -23,11 +23,15 @@ TaskBarUIProcessID = -1
 
 def CallWindowManagerUI():
     try:
-        process_obj = Core.MAIN.ProcessList[Core.MAIN.ProcessList_PID.index(TaskBarUIProcessID)]
+        process_obj = Core.ProcessAccess[TaskBarUIProcessID]
 
         process_obj.UI_Call_Request()
     except:
         print("Error while processing WindowManager call request.")
+
+def GetWindowManager():
+    return Core.ProcessAccess[TaskBarUIProcessID]
+
 
 def WindowManagerSignal(self, Signal):
     """

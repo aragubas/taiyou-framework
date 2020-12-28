@@ -203,7 +203,6 @@ def CreateProcess(Path, ProcessName, pInitArgs=None):
 
     ProcessWax.THIS_THREAD = Thread
 
-
     return ProcessNextPID
 
 def SendSigKillToProcessByPID(PID):
@@ -215,8 +214,8 @@ def KillProcessByPID(PID):
 
     # Call SIG_KILL Function on Process
     Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].Running = False
-    if hasattr(Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)], "SIG_KILL"):
-        Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].SIG_KILL()
+    if hasattr(Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)], "KillProcess"):
+        Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].KillProcess()
 
     # Remove Thread Object
     del Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].THIS_THREAD
@@ -238,7 +237,7 @@ def KillProcessByPID(PID):
 
 def GetProcessIndexByPID(PID):
     try:
-        return ProcessList_PID.index(PID)
+        return Core.ProcessAccess_PID.index(PID)
 
     except ValueError:
         raise ModuleNotFoundError("The process {0} could not be found".format(PID))
@@ -309,6 +308,7 @@ def Destroy():
 
 DrawingCode = None
 EventUpdateCode = None
+CeiraDeFPS = Utils.FPS()
 
 def UpdateDisplayDevice():
     global DrawingCode

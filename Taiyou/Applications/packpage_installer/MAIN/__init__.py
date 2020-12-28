@@ -14,41 +14,20 @@
 #   limitations under the License.
 #
 #
-import pygame, os
+import pygame, os, threading, time
 from System import Core
 #from System.Core import Utils
 from System.Core import UTILS as Utils
 from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core import CntMng
 
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.NAME = pProcessName
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = True
-        self.INIT_ARGS = pInitArgs
-        self.DISPLAY = pygame.Surface((400, 340))
-        self.LAST_SURFACE = self.DISPLAY.copy()
-        self.APPLICATION_HAS_FOCUS = True
-        self.POSITION = (0, 0)
-        self.FULLSCREEN = False
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
-        self.TITLEBAR_TEXT = "Packpage Installer"
-        self.WindowDragEnable = False
-        self.WINDOW_OPACITY = 255
-        self.ICON = None
-        self.ProcessIndex = pProcessIndex
-        self.WINDOW_DRAG_ENABLED = False
-        self.Running = True
-        self.Timer = pygame.time.Clock()
-
-        Core.RegisterToCoreAccess(self)
-
-        self.Initialize()
-
+class Process(Core.Process):
     def Initialize(self):
         # Initialize Content Manager
+        self.SetVideoMode(False, (400, 340))
+        self.CenterWindow()
+        self.SetTitle("Packpage Installer")
+
         self.ContentManager = CntMng.ContentManager()
         self.ContentManager.SetSourceFolder("PackpageInstaller/")
         self.ContentManager.SetFontPath("fonts/")
@@ -87,13 +66,11 @@ class Process():
         self.DownToolbar.GetWidget(3).IsVisible = False
         self.DownToolbar.GetWidget(4).IsVisible = False
 
-        self.POSITION = (Core.MAIN.ScreenWidth / 2 - self.DISPLAY.get_width() / 2, Core.MAIN.ScreenHeight / 2 - self.DISPLAY.get_height() / 2)
         self.ICON = self.ContentManager.GetImage("/app_icon.png")
 
         self.UpdatePackpageList()
 
     def Draw(self):
-        self.LAST_SURFACE = self.DISPLAY.copy()
         self.DISPLAY.fill((25, 30, 58))
 
         BGIconOpacity = 100
@@ -107,11 +84,11 @@ class Process():
 
         self.DownToolbar.Draw(self.DISPLAY)
 
-        return self.DISPLAY
-
     def Update(self):
+        Clock = pygame.time.Clock()
         while self.Running:
-            self.Timer.tick(100)
+            Clock.tick(100)
+
             if not self.APPLICATION_HAS_FOCUS:
                 continue
 

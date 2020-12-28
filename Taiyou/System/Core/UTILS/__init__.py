@@ -428,11 +428,8 @@ def Is_Multiple(x, y):
 class FPS:
     def __init__(self, avarageof=50):
         self.frametimestamps = collections.deque(maxlen=avarageof)
-        self.times_called = 0
 
     def __call__(self):
-        self.times_called += 1
-
         self.frametimestamps.append(time.time())
         if len(self.frametimestamps) > 1:
             return len(self.frametimestamps)/(self.frametimestamps[-1]-self.frametimestamps[0])

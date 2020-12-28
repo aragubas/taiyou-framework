@@ -22,7 +22,6 @@ from System.SystemApps.TaiyouUI.MAIN import UI
 from System.SystemApps.TaiyouUI.MAIN.UI import Widget
 from System.SystemApps.Bootloader.MAIN import ListInstalledApplications
 
-
 class TaskBarInstance:
     def __init__(self, pDefaultContent, pRootProcess):
         self.Enabled = False
@@ -61,6 +60,9 @@ class TaskBarInstance:
         self.LastDisplayFrame = pDisplay.copy()
 
     def Toggle(self):
+        if Core.MAIN.SystemFault_Trigger:
+            self.Enabled = True
+
         if not self.Enabled:
             self.Enabled = True
             self.Animation.Enabled = True
@@ -261,23 +263,19 @@ class ApplicationSelectorMode_Instace:
             except IndexError:
                 self.WindowList.ResetSelectedItem()
 
-            except ModuleNotFoundError:
-                try:
-                    raise Exception("Cannot finish an nonexistent process.")
+            except Exception:
+                Core.MAIN.SystemFault_Trigger = True
+                Core.MAIN.SystemFault_Traceback = traceback.format_exc()
+                Core.MAIN.SystemFault_ProcessObject = None
+                Core.wmm.WindowManagerSignal(None, 4)
 
-                except Exception:
-                    Core.MAIN.SystemFault_Trigger = True
-                    Core.MAIN.SystemFault_Traceback = traceback.format_exc()
-                    Core.MAIN.SystemFault_ProcessObject = None
-                    Core.wmm.WindowManagerSignal(None, 4)
+                print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
+                print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
 
-                    print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
-                    print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
-
-                    # Generate the Crash Log
-                    Core.MAIN.GenerateCrashLog()
-                    self.RootObj.SetMode(1)
-                    return
+                # Generate the Crash Log
+                Core.MAIN.GenerateCrashLog()
+                self.RootObj.SetMode(1)
+                self.RootObj.Toggle()
 
     def SwitchToSelectedProcess(self):
         if self.WindowList.LastItemIndex is not None:
@@ -306,6 +304,11 @@ class SystemFault_Instance:
     def __init__(self, pDefaultContent, pRootObj):
         self.DefaultContent = pDefaultContent
         self.RootObj = pRootObj
+        self.RootObj.Enabled = True
+        self.RootObj.DisableToggle = False
+        self.RootObj.Animation.Enabled = True
+        self.RootObj.Animation.CurrentMode = True
+        self.RootObj.Animation.Value = 0
 
     def Update(self):
         self.RootObj.GoToModeWhenReturning = 0

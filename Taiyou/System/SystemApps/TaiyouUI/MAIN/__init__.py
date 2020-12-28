@@ -72,6 +72,7 @@ class Process(Core.Process):
         pygame.fastevent.pump()
 
         # -- Update Event -- #
+        Core.WindowManagerShared_Event = None
         for event in pygame.fastevent.get():
             LastModKey = pygame.key.get_mods()
             # -- Closes Everthing when clicking on the X button
@@ -128,18 +129,12 @@ class Process(Core.Process):
                         ProcessGeometry = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height())
                         CursorColision = pygame.Rect(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], 1, 1)
 
-                        # Process EventUpdate for the process
-                        if process.APPLICATION_HAS_FOCUS and ProcessGeometry.colliderect(CursorColision) and not process.WINDOW_DRAG_ENABLED:
-                            try:
-                                process.EventUpdate(event)
-
-                            except:
-                                print("TaiyouUI.ApplicationError at (EventUpdate)")
-                                print(traceback.format_exc())
+                        # Update Process Events
+                        Core.WindowManagerShared_Event = event
 
                         # Play beep sound when clicking on Inactive Window
                         if self.FocusedProcess is not None:
-                            FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height())
+                            FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height() + self.FocusedProcess.TITLEBAR_RECTANGLE[3])
 
                             # Play beep sound when clicking on inactive window
                             if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
@@ -148,6 +143,7 @@ class Process(Core.Process):
             else:
                 # Update TaskBar Input Handling
                 self.TaskBarInstance.EventUpdate(event)
+                Core.WindowManagerShared_Event = None
 
     def SingleInstanceFocus(self):
         if len(Core.MAIN.ProcessList) == 2:
@@ -206,8 +202,9 @@ class Process(Core.Process):
             process.POSITION = (process.WINDOW_DRAG_SP[0] + pos[0], process.WINDOW_DRAG_SP[1] + pos[1])
 
     def Update(self):
+        Clock = pygame.time.Clock()
         while self.Running:
-            time.sleep((1000 / 60) / 1000)
+            Clock.tick(60)
 
             if not self.ImagesResLoaded:
                 self.ImagesResLoaded = True
@@ -232,20 +229,18 @@ class Process(Core.Process):
 
     def DrawScreen(self):
         # Draw the Applications Window
+        DISPLAY.fill((0, 0, 0))
+
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
             for process in Core.ProcessAccess:
-                # Skip Non-Graphical Process
-                if not process.IS_GRAPHICAL:
-                    continue
-
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
 
-                # Set Process Titlebar
-                if not process.FULLSCREEN:
-                    process.TITLEBAR_RECTANGLE = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width(), 15)
+                # Skip Non-Graphical Process
+                if not process.IS_GRAPHICAL:
+                    continue
 
                 if process.APPLICATION_HAS_FOCUS:
                     self.FocusedProcess = process
@@ -264,6 +259,9 @@ class Process(Core.Process):
                     ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
                     self.DrawProcess(self.FocusedProcess)
+                else:
+                    if len(Core.ProcessAccess_PID) > 1:
+                        self.FocusedProcess = Core.ProcessAccess[len(Core.ProcessAccess)]
 
             except Exception:
                 print("TaiyouUI.ApplicationError at (Active application rendering).")
@@ -306,7 +304,7 @@ class Process(Core.Process):
                 # If application has focus, draw again it's content
                 if process.APPLICATION_HAS_FOCUS:
                     try:
-                        Surface = process.Draw()
+                        Surface = process.LAST_SURFACE
 
                         # Check if Application Surface has maximum size
                         if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
@@ -340,7 +338,7 @@ class Process(Core.Process):
                 return
 
             # If not, draw window decoration
-            DISPLAY.blit(self.DrawWindow(process.Draw(), process), (process.POSITION[0], process.POSITION[1]))
+            DISPLAY.blit(self.DrawWindow(process.LAST_SURFACE, process), (process.POSITION[0], process.POSITION[1]))
 
         except:
             Core.MAIN.SystemFault_Trigger = True
@@ -365,7 +363,8 @@ class Process(Core.Process):
 
     def DrawWindow(self, pSurface, process):
         WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
-        Surface = pygame.Surface((WindowGeometry[2] + 1, WindowGeometry[3] + process.TITLEBAR_RECTANGLE[3] + 1))
+        if process.WINDOW_SURFACE is None:
+            process.WINDOW_SURFACE = pygame.Surface((WindowGeometry[2] + 1, WindowGeometry[3] + process.TITLEBAR_RECTANGLE[3] + 1))
         process.TITLEBAR_RECTANGLE = pygame.Rect(WindowGeometry[0], WindowGeometry[1], WindowGeometry[2], 15)
 
         # Draw the title bar
@@ -377,24 +376,28 @@ class Process(Core.Process):
             TextColor = UI.ThemesManager_GetProperty("WM_TitlebarTextInactiveColor")
             WindowBorderColor = UI.ThemesManager_GetProperty("WM_BorderInactiveColor")
 
-        # Draw window titlebar
-        Surface.fill(TitleBarColor)
+        # Draw window titlebar only when needded.
+        if process.WINDOW_SURFACE_LAST_DRAG_STATE != process.WINDOW_DRAG_ENABLED or process.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY != WindowGeometry:
+            process.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY = WindowGeometry
+            process.WINDOW_SURFACE_LAST_DRAG_STATE = process.WINDOW_DRAG_ENABLED
 
-        # Draw Title Bar Text
-        TitleBarText = process.TITLEBAR_TEXT
-        FontSize = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTSIZE")
-        Font = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTFILE")
-        if process.WINDOW_DRAG_ENABLED:
-            TitleBarText = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR")
-            self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2 - 1, -1)
+            process.WINDOW_SURFACE.fill(TitleBarColor)
 
-        # Draw Titlebar Text
-        self.DefaultContent.FontRender(Surface, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
+            # Draw Title Bar Text
+            TitleBarText = process.TITLEBAR_TEXT
+            FontSize = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTSIZE")
+            Font = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTFILE")
+            if process.WINDOW_DRAG_ENABLED:
+                TitleBarText = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR")
+                self.DefaultContent.FontRender(process.WINDOW_SURFACE, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2 - 1, -1)
+
+            # Draw Titlebar Text
+            self.DefaultContent.FontRender(process.WINDOW_SURFACE, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
 
         # Draw the Window Borders
-        Core.Shape.Shape_Rectangle(Surface, WindowBorderColor, (0, 0, Surface.get_width(), Surface.get_height()), 1)
+        Core.Shape.Shape_Rectangle(process.WINDOW_SURFACE, WindowBorderColor, (0, 0, process.WINDOW_SURFACE.get_width(), process.WINDOW_SURFACE.get_height()), 1)
 
         # Draw the Window Contents
-        Surface.blit(pSurface, (1, process.TITLEBAR_RECTANGLE[3]))
+        process.WINDOW_SURFACE.blit(pSurface, (1, process.TITLEBAR_RECTANGLE[3]))
 
-        return Surface
+        return process.WINDOW_SURFACE
