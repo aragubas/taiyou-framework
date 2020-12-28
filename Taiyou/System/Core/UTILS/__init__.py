@@ -108,29 +108,34 @@ def FixColorRange(ColorArguments):
         return (0, 0, 0, 0)
     ColorArguments = list(ColorArguments)
 
-    if len(ColorArguments) < 4:  # -- Add the Alpha Argument
-        ColorArguments.append(255)
+    try:
+        if len(ColorArguments) < 4:  # -- Add the Alpha Argument
+            ColorArguments.append(255)
 
-    # -- Limit the Color Range -- #
-    if int(ColorArguments[0]) < 0:  # -- R
-        ColorArguments[0] = 0
-    if int(ColorArguments[1]) < 0:  # -- G
-        ColorArguments[1] = 0
-    if int(ColorArguments[2]) < 0:  # -- B
-        ColorArguments[2] = 0
-    if int(ColorArguments[3]) < 0:  # -- A
-        ColorArguments[3] = 0
+        # -- Limit the Color Range -- #
+        if int(ColorArguments[0]) < 0:  # -- R
+            ColorArguments[0] = 0
+        if int(ColorArguments[1]) < 0:  # -- G
+            ColorArguments[1] = 0
+        if int(ColorArguments[2]) < 0:  # -- B
+            ColorArguments[2] = 0
+        if int(ColorArguments[3]) < 0:  # -- A
+            ColorArguments[3] = 0
 
-    if int(ColorArguments[0]) > 255:  # -- R
-        ColorArguments[0] = 255
-    if int(ColorArguments[1]) > 255:  # -- G
-        ColorArguments[1] = 255
-    if int(ColorArguments[2]) > 255:  # -- B
-        ColorArguments[2] = 255
-    if int(ColorArguments[3]) > 255:  # -- A
-        ColorArguments[3] = 255
+        if int(ColorArguments[0]) > 255:  # -- R
+            ColorArguments[0] = 255
+        if int(ColorArguments[1]) > 255:  # -- G
+            ColorArguments[1] = 255
+        if int(ColorArguments[2]) > 255:  # -- B
+            ColorArguments[2] = 255
+        if int(ColorArguments[3]) > 255:  # -- A
+            ColorArguments[3] = 255
 
-    return ColorArguments
+        return ColorArguments
+
+    except TypeError:
+        return (0, 0, 0, 0)
+
 
 def File_Exists(path):
     """
@@ -435,3 +440,20 @@ class FPS:
             return len(self.frametimestamps)/(self.frametimestamps[-1]-self.frametimestamps[0])
         else:
             return 0.0
+
+def ClampValue(input, min, max):
+    """
+    Clamp Value to min/max
+    :param input: Input
+    :param min: Minimum Value
+    :param max: Maximum Value
+    :return: Clamped Output
+    """
+    if input > max:
+        return max
+
+    elif input < min:
+        return min
+
+    else:
+        return input

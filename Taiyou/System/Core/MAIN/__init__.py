@@ -315,7 +315,7 @@ def UpdateDisplayDevice():
     global timer
     global EventUpdateCode
 
-    timer.tick(Core.DisplayRefreshRate)
+    timer.tick(Core.MainLoopRefreshRate)
 
     if DrawingCode is not None:
         DrawingCode()

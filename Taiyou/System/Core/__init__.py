@@ -17,7 +17,7 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.4"
+    return "4.5"
 
 def Get_ShapeVersion():
     return "2.2"
@@ -32,7 +32,7 @@ def Get_TaiyouMainVersion():
     return "4.0"
 
 def Get_ContentManagerVersion():
-    return "3.9"
+    return "4.0"
 
 def Get_FXVersion():
     return "1.3"
@@ -72,7 +72,7 @@ IgnoreSDL2Parameters = True
 PygameFastEvent = True
 SmoothScaleTransform = "MMX"
 ThrowException = False
-DisplayRefreshRate = 0
+MainLoopRefreshRate = 0
 
 # -- Taiyou Paths -- #
 TaiyouPath_SystemPath = ""
@@ -92,6 +92,7 @@ TaiyouPath_ApplicationsDataFolder = ""
 TaiyouPath_SystemApplicationsDataFolder = ""
 WindowManagerShared_Event = None
 WindowManagerShared_EventEnabled = False
+WindowManagerShared_EventWaitBeforeClear = 0
 
 LastException = "null"
 CurrentPlatform = ""
@@ -141,7 +142,7 @@ def Init():
     global TaiyouPath_SystemApplicationsFolder
     global TaiyouPath_ApplicationsDataFolder
     global TaiyouPath_SystemApplicationsDataFolder
-    global DisplayRefreshRate
+    global MainLoopRefreshRate
 
     # -- Set the Correct Slash Directory -- #
     CurrentPlatform = platform.system()
@@ -404,10 +405,10 @@ def Init():
 
                 print("Taiyou.Runtime.Init : AudioPlaybackChannels was set to:" + str(AudioPlayblackChannels))
 
-            elif SplitedParms[0] == "DisplayRefreshRate":
-                DisplayRefreshRate = int(SplitedParms[1].rstrip())
+            elif SplitedParms[0] == "MainLoopRefreshRate":
+                MainLoopRefreshRate = int(SplitedParms[1].rstrip())
 
-                print("Taiyou.Runtime.Init : DisplayRefreshRate was set to:" + str(DisplayRefreshRate))
+                print("Taiyou.Runtime.Init : DisplayRefreshRate was set to:" + str(MainLoopRefreshRate))
 
 
     # WORKAROUND : Fix bug to run at new Pygame 2.0
@@ -620,8 +621,9 @@ class Process(object):
         self.DRAW_KILL = False
         self.DRAW_FRAMERATE = 60
 
-        self.DRAW_THEREAD = threading.Thread(target=self.DrawRequest).start()
-        self.EVENT_THREAD = threading.Thread(target=self.EventUpdateRequest).start()
+        self.DRAW_THEREAD = threading.Thread(target=self.DrawRequest)
+        self.DRAW_THEREAD.name = "{0} Draw Thread".format(self.NAME)
+        self.DRAW_THEREAD.start()
 
     def KillDrawThread(self):
         """
@@ -662,15 +664,15 @@ class Process(object):
 
         # Main Draw Loop
         while not self.DRAW_KILL:
+            # Tick to Framerate
+            Clock.tick(self.DRAW_FRAMERATE)
+
             # Stop Drawing when requested
             if self.DRAW_STOP:
                 # Immediately stop drawing when killed
                 if self.DRAW_KILL:
                     return
                 continue
-
-            # Tick to Framerate
-            Clock.tick(self.DRAW_FRAMERATE)
 
             # Call draw function
             self.Draw()
@@ -691,27 +693,6 @@ class Process(object):
         :return:
         """
         return
-
-    def EventUpdateRequest(self):
-        """
-        Every pygame event should be processed here.
-        :return:
-        """
-        Clock = pygame.time.Clock()
-        while not self.DRAW_KILL:
-            Clock.tick(self.DRAW_FRAMERATE)
-            Event = WindowManagerShared_Event
-            if Event is None:
-                continue
-
-            # Stop event updating when requested
-            if self.DRAW_STOP:
-                # Immediately stop event updating when killed
-                if self.DRAW_KILL:
-                    return
-                continue
-
-            self.EventUpdate(Event)
 
     def CenterWindow(self):
         """

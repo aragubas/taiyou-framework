@@ -16,6 +16,9 @@
 #
 import System.Core as Core
 import time, pygame, traceback, math
+from random import randint
+from datetime import date
+from datetime import datetime
 from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core.MAIN import DISPLAY
 from System.SystemApps.TaiyouUI.MAIN import TaskBar
@@ -37,6 +40,7 @@ class Process(Core.Process):
         self.ImagesResLoaded = False
         self.DefaultContent = Core.CntMng.ContentManager()
         self.TaskBarInstance = TaskBar.TaskBarInstance
+        self.DoubleBuffer = None
 
         super(Process, self).__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
 
@@ -66,13 +70,17 @@ class Process(Core.Process):
         # Create TaskBar Instance
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
 
+        self.BGWaxUpdateTimer = 0
+        self.BGWaxUpdateInterval = 5
+        self.BGWaxSurface = pygame.Surface((5 * 70, 5 * 70))
+
     def EventUpdate(self):
         if not pygame.fastevent.get_init():
             return
-        pygame.fastevent.pump()
 
-        # -- Update Event -- #
         Core.WindowManagerShared_Event = None
+        pygame.fastevent.pump()
+        # -- Update Event -- #
         for event in pygame.fastevent.get():
             LastModKey = pygame.key.get_mods()
             # -- Closes Everthing when clicking on the X button
@@ -116,8 +124,19 @@ class Process(Core.Process):
                     self.UI_Call_Request()
 
             if not self.TaskBarInstance.Enabled:
+                # Do Focused Process Event Update
+                try:
+                    self.FocusedProcess.EventUpdate(event)
+                    self.FocusedProcess.DRAW_STOP = False
+
+                except Exception as ex:
+                    if self.FocusedProcess is not None:
+                        print("Application {0} has failed while Event Updating.".format(self.FocusedProcess.TITLEBAR_TEXT))
+                        print(traceback.format_exc())
+
+                # Update Process Events
                 for process in Core.ProcessAccess:
-                    # Check if current process is not TaiyouUI itself
+                    # Check if current procesas is not TaiyouUI itself
                     if process.PID == self.PID:
                         continue
 
@@ -126,19 +145,9 @@ class Process(Core.Process):
                         if not process.FULLSCREEN:
                             self.UpdateProcessWindowDrag(event, process)
 
-                        ProcessGeometry = pygame.Rect(process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height())
-                        CursorColision = pygame.Rect(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], 1, 1)
-
-                        # Update Process Events
-                        Core.WindowManagerShared_Event = event
-
-                        # Play beep sound when clicking on Inactive Window
-                        if self.FocusedProcess is not None:
-                            FocusedProcessGeometry = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width() + 1, self.FocusedProcess.DISPLAY.get_height() + self.FocusedProcess.TITLEBAR_RECTANGLE[3])
-
-                            # Play beep sound when clicking on inactive window
-                            if event.type == pygame.MOUSEBUTTONUP and ProcessGeometry.colliderect(CursorColision) and not FocusedProcessGeometry.colliderect(CursorColision):
-                                self.PlayNotifySound = True
+                        # Stop Rendering Un-Focused Process
+                        if process is not self.FocusedProcess:
+                            process.DRAW_STOP = True
 
             else:
                 # Update TaskBar Input Handling
@@ -227,9 +236,45 @@ class Process(Core.Process):
                 self.PlayNotifySound = False
                 self.DefaultContent.PlaySound("/notify.wav")
 
+    def BackgroundGenerator(self):
+        self.BGWaxUpdateTimer += 1
+
+        if self.BGWaxUpdateTimer >= self.BGWaxUpdateInterval:
+            self.BGWaxUpdateTimer = 0
+            self.BGWaxUpdateInterval = randint(1000, 10500)
+            RenderEffect = pygame.Surface((5 * 70, 5 * 70))
+
+            for x in range(0, 5):
+                for y in range(0, 5):
+                    Color = (
+                        randint(50, 100),
+                        randint(50, 100),
+                        randint(50, 100)
+                    )
+
+                    Core.Shape.Shape_Rectangle(RenderEffect, Color, (x * 70, y * 70, 70, 70))
+
+            self.BGWaxSurface = pygame.transform.scale(Core.Fx.Surface_Blur(RenderEffect, 150), (Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
+
+        DISPLAY.blit(self.BGWaxSurface, (0, 0))
+
+        today = date.today()
+        DateText = "{0}".format(today.strftime("%B %d, %Y"))
+        now = datetime.now()
+        TimeText = "{0}".format(now.strftime("%H:%M:%S"))
+
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (50, 50, 50), 12, 12)
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (50, 50, 50), 12, 52)
+
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (150, 150, 150), 10, 50)
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (150, 150, 150), 10, 10)
+
+
     def DrawScreen(self):
         # Draw the Applications Window
-        DISPLAY.fill((0, 0, 0))
+        #DISPLAY.fill((21, 56, 5))
+
+        self.BackgroundGenerator()
 
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
@@ -269,13 +314,27 @@ class Process(Core.Process):
                 self.FocusedProcess = None
 
             self.TaskBarInstance.Set_LastDisplayFrame(DISPLAY)
+            # WORKAROUND: Fix rendering bug
+            # Update Process Events
+            for process in Core.ProcessAccess:
+                if self.FocusedProcess is None:
+                    break
+
+                # Check if current procesas is not TaiyouUI itself
+                if process.PID == self.PID:
+                    continue
+
+                if process.PID != self.FocusedProcess.PID:
+                    process.APPLICATION_HAS_FOCUS = False
 
         # Draw and update the Taskbar UI
         self.TaskBarInstance.Update()
         self.TaskBarInstance.Draw(DISPLAY)
 
         self.DrawCursor()
+        self.DrawZoom()
 
+    def DrawZoom(self):
         if self.ZoomEnabled:
             if self.Zoomlevel > self.ZoomlevelMod:
                 self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / self.DefaultContent.Get_RegKey("/options/zoom_animation_scale", int)

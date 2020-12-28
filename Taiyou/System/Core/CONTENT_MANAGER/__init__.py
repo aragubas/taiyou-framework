@@ -520,7 +520,7 @@ class ContentManager:
         :param Text:Text
         :return:Size (int)
         """
-        if Text == "" or FontFileLocation == "" or FontSize == 0:
+        if Text == "" or FontFileLocation == "" or FontSize == 0 or FontRenderingDisabled:
             return 0
 
         TotalSize = 0
@@ -545,7 +545,7 @@ class ContentManager:
         :param Text:Text
         :return:Size (int)
         """
-        if Text == "" or FontFileLocation == "" or FontSize == 0:
+        if Text == "" or FontFileLocation == "" or FontSize == 0 or FontRenderingDisabled:
             return 0
 
         try:
@@ -599,6 +599,8 @@ class ContentManager:
         Initialize the Sound System
         :return:
         """
+        if SoundDisabled:
+            return
         self.SoundChannels.clear()
 
         for i in range(0, Core.AudioPlayblackChannels):
@@ -637,7 +639,6 @@ class ContentManager:
         """
         ObjName = ''.join((str(Frequency), str(Duration), str(SampleRate), FrequencyType))
         try:  # -- Return the Tune from Cache, if existent -- #
-            print("SoundTuneCache Size is:\n" + str(len(self.SoundTuneCache_Names)))
             return self.SoundTuneCache_Cache[self.SoundTuneCache_Names.index(ObjName)]
 
         except ValueError:  # -- If not, generate the tune, then return it from cache -- #
