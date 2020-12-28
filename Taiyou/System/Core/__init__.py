@@ -91,6 +91,7 @@ TaiyouPath_SystemApplicationsFolder = ""
 TaiyouPath_ApplicationsDataFolder = ""
 TaiyouPath_SystemApplicationsDataFolder = ""
 WindowManagerShared_Event = None
+WindowManagerShared_EventEnabled = False
 
 LastException = "null"
 CurrentPlatform = ""
@@ -698,17 +699,16 @@ class Process(object):
         """
         Clock = pygame.time.Clock()
         while not self.DRAW_KILL:
-            Event = WindowManagerShared_Event
             Clock.tick(self.DRAW_FRAMERATE)
-
-            # Stop Drawing when requested
-            if self.DRAW_STOP:
-                # Immediately stop drawing when killed
-                if self.DRAW_KILL:
-                    return
+            Event = WindowManagerShared_Event
+            if Event is None:
                 continue
 
-            if Event is None:
+            # Stop event updating when requested
+            if self.DRAW_STOP:
+                # Immediately stop event updating when killed
+                if self.DRAW_KILL:
+                    return
                 continue
 
             self.EventUpdate(Event)
