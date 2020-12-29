@@ -41,6 +41,7 @@ class Process(Core.Process):
         self.DefaultContent = Core.CntMng.ContentManager()
         self.TaskBarInstance = TaskBar.TaskBarInstance
         self.DoubleBuffer = None
+        self.EnableBackground = False
 
         super(Process, self).__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
 
@@ -269,13 +270,14 @@ class Process(Core.Process):
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (150, 150, 150), 10, 50)
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (150, 150, 150), 10, 10)
 
-
     def DrawScreen(self):
         # Draw the Applications Window
         #DISPLAY.fill((21, 56, 5))
 
-        self.BackgroundGenerator()
+        if self.EnableBackground and not self.TaskBarInstance.Enabled:
+            self.BackgroundGenerator()
 
+        self.EnableBackground = True
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
             # Draw the Unfocused Process
             for process in Core.ProcessAccess:
@@ -286,6 +288,9 @@ class Process(Core.Process):
                 # Skip Non-Graphical Process
                 if not process.IS_GRAPHICAL:
                     continue
+
+                if process.FULLSCREEN:
+                    self.EnableBackground = False
 
                 if process.APPLICATION_HAS_FOCUS:
                     self.FocusedProcess = process
