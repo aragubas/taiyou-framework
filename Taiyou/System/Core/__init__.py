@@ -17,10 +17,10 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.5"
+    return "4.6"
 
 def Get_ShapeVersion():
-    return "2.2"
+    return "2.3"
 
 def Get_AppDataVersion():
     return "1.2"
@@ -46,8 +46,12 @@ def Get_MAINVersion():
 def Get_WindowManagerManagerVersion():
     return "1.4"
 
+def Get_TaiyouUIVersion():
+    return "2.6"
+
+
 # -- Calculate the Version of Taiyou Game Engine -- #
-TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion())
+TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion()) + float(Get_TaiyouUIVersion())
 
 # -- Print Runtime Version -- #
 print("\nTaiyou General version " + str(TaiyouGeneralVersion))
@@ -567,6 +571,9 @@ class Process(object):
         self.WINDOW_SURFACE_LAST_DRAG_STATE = None
         self.WINDOW_SURFACE_LAST_DRAG_STATE_BORDER_UPDATE_NEXT_FRAME = False
         self.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY = None
+        self.CURSOR = None
+        self.LAST_TITLEBAR_TEXT = False
+        self.SetCursor(0)
         self.Initialize()
 
         RegisterToCoreAccess(self)
@@ -581,6 +588,13 @@ class Process(object):
         :return:
         """
         self.TITLEBAR_TEXT = str(title)
+
+        if self.TITLEBAR_TEXT != str(title):
+            self.WINDOW_SURFACE_LAST_DRAG_STATE = not self.WINDOW_SURFACE_LAST_DRAG_STATE
+            print("Entidade")
+
+    def SetCursor(self, Value):
+        self.CURSOR = int(Value)
 
     def SetVideoMode(self, Fullscreen, Resolution, maxResolution=False):
         """

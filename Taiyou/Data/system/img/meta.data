@@ -1,8 +1,13 @@
-# This assets is shared by all UI modules #
+# This assets is shared by all UI Subsystem modules #
 
+# Icons
 /error.png:True
 /folder_question.png:True
 /framework_logo.png:True
-/pointer.png:True
 /warning.png:True
+
+# Pointer Resources
+/cur/pointer.png:True
+/cur/loading.png:True
+
 

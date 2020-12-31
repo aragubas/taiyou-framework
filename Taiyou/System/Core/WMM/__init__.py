@@ -33,7 +33,7 @@ def GetWindowManager():
     return Core.ProcessAccess[TaskBarUIProcessID]
 
 
-def WindowManagerSignal(self, Signal):
+def WindowManagerSignal(self, Signal, Args=None):
     """
     Sends a signal to the TaskBar's Window Manager
     :param self:Process Object

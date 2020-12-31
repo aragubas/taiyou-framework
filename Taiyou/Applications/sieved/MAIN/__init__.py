@@ -23,40 +23,11 @@ from System.SystemApps.TaiyouUI.MAIN import UI
 from Applications.sieved.MAIN import LoadingScreen
 from Applications.sieved.MAIN import MainScreen
 
-class Process():
-    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
-        self.PID = pPID
-        self.NAME = pProcessName
-        self.ROOT_MODULE = pROOT_MODULE
-        self.IS_GRAPHICAL = True
-        self.INIT_ARGS = pInitArgs
-        self.DISPLAY = pygame.Surface((650, 420))
-        self.LAST_SURFACE = self.DISPLAY.copy()
-        self.APPLICATION_HAS_FOCUS = True
-        self.POSITION = (0, 0)
-        self.FULLSCREEN = False
-        self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], self.DISPLAY.get_width(), 15)
-        self.TITLEBAR_TEXT = "Sieved Store"
-        self.WindowDragEnable = False
-        self.DefaultContents = CntMng.ContentManager()
-        self.ICON = None
-        self.ProcessIndex = pProcessIndex
-        self.WINDOW_DRAG_ENABLED = False
-        self.Running = True
-        self.Timer = pygame.time.Clock()
-
-        Core.RegisterToCoreAccess(self)
-
-        self.Initialize()
-
-        # Initialize Drawing Thread
-        self.InterruptDrawing = False
-        self.TerminateDrawing = False
-        self.DrawThread = threading.Thread(target=self.Draw).start()
-
+class Process(Core.Process):
     def Initialize(self):
         self.POSITION = (Core.MAIN.ScreenWidth / 2 - self.DISPLAY.get_width() / 2, Core.MAIN.ScreenHeight / 2 - self.DISPLAY.get_height() / 2)
 
+        self.DefaultContents = Core.CntMng.ContentManager()
         self.DefaultContents.SetSourceFolder("Sieved/")
         self.DefaultContents.SetFontPath("fonts/")
         self.DefaultContents.SetRegKeysPath("reg/")
@@ -99,6 +70,8 @@ class Process():
         # Download newest header file
         self.AddToDownloadQueue(self.ServerRootPath + "header", "header", "header_file")
         self.AddToDownloadQueue(self.ServerRootPath + "news", "news", "news_file")
+
+        self.SetVideoMode(False, (650, 420))
 
     def HeadFile_GetProperty(self, PropertyName):
         for propData in self.HeaderFilePropertiesData:
@@ -159,6 +132,8 @@ class Process():
         self.DownloadQueue.append((url, DownloadPath, tag))
 
     def Update(self):
+        self.Timer = pygame.time.Clock()
+
         while self.Running:
             self.Timer.tick(100)
 
@@ -232,23 +207,15 @@ class Process():
             self.DownloadQueue.pop(0)
 
     def Draw(self):
-        Clock = pygame.time.Clock()
+        self.DISPLAY.fill(UI.ThemesManager_GetProperty("WM_BorderInactiveColor"))
 
-        while not self.TerminateDrawing:
-            if self.InterruptDrawing:
-                continue
+        self.SelectedScreen.Render(self.DISPLAY)
 
-            Clock.tick(60)
+        # Downloading Overlay
+        if self.IsDownloading:
+            self.DrawDownloaderStatusBar()
 
-            self.DISPLAY.fill(UI.ThemesManager_GetProperty("WM_BorderInactiveColor"))
-
-            self.SelectedScreen.Render(self.DISPLAY)
-
-            # Downloading Overlay
-            if self.IsDownloading:
-                self.DrawDownloaderStatusBar()
-
-            self.LAST_SURFACE = self.DISPLAY.copy()
+        self.LAST_SURFACE = self.DISPLAY.copy()
 
     def UpdateDownloaderStatusBar(self):
         self.IsDownloadingWidgetController.Update()

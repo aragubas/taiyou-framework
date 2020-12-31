@@ -22,8 +22,17 @@ import System.Core as tge
 
 print("Taiyou SHAPE version: " + tge.Get_ShapeVersion())
 
+PreRenderedRects_Keys = list()
+PreRenderedRects_Results = list()
 
-def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Border_TopLeft_Radius=0, Border_TopRight_Radius=0, Border_BottomLeft_Radius=0, Border_BottomRight_Radius=0, DrawLines=False):
+def ClearPreRendered_Rectangles():
+    global PreRenderedRects_Keys
+    global PreRenderedRects_Results
+
+    PreRenderedRects_Keys.clear()
+    PreRenderedRects_Results.clear()
+
+def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Border_TopLeft_Radius=0, Border_TopRight_Radius=0, Border_BottomLeft_Radius=0, Border_BottomRight_Radius=0, DrawLines=False, DontUseCache=False):
     """
     Draw a Rectangle
     :param DISPLAY:Surface to be drawn\n
@@ -36,28 +45,60 @@ def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Bo
     :param Border_BottomLeft_Radius:Only apply border to BottomLeft\n
     :param Border_BottomRight_Radius:Only apply border to BottomRight\n
     :param DrawLines:Draw only rectangle line\n
+    :param DontUseCache:Don't use caching for rendering
     :return:
     """
+    global PreRenderedRects_Keys
+    global PreRenderedRects_Results
     if CntMng.RectangleRenderingDisabled:
         return
 
-    if Rectangle[0] <= DISPLAY.get_width() and Rectangle[0] >= 0 - Rectangle[2] and Rectangle[1] <= DISPLAY.get_height() and Rectangle[1] >= 0 - Rectangle[3]:
-        # -- Fix the Color Range -- #
-        Color = Utils.FixColorRange(Color)
+    if DontUseCache:
+        Result = PreRender_ShapeRectangle(Rectangle, Color, BorderRadius, Border_TopRight_Radius, Border_TopLeft_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius, BorderWidth, DrawLines)
 
-        # -- Border Radius-- #
-        if BorderRadius > 0 and Border_TopRight_Radius == 0 and Border_TopLeft_Radius == 0 and Border_BottomLeft_Radius == 0 and Border_BottomRight_Radius == 0:
-            Border_TopRight_Radius = BorderRadius
-            Border_TopLeft_Radius = BorderRadius
-            Border_BottomRight_Radius = BorderRadius
-            Border_BottomLeft_Radius = BorderRadius
+        DISPLAY.blit(Result, (Rectangle[0], Rectangle[1]))
+        return
 
-        # -- Render the Rectangle -- #
-        if not DrawLines:
-            pygame.draw.rect(DISPLAY, Color, Rectangle, BorderWidth, BorderRadius, Border_TopLeft_Radius,
-                             Border_TopRight_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius)
-        else:
-            gFxdraw.rectangle(DISPLAY, Rectangle, Color)
+    RectKey = str(Color) + str(Rectangle) + str(BorderWidth) + str(BorderRadius) + str(Border_TopLeft_Radius) + str(Border_TopRight_Radius) + str(Border_BottomLeft_Radius) + str(Border_BottomRight_Radius)
+
+    try:
+        Index = PreRenderedRects_Keys.index(RectKey)
+
+        DISPLAY.blit(PreRenderedRects_Results[Index], (Rectangle[0], Rectangle[1]))
+
+    except ValueError as e:
+        Result = PreRender_ShapeRectangle(Rectangle, Color, BorderRadius, Border_TopRight_Radius, Border_TopLeft_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius, BorderWidth, DrawLines)
+
+        PreRenderedRects_Keys.append(RectKey)
+        PreRenderedRects_Results.append(Result)
+
+        DISPLAY.blit(Result, (Rectangle[0], Rectangle[1]))
+
+def PreRender_ShapeRectangle(Rectangle, Color, BorderRadius, Border_TopRight_Radius, Border_TopLeft_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius, BorderWidth, DrawLines):
+    PreRenderSurface = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.SRCALPHA)
+
+    # -- Fix the Color Range -- #
+    Color = Utils.FixColorRange(Color)
+
+    # Set Opacity
+    PreRenderSurface.set_alpha(Color[3])
+
+    # -- Border Radius-- #
+    if BorderRadius > 0 and Border_TopRight_Radius == 0 and Border_TopLeft_Radius == 0 and Border_BottomLeft_Radius == 0 and Border_BottomRight_Radius == 0:
+        Border_TopRight_Radius = BorderRadius
+        Border_TopLeft_Radius = BorderRadius
+        Border_BottomRight_Radius = BorderRadius
+        Border_BottomLeft_Radius = BorderRadius
+
+    # -- Render the Rectangle -- #
+    if not DrawLines:
+        pygame.draw.rect(PreRenderSurface, Color, (0, 0, Rectangle[2], Rectangle[3]), BorderWidth, BorderRadius, Border_TopLeft_Radius,
+                         Border_TopRight_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius)
+
+    else:
+        gFxdraw.rectangle(PreRenderSurface, (0, 0, Rectangle[2], Rectangle[3]), Color)
+
+    return PreRenderSurface
 
 def Shape_Line(DISPLAY, Color, startX, startY, endX, endY, LineWidth, FoldLine=True):
     """

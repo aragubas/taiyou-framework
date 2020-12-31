@@ -20,8 +20,6 @@ import System.Core.SHAPES as Shape
 import System.Core.UTILS as Utils
 import System.SystemApps.TaiyouUI.MAIN.UI.Widget as widget
 
-TaskBar_Version = "2.5"
-
 #region Theme Manager
 ThemesList_Properties = list()
 ThemesList_PropertyNames = list()
@@ -130,10 +128,10 @@ class VerticalListWithDescription:
                 BorderColor = (255, 51, 102)
 
             # -- Background -- #
-            Shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect)
+            Shape.Shape_Rectangle(self.ListSurface, BackgroundColor, ItemRect, DontUseCache=True)
 
             # -- Indicator Bar -- #
-            Shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1)
+            Shape.Shape_Rectangle(self.ListSurface, BorderColor, ItemRect, 1, DontUseCache=True)
 
             # -- Render Item Name -- #
             self.ContentManager.FontRender(self.ListSurface, "/Ubuntu_Bold.ttf", 14, itemNam, ItemNameFontColor, TextsX + ItemRect[0], ItemRect[1] + 5)
@@ -224,9 +222,8 @@ class ApplicationSelector:
         self.HScroll = 10
 
     def Draw(self, Surface):
-        self.ObjectSurface.fill((0, 0, 0, 0))
-
-        Shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
+        # Fill Background
+        self.ObjectSurface.fill((0, 0, 0, 150))
 
         index = -1
         for item in self.SeletorItems_Index:
@@ -235,7 +232,7 @@ class ApplicationSelector:
             ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
 
             if self.SelectedItemIndex == index:
-                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
+                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2, DontUseCache=True)
 
             if self.SeletorItems_Icon[index] == None:
                 self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)

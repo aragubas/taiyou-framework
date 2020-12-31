@@ -19,6 +19,7 @@ import time, pygame, traceback, math
 from random import randint
 from datetime import date
 from datetime import datetime
+from System.Core import WMM
 from System.SystemApps.TaiyouUI.MAIN import UI
 from System.Core.MAIN import DISPLAY
 from System.SystemApps.TaiyouUI.MAIN import TaskBar
@@ -42,6 +43,8 @@ class Process(Core.Process):
         self.TaskBarInstance = TaskBar.TaskBarInstance
         self.DoubleBuffer = None
         self.EnableBackground = False
+        self.CurrentCursor = 0
+        self.TaskbarActiveCursorReseted = False
 
         super(Process, self).__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
 
@@ -94,7 +97,7 @@ class Process(Core.Process):
                 # -- Increase Zoom -- #
                 if LastModKey & pygame.KMOD_SHIFT:
                     if event.key == pygame.K_F11:
-                        self.ZoomlevelMod += self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount", float)
+                        self.ZoomlevelMod += float(self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount"))
 
                         if self.ZoomlevelMod >= 10:
                             self.ZoomlevelMod = 10
@@ -115,7 +118,7 @@ class Process(Core.Process):
                 if LastModKey & pygame.KMOD_CTRL:
                     # -- Decrease Zoom -- #
                     if event.key == pygame.K_F11:
-                        self.ZoomlevelMod -= self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount", float)
+                        self.ZoomlevelMod -= float(self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount"))
 
                         if self.ZoomlevelMod <= 1.0:
                             self.ZoomlevelMod = 1.0
@@ -171,10 +174,7 @@ class Process(Core.Process):
         self.TaskBarInstance.Toggle()
 
     def UpdateProcessWindowDrag(self, event, process):
-        try:
-            if self.FocusedProcess.FULLSCREEN:
-                return
-        except AttributeError:
+        if self.FocusedProcess.FULLSCREEN:
             return
 
         if self.SomeWindowIsBeingMoved:
@@ -242,15 +242,15 @@ class Process(Core.Process):
 
         if self.BGWaxUpdateTimer >= self.BGWaxUpdateInterval:
             self.BGWaxUpdateTimer = 0
-            self.BGWaxUpdateInterval = randint(1000, 10500)
+            self.BGWaxUpdateInterval = randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/interval_min")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/interval_max")))
             RenderEffect = pygame.Surface((5 * 70, 5 * 70))
 
             for x in range(0, 5):
                 for y in range(0, 5):
                     Color = (
-                        randint(50, 100),
-                        randint(50, 100),
-                        randint(50, 100)
+                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value"))),
+                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value"))),
+                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value")))
                     )
 
                     Core.Shape.Shape_Rectangle(RenderEffect, Color, (x * 70, y * 70, 70, 70))
@@ -260,9 +260,9 @@ class Process(Core.Process):
         DISPLAY.blit(self.BGWaxSurface, (0, 0))
 
         today = date.today()
-        DateText = "{0}".format(today.strftime("%B %d, %Y"))
+        DateText = "{0}".format(today.strftime(self.DefaultContent.Get_RegKey("/dynamic_bg/date_format")))
         now = datetime.now()
-        TimeText = "{0}".format(now.strftime("%H:%M:%S"))
+        TimeText = "{0}".format(now.strftime(self.DefaultContent.Get_RegKey("/dynamic_bg/hour_format")))
 
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (50, 50, 50), 12, 12)
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (50, 50, 50), 12, 52)
@@ -272,13 +272,18 @@ class Process(Core.Process):
 
     def DrawScreen(self):
         # Draw the Applications Window
-        #DISPLAY.fill((21, 56, 5))
 
-        if self.EnableBackground and not self.TaskBarInstance.Enabled:
-            self.BackgroundGenerator()
+        if self.DefaultContent.Get_RegKey("/dynamic_bg/enabled").lower() == "true":
+            if self.EnableBackground and not self.TaskBarInstance.Enabled:
+                self.BackgroundGenerator()
+        else:
+            DISPLAY.fill(UI.ThemesManager_GetProperty("BackgroundFillColor"))
 
         self.EnableBackground = True
         if not self.TaskBarInstance.Enabled and not self.TaskBarSystemFault:
+            # Restart cursor next time enters to TaskBar
+            self.TaskbarActiveCursorReseted = False
+
             # Draw the Unfocused Process
             for process in Core.ProcessAccess:
                 # Check if current process is not TaiyouUI itself
@@ -317,6 +322,7 @@ class Process(Core.Process):
                 print("TaiyouUI.ApplicationError at (Active application rendering).")
                 print(traceback.format_exc())
                 self.FocusedProcess = None
+                self.CurrentCursor = 0
 
             self.TaskBarInstance.Set_LastDisplayFrame(DISPLAY)
             # WORKAROUND: Fix rendering bug
@@ -332,6 +338,21 @@ class Process(Core.Process):
                 if process.PID != self.FocusedProcess.PID:
                     process.APPLICATION_HAS_FOCUS = False
 
+        elif self.TaskBarInstance.Enabled and not self.TaskbarActiveCursorReseted:
+            self.TaskbarActiveCursorReseted = True
+            self.CurrentCursor = 0
+
+            for process in Core.ProcessAccess:
+                # Check if current process is not TaiyouUI itself
+                if process.PID == self.PID:
+                    continue
+
+                # Skip Non-Graphical Process
+                if not process.IS_GRAPHICAL:
+                    continue
+
+                process.DRAW_STOP = True
+
         # Draw and update the Taskbar UI
         self.TaskBarInstance.Update()
         self.TaskBarInstance.Draw(DISPLAY)
@@ -342,10 +363,10 @@ class Process(Core.Process):
     def DrawZoom(self):
         if self.ZoomEnabled:
             if self.Zoomlevel > self.ZoomlevelMod:
-                self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / self.DefaultContent.Get_RegKey("/options/zoom_animation_scale", int)
+                self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("/options/zoom_animation_scale"))
 
             if self.Zoomlevel < self.ZoomlevelMod:
-                self.Zoomlevel += abs(self.Zoomlevel - self.ZoomlevelMod) / self.DefaultContent.Get_RegKey("/options/zoom_animation_scale", int)
+                self.Zoomlevel += abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("/options/zoom_animation_scale"))
 
             if self.Zoomlevel < 1:
                 self.Zoomlevel = 1
@@ -356,40 +377,49 @@ class Process(Core.Process):
 
     def DrawCursor(self):
         # Draw the Cursor
-        self.DefaultContent.ImageRender(DISPLAY, "/pointer.png", pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        CursorPath = "/cursor/{0}".format(self.CurrentCursor)
+        if self.DefaultContent.KeyExists(CursorPath):
+            self.DefaultContent.ImageRender(DISPLAY, self.DefaultContent.Get_RegKey(CursorPath), pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+
+        else:
+            self.DefaultContent.ImageRender(DISPLAY, self.DefaultContent.Get_RegKey("/cursor/0"), pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+
+    def DrawFullscreenProcess(self, process):
+        try:
+            if process.LAST_SURFACE.get_width() < DISPLAY.get_width() or process.LAST_SURFACE.get_height() < DISPLAY.get_height():
+                pygame.transform.scale(process.LAST_SURFACE, (DISPLAY.get_width(), DISPLAY.get_height()), DISPLAY)
+                return
+
+            DISPLAY.blit(process.LAST_SURFACE, (0, 0))
+
+        except:
+            print("TaiyouUI.RenderingError : Error while rendering focused fullscreen application.")
+            print(traceback.format_exc())
 
     def DrawProcess(self, process):
         if process is None:
             return
 
         try:
+            # Set Cursor
+            self.CurrentCursor = process.CURSOR
+
             # If is fullscreen process, just draw at max resolution at 0, 0
             if process.FULLSCREEN:
                 # If application has focus, draw again it's content
                 if process.APPLICATION_HAS_FOCUS:
-                    try:
-                        Surface = process.LAST_SURFACE
-
-                        # Check if Application Surface has maximum size
-                        if Surface.get_width() != DISPLAY.get_width() or Surface.get_height() != DISPLAY.get_height():
-                            Surface = pygame.Surface((DISPLAY.get_width(), DISPLAY.get_height()))
-                            process.DISPLAY = Surface
-
-                        DISPLAY.blit(Surface, (0, 0))
-                        return
-
-                    except:
-                        return
+                    self.DrawFullscreenProcess(process)
 
                 # If not, just draw a copy of its screen
-                DISPLAY.blit(process.LAST_SURFACE, (0, 0))
+                self.DrawFullscreenProcess(process)
+
                 if not process.APPLICATION_HAS_FOCUS:
                     WindowGeometry = [process.POSITION[0], process.POSITION[1], process.DISPLAY.get_width() + 1, process.DISPLAY.get_height()]
-                    process.TITLEBAR_RECTANGLE = pygame.Rect(WindowGeometry[0], WindowGeometry[1], WindowGeometry[2], 15)
+                    process.TITLEBAR_RECTANGLE = pygame.Rect(WindowGeometry[0], WindowGeometry[1], DISPLAY.get_width(), 15)
 
                     # Draw the title bar
-                    TitleBarColor = (39, 54, 159)
-                    TextColor = (200, 200, 200)
+                    TitleBarColor = UI.ThemesManager_GetProperty("WM_FullscreenWindowTitleBarColor")
+                    TextColor = UI.ThemesManager_GetProperty("WM_FullscreenWindowTitleBarTextColor")
 
                     Core.Shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
 
@@ -398,7 +428,7 @@ class Process(Core.Process):
                     FontSize = 12
                     Font = "/Ubuntu.ttf"
 
-                    self.DefaultContent.FontRender(DISPLAY, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
+                    self.DefaultContent.FontRender(DISPLAY, Font, FontSize, TitleBarText, TextColor, DISPLAY.get_width() / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
                 return
 
             # If not, draw window decoration
@@ -435,31 +465,34 @@ class Process(Core.Process):
         TitleBarColor = UI.ThemesManager_GetProperty("WM_TitlebarActiveColor")
         WindowBorderColor = UI.ThemesManager_GetProperty("WM_BorderActiveColor")
         TextColor = UI.ThemesManager_GetProperty("WM_TitlebarTextActiveColor")
+        FontSmoothEnabled = True
+
         if not process.APPLICATION_HAS_FOCUS:
             TitleBarColor = UI.ThemesManager_GetProperty("WM_TitlebarInactiveColor")
             TextColor = UI.ThemesManager_GetProperty("WM_TitlebarTextInactiveColor")
             WindowBorderColor = UI.ThemesManager_GetProperty("WM_BorderInactiveColor")
+            FontSmoothEnabled = False
 
         # Draw window titlebar only when needded.
         if process.WINDOW_SURFACE_LAST_DRAG_STATE != process.WINDOW_DRAG_ENABLED or process.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY != WindowGeometry:
             process.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY = WindowGeometry
             process.WINDOW_SURFACE_LAST_DRAG_STATE = process.WINDOW_DRAG_ENABLED
-
             process.WINDOW_SURFACE.fill(TitleBarColor)
-
-            # Draw Title Bar Text
-            TitleBarText = process.TITLEBAR_TEXT
-            FontSize = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTSIZE")
-            Font = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTFILE")
-            if process.WINDOW_DRAG_ENABLED:
-                TitleBarText = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR")
-                self.DefaultContent.FontRender(process.WINDOW_SURFACE, Font, FontSize, TitleBarText, (TextColor[0] - 100, TextColor[1] - 100, TextColor[2] - 100), WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2 - 1, -1)
-
-            # Draw Titlebar Text
-            self.DefaultContent.FontRender(process.WINDOW_SURFACE, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0)
 
         # Draw the Window Borders
         Core.Shape.Shape_Rectangle(process.WINDOW_SURFACE, WindowBorderColor, (0, 0, process.WINDOW_SURFACE.get_width(), process.WINDOW_SURFACE.get_height()), 1)
+
+        # Draw titlebar background
+        Core.Shape.Shape_Rectangle(process.WINDOW_SURFACE, TitleBarColor, (1, 1, process.TITLEBAR_RECTANGLE[2] - 1, process.TITLEBAR_RECTANGLE[3] - 1))
+
+        # Draw Title Bar Text
+        TitleBarText = process.TITLEBAR_TEXT
+        FontSize = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTSIZE")
+        Font = UI.ThemesManager_GetProperty("WM_WINDOWDRAG_TITLEBAR_FONTFILE")
+        process.LAST_TITLEBAR_TEXT = process.TITLEBAR_TEXT
+
+        # Draw Titlebar Text
+        self.DefaultContent.FontRender(process.WINDOW_SURFACE, Font, FontSize, TitleBarText, TextColor, WindowGeometry[2] / 2 - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, 0, FontSmoothEnabled)
 
         # Draw the Window Contents
         process.WINDOW_SURFACE.blit(pSurface, (1, process.TITLEBAR_RECTANGLE[3]))

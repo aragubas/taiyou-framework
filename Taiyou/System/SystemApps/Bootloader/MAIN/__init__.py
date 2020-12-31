@@ -39,9 +39,8 @@ class ApplicationSelector:
         self.HScroll = 10
 
     def Draw(self, Surface):
-        self.ObjectSurface.fill((0, 0, 0, 0))
-
-        Shape.Shape_Rectangle(self.ObjectSurface, (0, 0, 0, 150), (0, 0, self.Width, self.Height), 0, 5)
+        # Draw Background
+        self.ObjectSurface.fill((0, 0, 0, 150))
 
         index = -1
         for _ in self.SeletorItems_Index:
@@ -50,7 +49,7 @@ class ApplicationSelector:
             ItemPicBox = pygame.Rect(ItemRect[0] + 2, ItemRect[1] + 4, ItemRect[2] - 4, ItemRect[3] - 8)
 
             if self.SelectedItemIndex == index:
-                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2)
+                Shape.Shape_Rectangle(self.ObjectSurface, (255, 255, 255, 150), ItemRect, 0, 2, DontUseCache=True)
 
             if self.SeletorItems_Icon[index] == None:
                 self.Content.ImageRender(self.ObjectSurface, "/folder_question.png", ItemPicBox[0], ItemPicBox[1], ItemPicBox[2], ItemPicBox[3], SmoothScaling=True)
@@ -246,7 +245,7 @@ class Process(Core.Process):
                             print(Traceback)
                             print("Something bad happened while creating the process for the default application.")
 
-                            self.FatalErrorScreen = False
+                            self.FatalErrorScreen = True
                             self.ApplicationSeletor = True
                             self.APPLICATION_HAS_FOCUS = True
 
@@ -359,7 +358,7 @@ class Process(Core.Process):
                         self.APPLICATION_HAS_FOCUS = True
 
         else:
-            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress == 0:
+            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress < 1:
                 self.LoadingComplete = False
                 self.LoadingBarProgress = 0
                 self.Progress = 0
@@ -405,7 +404,6 @@ class Process(Core.Process):
             # Start the SystemUI
             Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui")
             self.InterruptDrawing = False
-
 
         if CurrentProgres == 2:
             # Finish the Loading

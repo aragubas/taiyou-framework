@@ -107,7 +107,7 @@ class TaskBarInstance:
         if self.Animation.Value == 0 and not self.Animation.Enabled and not self.Workaround_RenderLastFrame:
             # Only blur the background wheen needed
             if self.Animation.Value != self.Animation.MaxValue:
-                self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+                self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value)
 
             DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
 
@@ -120,9 +120,10 @@ class TaskBarInstance:
 
         # Only blur the background wheen needed
         if self.Animation.Value != self.Animation.MaxValue:
-            self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value - 25)
+            self.BluredBackgroundResult = Fx.Surface_Blur(self.LastDisplayFrame, self.Animation.Value)
 
         DISPLAY.blit(self.BluredBackgroundResult, (0, 0))
+        self.BluredBackgroundResult = self.BluredBackgroundResult.copy()
 
         if hasattr(self, "CurrentMode"):
             # Contents Surface
@@ -131,7 +132,7 @@ class TaskBarInstance:
 
             self.CurrentMode.Draw(ContentsSurface)
 
-            DISPLAY.blit(ContentsSurface, (0, 0))
+            DISPLAY.blit(ContentsSurface, (0, self.Animation.Value - 255))
 
     def EventUpdate(self, event):
         if not self.Enabled:
@@ -208,7 +209,7 @@ class ApplicationSelectorMode_Instace:
 
     def RenderBottomInfosText(self, ContentsSurface):
         # Draw Bottom Text
-        TitleText = "TaskBar v" + UI.TaskBar_Version
+        TitleText = "TaskBar v" + Core.Get_TaiyouUIVersion()
         TextY = 15
         TitleFontSize = 12
         TitleFont = "/Ubuntu_Bold.ttf"
@@ -365,7 +366,10 @@ class ApplicationDashboard_Instace:
         self.LoadApplicationsList()
 
         self.BottomButtonsList = Widget.Widget_Controller(pDefaultContent, (5, Core.MAIN.ScreenHeight - 50 - 5, Core.MAIN.ScreenWidth - 10, 50))
-        self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", "Taiyou Framework v" + Utils.FormatNumber(Core.TaiyouGeneralVersion) + "\nTaiyou UI/Taskbar v" + UI.TaskBar_Version, 14, (200, 200, 200), 5, 5, 0))
+        VersionText = "Taiyou Framework v" + Utils.FormatNumber(Core.TaiyouGeneralVersion) + \
+                      "\nTaiyou UI/Taskbar v" + Core.Get_TaiyouUIVersion()
+
+        self.BottomButtonsList.Append(Widget.Widget_Label(pDefaultContent, "/Ubuntu_Bold.ttf", VersionText, 14, (200, 200, 200), 5, 5, 0))
 
         self.ApplicationManagerBarAnimatorDisableToggle = True
         self.ApplicationManagerBarAnimator = Utils.AnimationController(2)

@@ -172,6 +172,7 @@ class ContentManager:
         """
         try:
             return self.Images_Data[self.Images_Name.index(ImageResourceName)]
+
         except:
             return DefaultImage
 
@@ -271,6 +272,7 @@ class ContentManager:
         # -- Set the Image Variable -- #
         if not ImageNotLoaded:
             Image = self.GetImage(sprite)
+
         else:
             Image = sprite
 
@@ -393,27 +395,14 @@ class ContentManager:
         """
         self.Font_Path = self.SourceFolder + FolderName.replace("/", Core.TaiyouPath_CorrectSlash)
 
-    def Get_RegKey(self, keyName, valueType=str):
+    def Get_RegKey(self, keyName):
         """
         Returns a String Key
         :param keyName:Name of Key [starting with /]
         :return:KeyData
         """
-    
-        if valueType is str:
-            return self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))]
 
-        elif valueType is int:
-            return int(self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))])
-
-        elif valueType is float:
-            return float(self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))])
-
-        elif valueType is bool:
-            return self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))].lower() in ("true")
-
-        else:
-            return self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))]
+        return self.reg_contents[self.reg_keys.index(self.CorrectKeyName(keyName))]
 
     def Write_RegKey(self, keyName, keyValue):
         """
@@ -671,6 +660,8 @@ class ContentManager:
 
             # grab the x-coordinate of the sine wave at a given time, while constraining the sample to what our mixer is set to with "bits"
             Value = 0
+
+            FrequencyType = FrequencyType.lower()
 
             if FrequencyType == "square":
                 Value = int(round(max_sample * np.sign(math.sin(2 * math.pi * Frequency * t))))

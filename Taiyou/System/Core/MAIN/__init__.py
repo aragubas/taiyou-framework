@@ -235,6 +235,12 @@ def KillProcessByPID(PID):
 
     ProcessListChanged = True
 
+    ClearPreRendered()
+
+def ClearPreRendered():
+    Core.Shape.ClearPreRendered_Rectangles()
+
+
 def GetProcessIndexByPID(PID):
     try:
         return Core.ProcessAccess_PID.index(PID)
