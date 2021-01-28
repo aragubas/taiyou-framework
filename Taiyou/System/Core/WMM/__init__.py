@@ -15,6 +15,7 @@
 #
 #
 import System.Core as Core
+import traceback
 
 # The main Entry Point
 print("Taiyou Window Manager Manager (WMM) version " + Core.Get_WindowManagerManagerVersion())
@@ -50,39 +51,43 @@ def WindowManagerSignal(self, Signal, Args=None):
     """
     global TaskBarUIProcessID
 
-    if TaskBarUIProcessID == -1:
-        raise Exception("Cant send signal to TaskBarGUI because it is not running.")
+    try:
+        if TaskBarUIProcessID == -1:
+            raise Exception("Cant send signal to TaskBarGUI because it is not running.")
 
-    print("WindowManagerManager : TaskBAR ProcessID {0}".format(TaskBarUIProcessID))
+        print("WindowManagerManager : TaskBAR ProcessID {0}".format(TaskBarUIProcessID))
 
-    if Signal == 0:
-        OriginalDragValue = self.WINDOW_DRAG_ENABLED
+        if Signal == 0:
+            OriginalDragValue = self.WINDOW_DRAG_ENABLED
 
-        for process in Core.ProcessAccess:
-            process.APPLICATION_HAS_FOCUS = False
-            process.WINDOW_DRAG_ENABLED = False
+            for process in Core.ProcessAccess:
+                process.APPLICATION_HAS_FOCUS = False
+                process.WINDOW_DRAG_ENABLED = False
 
-        # Make this application focused again
-        self.APPLICATION_HAS_FOCUS = True
-        self.WINDOW_DRAG_ENABLED = OriginalDragValue
-        return
+            # Make this application focused again
+            self.APPLICATION_HAS_FOCUS = True
+            self.WINDOW_DRAG_ENABLED = OriginalDragValue
+            return
 
-    elif Signal == 1:
-        Core.MAIN.KillProcessByPID(self.PID)
-        return
+        elif Signal == 1:
+            Core.MAIN.KillProcessByPID(self.PID)
+            return
 
-    elif Signal == 2:
-        Core.ProcessAccess[TaskBarUIProcessID].PlayNotifySound = True
-        return
+        elif Signal == 2:
+            Core.ProcessAccess[TaskBarUIProcessID].PlayNotifySound = True
+            return
 
-    elif Signal == 3:
-        Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
-        return
+        elif Signal == 3:
+            Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
+            return
 
-    elif Signal == 4:
-        Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
-        return
+        elif Signal == 4:
+            Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
+            return
 
-    elif Signal == 5:
-        Core.ProcessAccess[TaskBarUIProcessID].WelcomeScreenAppered = True
-        return
+        elif Signal == 5:
+            Core.ProcessAccess[TaskBarUIProcessID].WelcomeScreenAppered = True
+            return
+    except:
+        print("Error while processing Window Manager Request")
+        print(traceback.format_exc())

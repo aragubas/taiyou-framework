@@ -20,15 +20,12 @@ import System.Core as tge
 import os, shutil, requests, string, random, threading, zipfile, urllib.request, gc, psutil, collections, time
 from pathlib import Path
 from urllib.error import HTTPError
-import binascii
-import struct
 from PIL import Image
 import numpy as np
 import scipy
 import scipy.misc
 import scipy.cluster
-import glob
-import System.Core.UTILS.Convert as Convert
+import Library.CoreUtils.Convert
 
 print("Taiyou Utils version " + tge.Get_UtilsVersion())
 

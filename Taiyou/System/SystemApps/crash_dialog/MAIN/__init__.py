@@ -20,8 +20,48 @@ from System.Core import CntMng
 from System.Core import MAIN
 from System.Core import AppData
 import System.Core as tge
-from OneTrack.MAIN.Screens import Editor
-from OneTrack.MAIN import LagIndicator
-from OneTrack.MAIN import UI
-from OneTrack.MAIN.Screens.Editor import InstanceVar as var
+from Library import UI
 
+class Process(Core.Process):
+    def Initialize(self):
+        self.DefaultContent = Core.CntMng.ContentManager()
+
+        self.DefaultContent.SetSourceFolder("", True)
+        self.DefaultContent.SetFontPath("fonts")
+        self.DefaultContent.SetImageFolder("img")
+        self.DefaultContent.SetRegKeysPath("reg/CRASH_DIALOG")
+        self.DefaultContent.SetSoundPath("sound")
+        self.DefaultContent.SetFontPath("fonts")
+
+        self.DefaultContent.LoadImagesInFolder()
+        self.DefaultContent.LoadRegKeysInFolder()
+        self.DefaultContent.LoadSoundsInFolder()
+        self.CrashSoundPlayed = False
+
+        self.SetVideoMode(False, (420, 140))
+        self.CenterWindow()
+        self.CrashedProcess_TitlebarName = str(self.INIT_ARGS[0])
+        self.CrashedProcess_ProcessName = str(self.INIT_ARGS[1])
+        self.CrashedProcess_PID = str(self.INIT_ARGS[2])
+
+        self.SetTitle("{0} has crashed.".format(self.CrashedProcess_TitlebarName))
+        self.ICON = self.DefaultContent.GetImage("/error.png")
+
+    def EventUpdate(self, event):
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_ESCAPE:
+                self.KillProcess()
+
+    def Update(self):
+        if not self.CrashSoundPlayed:
+            self.CrashSoundPlayed = True
+            self.DefaultContent.PlaySound("/error.wav")
+
+    def Draw(self):
+        self.DISPLAY.fill((20, 27, 30))
+        CrashText = "The process {0}\nhas stopped working.\n\nPID: {1}\nProcessName:{2}\n\nPress ESC to exit".format(self.CrashedProcess_TitlebarName, self.CrashedProcess_PID, self.CrashedProcess_ProcessName)
+
+        self.DefaultContent.ImageRender(self.DISPLAY, "/error.png", 5, 5, 128, 128, SmoothScaling=True)
+        self.DefaultContent.FontRender(self.DISPLAY, "/Ubuntu_Bold.ttf", 14, CrashText, (215, 224, 223), 145, 5)
+
+        self.LAST_SURFACE = self.DISPLAY.copy()

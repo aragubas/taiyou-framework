@@ -16,20 +16,12 @@
 #
 
 # -- Imports --
-from System.Core import UTILS as Utils
 import System.Core as Core
-import pygame, sys, os
-from pygame import gfxdraw
-import binascii
-import struct
-from PIL import Image
+import pygame
 import numpy as np
-import scipy
-import scipy.misc
-import scipy.cluster
-from scipy import signal
-import glob
 import os, time, numpy, math
+from Library import CoreUtils as UTILS
+from Library import CorePrimitives as Shape
 
 print("Taiyou ContentManager version " + Core.Get_ContentManagerVersion())
 
@@ -81,7 +73,7 @@ class ContentManager:
 
         if not pSourceFolder.endswith("/"):
             pSourceFolder = pSourceFolder + Core.TaiyouPath_CorrectSlash
-        
+
         self.SourceFolder = "{0}{1}".format(Root, pSourceFolder.replace("/", Core.TaiyouPath_CorrectSlash))
         print("Taiyou.ContentManager.LoadUserAppContents : Source Directory has been set to ({0}).".format(self.SourceFolder))
 
@@ -155,7 +147,7 @@ class ContentManager:
         :param Transparency:Bool Value to import with transparency or not
         :return:
         """
-        if Utils.Directory_Exists(ImagePath):
+        if UTILS.Directory_Exists(ImagePath):
             self.Images_Name.append(Core.TaiyouPath_CorrectSlash + os.path.basename(ImagePath))
 
             if Transparency:
@@ -182,11 +174,11 @@ class ContentManager:
         :return:
         """
         print("Image.Unload : Unloading Images...")
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
         del self.Images_Data
         del self.Images_Name
         del CurrentLoadedFonts_Name
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
         self.Images_Data = list()
         self.Images_Name = list()
@@ -321,7 +313,7 @@ class ContentManager:
 
         print("Taiyou.ContentManager.LoadRegistry : Loading Registry...")
 
-        temp_reg_keys = Utils.Directory_FilesList(reg_dir)
+        temp_reg_keys = UTILS.Directory_FilesList(reg_dir)
         index = -1
 
         for x in temp_reg_keys:
@@ -347,9 +339,9 @@ class ContentManager:
 
             print("Taiyou.ContentManager.LoadRegistry : KeyLoaded[" + CorrectKeyName + "]")
 
-        print("Taiyou.ContentManager.LoadRegistry : Total of {0} registry keys loaded. In {1} seconds.".format(str(len(self.reg_keys)), Utils.FormatNumber(time.time() - start_time, 4)))
+        print("Taiyou.ContentManager.LoadRegistry : Total of {0} registry keys loaded. In {1} seconds.".format(str(len(self.reg_keys)), UTILS.FormatNumber(time.time() - start_time, 4)))
 
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
     def ReloadRegistry(self):
         """
@@ -361,7 +353,7 @@ class ContentManager:
         
         self.LoadRegKeysInFolder()
 
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
     def UnloadRegistry(self):
         """
@@ -374,7 +366,7 @@ class ContentManager:
         self.reg_keys = list()
         self.reg_contents = list()
 
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
     def CorrectKeyName(self, keyEntred):
         """
@@ -460,7 +452,7 @@ class ContentManager:
         if not FontRenderingDisabled:
             # -- Get the FontFileObject, required for all functions here -- #
             FontFileObject = self.GetFont_object(FontFileLocation, Size)
-            ColorRGB = Utils.FixColorRange(ColorRGB)
+            ColorRGB = UTILS.FixColorRange(ColorRGB)
 
             if X <= DISPLAY.get_width() and Y <= DISPLAY.get_height() and X >= -FontFileObject.render(Text, antialias, ColorRGB).get_width() and Y >= -FontFileObject.render(Text, antialias, ColorRGB).get_height() and not Text == "":
                 # -- Fix Opacity Range -- #
@@ -563,7 +555,7 @@ class ContentManager:
         FolderName = self.Sound_Path
         self.InitSoundSystem()
 
-        temp_sound_files = Utils.Directory_FilesList(FolderName)
+        temp_sound_files = UTILS.Directory_FilesList(FolderName)
         index = -1
 
         print("ContentManager.LoadSoundsInFolder : Loading Sounds")
@@ -759,15 +751,15 @@ class ContentManager:
         print("ContentManager.UnloadSoundTuneCache : Clearing FrequencyGenerator Cache...")
         self.SoundTuneCache_Cache.clear()
         self.SoundTuneCache_Names.clear()
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
         del self.SoundTuneCache_Cache
         del self.SoundTuneCache_Names
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
 
         self.SoundTuneCache_Cache = list()
         self.SoundTuneCache_Names = list()
-        Utils.GarbageCollector_Collect()
+        UTILS.GarbageCollector_Collect()
         print("ContentManager.UnloadSoundTuneCache : Done")
 
     def PlaySound(self, SourceName, Volume=1.0, LeftPan=1.0, RightPan=1.0, ForcePlay=False, PlayOnSpecificID=None, Fadeout=0):

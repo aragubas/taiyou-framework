@@ -15,10 +15,9 @@
 #
 #
 import pygame
-from pygame import gfxdraw
-from System.Core import UTILS as Utils
 from System.Core import CONTENT_MANAGER as CntMng
 import System.Core as tge
+from Library import CoreUtils as UTILS
 
 print("Taiyou SHAPE version: " + tge.Get_ShapeVersion())
 
@@ -75,10 +74,10 @@ def Shape_Rectangle(DISPLAY, Color, Rectangle, BorderWidth=0, BorderRadius=0, Bo
         DISPLAY.blit(Result, (Rectangle[0], Rectangle[1]))
 
 def PreRender_ShapeRectangle(Rectangle, Color, BorderRadius, Border_TopRight_Radius, Border_TopLeft_Radius, Border_BottomLeft_Radius, Border_BottomRight_Radius, BorderWidth, DrawLines):
-    PreRenderSurface = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.SRCALPHA)
+    PreRenderSurface = pygame.Surface((Rectangle[2], Rectangle[3]), pygame.SRCALPHA | pygame.HWACCEL | pygame.HWSURFACE)
 
     # -- Fix the Color Range -- #
-    Color = Utils.FixColorRange(Color)
+    Color = UTILS.FixColorRange(Color)
 
     # Set Opacity
     PreRenderSurface.set_alpha(Color[3])
@@ -114,7 +113,7 @@ def Shape_Line(DISPLAY, Color, startX, startY, endX, endY, LineWidth, FoldLine=T
     :return:
     """
     # -- Fix the Color Range -- #
-    Color = Utils.FixColorRange(Color)
+    Color = UTILS.FixColorRange(Color)
 
     if FoldLine:
         if endX > DISPLAY.get_width():
@@ -146,6 +145,6 @@ def Shape_Circle(DISPLAY, X, Y, Radius, Color, Width=0, draw_top_right=False, dr
     :return:
     """
     if X - Radius < DISPLAY.get_width() and Y - Radius < DISPLAY.get_height() and X > -Radius and Y > -Radius and Radius > 1:
-        Color = Utils.FixColorRange(Color)
+        Color = UTILS.FixColorRange(Color)
 
         pygame.draw.circle(DISPLAY, Color, (X, Y), Radius, Width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)

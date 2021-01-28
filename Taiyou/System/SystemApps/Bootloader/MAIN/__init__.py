@@ -15,9 +15,10 @@
 #
 #
 import System.Core as Core
-import traceback, pygame, time, sys, threading
-from System.Core import Shape
-from System.Core import Utils
+import traceback, pygame
+from Library import CorePrimitives as Shape
+from Library import CoreUtils as UTILS
+
 
 class ApplicationSelector:
     def __init__(self, pContentManager, pX, pY):
@@ -134,6 +135,7 @@ def ListInstalledApplications(BootFolders, ApplicationSelector):
 class Process(Core.Process):
     def Initialize(self):
         self.SetVideoMode(True, None, True)
+        self.SetTitle("Taiyou System Bootloader")
 
         self.Timer = pygame.time.Clock()
 
@@ -162,7 +164,7 @@ class Process(Core.Process):
         self.CenterY = self.DISPLAY.get_height() / 2
 
         self.ApplicationSeletor = False
-        self.ApplicationSeletorAnimatorStart = Core.Utils.AnimationController(0.5, multiplierRestart=True)
+        self.ApplicationSeletorAnimatorStart = UTILS.AnimationController(0.5, multiplierRestart=True)
         self.ApplicationSelectorObj = ApplicationSelector(self.DefaultContent, self.CenterX - 550 / 2, self.CenterY - 120 / 2)
 
         self.NoFoldersFound = False
@@ -173,7 +175,7 @@ class Process(Core.Process):
         self.ImagesHasBeenLoaded = False
 
         # List all valid folders
-        folder_list = Core.Utils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        folder_list = UTILS.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
             if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
@@ -187,72 +189,71 @@ class Process(Core.Process):
         self.InitialSignal = False
 
     def Update(self):
-        while self.Running:
-            self.Timer.tick(100)
+        self.Timer.tick(100)
 
-            if self.ApplicationSeletor:
-                self.ApplicationSeletorAnimatorStart.Update()
+        if self.ApplicationSeletor:
+            self.ApplicationSeletorAnimatorStart.Update()
 
-                if self.ApplicationSeletorAnimatorStart.Value <= 10 and not self.FatalErrorScreen:
-                    self.ApplicationSeletorAnimatorStart.Enabled = True
+            if self.ApplicationSeletorAnimatorStart.Value <= 10 and not self.FatalErrorScreen:
+                self.ApplicationSeletorAnimatorStart.Enabled = True
 
-                if not self.ApplicationSeletorWelcomeSound and not self.FatalErrorScreen:
-                    self.ApplicationSeletorWelcomeSound = True
+            if not self.ApplicationSeletorWelcomeSound and not self.FatalErrorScreen:
+                self.ApplicationSeletorWelcomeSound = True
 
-                    self.DefaultContent.PlaySound("/intro.wav")
-                    Core.wmm.WindowManagerSignal(None, 5)
-                continue
+                self.DefaultContent.PlaySound("/intro.wav")
+                Core.wmm.WindowManagerSignal(None, 5)
+            return
 
-            if self.ProgressProgression and not self.LoadingComplete:
-                self.ProgressAddDelay += 1
+        if self.ProgressProgression and not self.LoadingComplete:
+            self.ProgressAddDelay += 1
 
-                if self.ProgressAddDelay == 5:
-                    self.ProgressAddDelay = 0
-                    self.Progress += 1
+            if self.ProgressAddDelay == 5:
+                self.ProgressAddDelay = 0
+                self.Progress += 1
 
-                if self.ProgressAddDelay == 1:
-                    self.LoadingSteps(self.Progress)
+            if self.ProgressAddDelay == 1:
+                self.LoadingSteps(self.Progress)
 
-                if self.Progress >= self.ProgressMax and not self.LoadingComplete:
-                    self.LoadingComplete = True
+            if self.Progress >= self.ProgressMax and not self.LoadingComplete:
+                self.LoadingComplete = True
 
-                    print("Taiyou.Bootloader :  : Loading Complete")
+                print("Taiyou.Bootloader :  : Loading Complete")
 
-                    # Start the Default Application
+                # Start the Default Application
+                try:
+                    print("Taiyou.Bootloader : Loading has been completed\nStarting user selected applicaton...")
+                    # Create the Application Process
+                    Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
+
+                    # Allow Window Manager do receive request
+                    Core.wmm.WindowManagerSignal(None, 4)
+
+                    # Kills the Bootloader process
+                    print("Taiyou.Bootloader : I am done at the time...\ni think i will just exit the conversation.")
+                    Core.MAIN.KillProcessByPID(self.PID)
+                    self.Running = False
+
+                except Exception:
+                    print("Taiyou.Bootloader : Fatal Error : Error while creating the process to the Auto-Start Application.")
+
+                    Traceback = traceback.format_exc()
+
+                    # Check if SelectedFile wax exists
                     try:
-                        print("Taiyou.Bootloader : Loading has been completed\nStarting user selected applicaton...")
-                        # Create the Application Process
-                        Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
+                        UserSelectedApplication = Core.GetUserSelectedApplication()
 
-                        # Allow Window Manager do receive request
-                        Core.wmm.WindowManagerSignal(None, 4)
+                        self.GenerateCrashLog(Traceback, UserSelectedApplication)
+                        print(Traceback)
+                        print("Something bad happened while creating the process for the default application.")
 
-                        # Kills the Bootloader process
-                        print("Taiyou.Bootloader : I am done at the time...\ni think i will just exit the conversation.")
-                        Core.MAIN.KillProcessByPID(self.PID)
-                        self.Running = False
+                        self.FatalErrorScreen = True
+                        self.ApplicationSeletor = True
+                        self.APPLICATION_HAS_FOCUS = True
 
-                    except Exception:
-                        print("Taiyou.Bootloader : Fatal Error : Error while creating the process to the Auto-Start Application.")
-
-                        Traceback = traceback.format_exc()
-
-                        # Check if SelectedFile wax exists
-                        try:
-                            UserSelectedApplication = Core.GetUserSelectedApplication()
-
-                            self.GenerateCrashLog(Traceback, UserSelectedApplication)
-                            print(Traceback)
-                            print("Something bad happened while creating the process for the default application.")
-
-                            self.FatalErrorScreen = True
-                            self.ApplicationSeletor = True
-                            self.APPLICATION_HAS_FOCUS = True
-
-                        except:
-                            print("Selected application file is not readable.")
-                            self.ApplicationSeletor = True
-                            self.APPLICATION_HAS_FOCUS = True
+                    except:
+                        print("Selected application file is not readable.")
+                        self.ApplicationSeletor = True
+                        self.APPLICATION_HAS_FOCUS = True
 
     def Draw(self):
         if not self.ImagesHasBeenLoaded:
@@ -326,7 +327,7 @@ class Process(Core.Process):
 
     def DrawProgressBar(self, DISPLAY):
         self.LoadingBarPos = (DISPLAY.get_width() / 2 - 250 / 2, DISPLAY.get_height() / 2 + 10 / 2, 250, 10)
-        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], max(10, Utils.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax)), 10)
+        self.LoadingBarProgress = (self.LoadingBarPos[0], self.LoadingBarPos[1], max(10, UTILS.Get_Percentage(self.Progress, self.LoadingBarPos[2], self.ProgressMax)), 10)
 
         Shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.LoadingBarPos, 0, self.LoadingBarPos[3])
         Shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.LoadingBarProgress, 0, self.LoadingBarPos[3])
@@ -376,7 +377,7 @@ class Process(Core.Process):
         print("Generating crash log...")
         # Create the directory for the Crash Logs
         CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
-        Utils.Directory_MakeDir(CrashLogsDir)
+        UTILS.Directory_MakeDir(CrashLogsDir)
 
         # Set the FileName
         FilePath = CrashLogsDir + ApplicationName + "_boot.txt"

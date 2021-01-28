@@ -15,10 +15,9 @@
 #
 #
 import pygame
-import System.Core as tge
-import System.Core.SHAPES as Shape
-import System.Core.UTILS as Utils
-import System.SystemApps.TaiyouUI.MAIN.UI.Widget as widget
+import Library.CorePrimitives as Shape
+import Library.UI.Widget as widget
+from Library import CoreUtils as UTILS
 
 #region Theme Manager
 ThemesList_Properties = list()
@@ -45,7 +44,7 @@ def ThemesManager_LoadTheme(ContentManager, ThemeName):
         ThemeRawData = None
 
         if ThemeDataType == "tuple":
-            ThemeRawData = Utils.Convert.Parse_Tuple(ThemeData)
+            ThemeRawData = UTILS.Convert.Parse_Tuple(ThemeData)
 
         if ThemeDataType == "int":
             ThemeRawData = int(ThemeData)
@@ -103,7 +102,7 @@ class VerticalListWithDescription:
             self.LastRectangle[2] = self.Rectangle[2]
             self.LastRectangle[3] = self.Rectangle[3]
 
-            self.ListSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
+            self.ListSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA | pygame.HWACCEL | pygame.HWSURFACE)
 
         self.ListSurface.fill((0, 0, 0, 0))
 
@@ -209,7 +208,7 @@ class ApplicationSelector:
         self.Width = 550
         self.Height = 120
         self.Content = pContentManager
-        self.ObjectSurface = pygame.Surface((self.Width, self.Height), pygame.SRCALPHA)
+        self.ObjectSurface = pygame.Surface((self.Width, self.Height), pygame.SRCALPHA | pygame.HWACCEL | pygame.HWSURFACE)
         self.SeletorItems_Title = list()
         self.SeletorItems_Index = list()
         self.SeletorItems_Icon = list()

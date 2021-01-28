@@ -1,8 +1,19 @@
+# =======================================================
+# Default theme file by Aragubas (2021)
+# This theme file will now be use with all applications.
+# =======================================================
+#
+# Template 
+# =========
+# <property_name>;<value_type>;<value>
+# 
+# Valid values types are (int, tuple (for rgb color), str)
+
 ### EDITOR: Button ###
 Button_Active_IndicatorColor;tuple;(46, 196, 182)
 Button_Inactive_IndicatorColor;tuple;(255, 51, 102)
 Button_BackgroundColor;tuple;(15, 27, 44)
-
+ 
 #== UI: Vertical List ### 
 # -- Inactive --
 VerticalListWithDescription_Inactive_BackgroundColor;tuple;(20, 42, 59, 50)
@@ -35,7 +46,7 @@ WM_TitlebarTextInactiveColor;tuple;(150, 150, 150, 55)
 
 # -- Border -- #
 WM_BorderActiveColor;tuple;(94, 114, 219, 255)
-WM_BorderInactiveColor;tuple;(20, 20, 58, 55)
+WM_BorderInactiveColor;tuple;(20, 20, 55, 55)
   
 # -- Font Text Values -- 
 WM_WINDOWDRAG_TITLEBAR_FONTFILE;str;/Ubuntu_Lite.ttf
@@ -44,4 +55,11 @@ WM_WINDOWDRAG_TITLEBAR_FONTSIZE;int;12
 
 #== Background Color
 BackgroundFillColor;tuple;(21, 26, 22)
+
+#== Widget Controller Background 1
+WidgetControllerBackground1;tuple;(20, 20, 55)
+
+#== Applications Background Color
+DefaultBackground;tuple;(10, 10, 25)
+
 

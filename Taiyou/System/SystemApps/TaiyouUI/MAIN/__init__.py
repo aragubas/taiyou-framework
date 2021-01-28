@@ -15,16 +15,15 @@
 #
 #
 import System.Core as Core
-import time, pygame, traceback, math
+import pygame, traceback
 from random import randint
 from datetime import date
 from datetime import datetime
-from System.Core import WMM
-from System.SystemApps.TaiyouUI.MAIN import UI
+from Library import UI
 from System.Core.MAIN import DISPLAY
 from System.SystemApps.TaiyouUI.MAIN import TaskBar
-from System.Core import Utils
-from System.Core import Fx
+from Library import CoreEffects
+from Library import CorePrimitives as Shape
 
 class Process(Core.Process):
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
@@ -133,10 +132,13 @@ class Process(Core.Process):
                     self.FocusedProcess.EventUpdate(event)
                     self.FocusedProcess.DRAW_STOP = False
 
-                except Exception as ex:
+                except:
                     if self.FocusedProcess is not None:
                         print("Application {0} has failed while Event Updating.".format(self.FocusedProcess.TITLEBAR_TEXT))
                         print(traceback.format_exc())
+
+                        self.FocusedProcess.ProcessError()
+                    self.FocusedProcess = None
 
                 # Update Process Events
                 for process in Core.ProcessAccess:
@@ -145,7 +147,7 @@ class Process(Core.Process):
                         continue
 
                     # Check if is window, and update it
-                    if process.IS_GRAPHICAL and not self.TaskBarInstance.Enabled:
+                    if process.IS_GRAPHICAL:
                         if not process.FULLSCREEN:
                             self.UpdateProcessWindowDrag(event, process)
 
@@ -159,11 +161,11 @@ class Process(Core.Process):
                 Core.WindowManagerShared_Event = None
 
     def SingleInstanceFocus(self):
-        if len(Core.MAIN.ProcessList) == 2:
+        if len(Core.ProcessAccess) == 2:
             for process in Core.ProcessAccess:
                 if process.PID != self.PID:
                     process.APPLICATION_HAS_FOCUS = True
-                    process.PRIORITY = -1
+                    self.FocusedProcess = process
 
     def UI_Call_Request(self):
         # Ignore request if GUI_TASKMANAGER is not allowed
@@ -174,7 +176,10 @@ class Process(Core.Process):
         self.TaskBarInstance.Toggle()
 
     def UpdateProcessWindowDrag(self, event, process):
-        if self.FocusedProcess.FULLSCREEN:
+        if self.FocusedProcess is None:
+            return
+
+        if self.FocusedProcess.FULLSCREEN or self.FocusedProcess.FRAMELESS:
             return
 
         if self.SomeWindowIsBeingMoved:
@@ -228,7 +233,7 @@ class Process(Core.Process):
 
             Core.MAIN.DrawingCode = self.DrawScreen
             Core.MAIN.EventUpdateCode = self.EventUpdate
-            
+
             # Single-Instance Application Focus
             self.SingleInstanceFocus()
 
@@ -253,9 +258,9 @@ class Process(Core.Process):
                         randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value")))
                     )
 
-                    Core.Shape.Shape_Rectangle(RenderEffect, Color, (x * 70, y * 70, 70, 70))
+                    Shape.Shape_Rectangle(RenderEffect, Color, (x * 70, y * 70, 70, 70))
 
-            self.BGWaxSurface = pygame.transform.scale(Core.Fx.Surface_Blur(RenderEffect, 150), (Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
+            self.BGWaxSurface = pygame.transform.scale(CoreEffects.Surface_Blur(RenderEffect, 150), (Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
 
         DISPLAY.blit(self.BGWaxSurface, (0, 0))
 
@@ -311,9 +316,13 @@ class Process(Core.Process):
             # Draw the focused process
             try:
                 if not self.FocusedProcess is None:
-                    ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
+                    try:
+                        ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
-                    self.DrawProcess(self.FocusedProcess)
+                        self.DrawProcess(self.FocusedProcess)
+                    except ValueError:
+                        pass
+
                 else:
                     if len(Core.ProcessAccess_PID) > 1:
                         self.FocusedProcess = Core.ProcessAccess[len(Core.ProcessAccess)]
@@ -421,7 +430,7 @@ class Process(Core.Process):
                     TitleBarColor = UI.ThemesManager_GetProperty("WM_FullscreenWindowTitleBarColor")
                     TextColor = UI.ThemesManager_GetProperty("WM_FullscreenWindowTitleBarTextColor")
 
-                    Core.Shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
+                    Shape.Shape_Rectangle(DISPLAY, TitleBarColor, (0, 0, process.TITLEBAR_RECTANGLE[2] + 1, process.TITLEBAR_RECTANGLE[3]))
 
                     # Draw Title Bar Text
                     TitleBarText = process.TITLEBAR_TEXT
@@ -432,7 +441,10 @@ class Process(Core.Process):
                 return
 
             # If not, draw window decoration
-            DISPLAY.blit(self.DrawWindow(process.LAST_SURFACE, process), (process.POSITION[0], process.POSITION[1]))
+            if not process.FRAMELESS:
+                DISPLAY.blit(self.DrawWindow(process.LAST_SURFACE, process), (process.POSITION[0], process.POSITION[1]))
+            else:
+                DISPLAY.blit(process.LAST_SURFACE, (process.POSITION[0], process.POSITION[1]))
 
         except:
             Core.MAIN.SystemFault_Trigger = True
@@ -480,10 +492,10 @@ class Process(Core.Process):
             process.WINDOW_SURFACE.fill(TitleBarColor)
 
         # Draw the Window Borders
-        Core.Shape.Shape_Rectangle(process.WINDOW_SURFACE, WindowBorderColor, (0, 0, process.WINDOW_SURFACE.get_width(), process.WINDOW_SURFACE.get_height()), 1)
+        Shape.Shape_Rectangle(process.WINDOW_SURFACE, WindowBorderColor, (0, 0, process.WINDOW_SURFACE.get_width(), process.WINDOW_SURFACE.get_height()), 1)
 
         # Draw titlebar background
-        Core.Shape.Shape_Rectangle(process.WINDOW_SURFACE, TitleBarColor, (1, 1, process.TITLEBAR_RECTANGLE[2] - 1, process.TITLEBAR_RECTANGLE[3] - 1))
+        Shape.Shape_Rectangle(process.WINDOW_SURFACE, TitleBarColor, (1, 1, process.TITLEBAR_RECTANGLE[2] - 1, process.TITLEBAR_RECTANGLE[3] - 1))
 
         # Draw Title Bar Text
         TitleBarText = process.TITLEBAR_TEXT

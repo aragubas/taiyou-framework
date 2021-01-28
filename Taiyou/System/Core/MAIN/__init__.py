@@ -16,15 +16,10 @@
 #
 
 # Import some stuff
-import os
 import System.Core as Core
-from System.Core import APPDATA as reg
-from System.Core import CONTENT_MANAGER as sprite
-from System.Core import UTILS as Utils
-import pygame, sys, importlib, multiprocessing, traceback, threading, time
-from datetime import datetime
-from multiprocessing import Process
-import gc
+from Library import CoreUtils as UTILS
+from Library import CorePrimitives as Shape
+import pygame, sys, importlib, threading
 
 # The main Entry Point
 print("Taiyou Main version " + Core.Get_TaiyouMainVersion())
@@ -41,9 +36,9 @@ ErrorScreenInitialzed = False
 ThrowException = True
 ProcessListChanged = False
 ProcessListChanged_Delay = False
-ProcessList = list()
-ProcessList_Names = list()
-ProcessList_PID = list()
+#ProcessList = list()
+#ProcessList_Names = list()
+#ProcessList_PID = list()
 ProcessNextPID = -1
 SystemFault_Trigger = False
 SystemFault_Traceback = ""
@@ -87,7 +82,6 @@ def ReceiveCommand(Command, Arguments=None):
     :return:
     """
     global DISPLAY
-    global FPS
     global ScreenWidth
     global ScreenHeight
 
@@ -95,15 +89,7 @@ def ReceiveCommand(Command, Arguments=None):
     IsSpecialEvent = False
 
     try:
-        if Command == 0:  # -- Set FPS
-            CommandWasValid = True
-            IsSpecialEvent = True
-
-            FPS = int(Arguments)
-
-            print("TaiyouFramework.ReceiveCommand : MaxFPS Set to:" + str(FPS))
-
-        elif Command == 1:  # -- Set Resolution
+        if Command == 1:  # -- Set Resolution
             CommandWasValid = True
             IsSpecialEvent = True
 
@@ -173,36 +159,42 @@ def CreateProcess(Path, ProcessName, pInitArgs=None):
     global ProcessListChanged
     global ProcessNextPID
 
-    print("TaiyouFramework.CreateProcess : Creating Process: [" + ProcessName + "]")
+    print("TaiyouFramework.CreateProcess : Creating Process: [" + ProcessName + "]...")
 
+    # Get Process Path
     Path = Path.replace("/", Core.TaiyouPath_CorrectSlash)
-    ProcessIndex = len(ProcessList_Names)
+    ProcessIndex = len(Core.ProcessAccess_PID)
     ProcessNextPID += 1
 
+    # Print new process info to console
+    print("Process Information:")
     print("ProcessIndex: " + str(ProcessIndex))
     print("Path: " + Path)
     print("ProcessName: " + ProcessName)
     print("ProcessPID : " + str(ProcessNextPID))
 
+    # Import Module
     Module = importlib.import_module(Core.Get_MainModuleName(Path))
 
+    # Get Process Object from Module
     ProcessWax = Module.Process(ProcessNextPID, ProcessName, Core.Get_MainModuleName(Path), pInitArgs, ProcessIndex)
 
-    importlib.reload(Module)
+    # Unload Module from Ram
     del Module
 
+    # Check if module is imported and remove it
     if Core.Get_MainModuleName(Path) in sys.modules:
         sys.modules.pop(Core.Get_MainModuleName(Path))
-    Utils.GarbageCollector_Collect()
+    UTILS.GarbageCollector_Collect()
 
-    Thread = threading.Thread(target=ProcessWax.Update).start()
+    # Start process thread with UpdateRequest Function
+    Thread = threading.Thread(target=ProcessWax.UpdateRequest).start()
 
-    ProcessList.append(Thread)
-    ProcessList_PID.append(ProcessNextPID)
-    ProcessList_Names.append(ProcessName)
-
+    # Set THIS_THREAD Variable to Process
     ProcessWax.THIS_THREAD = Thread
 
+    print("Process created sucefully")
+    # Return newly created process PID
     return ProcessNextPID
 
 def SendSigKillToProcessByPID(PID):
@@ -213,32 +205,18 @@ def KillProcessByPID(PID):
     Index = GetProcessIndexByPID(PID)
 
     # Call SIG_KILL Function on Process
-    Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].Running = False
-    if hasattr(Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)], "KillProcess"):
-        Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].KillProcess()
+    Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].KillProcess()
 
-    # Remove Thread Object
-    del Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].THIS_THREAD
-
-    # Delete from CoreAcess
-    index = Core.ProcessAccess_PID.index(PID)
-    Core.ProcessAccess.pop(index)
-    Core.ProcessAccess_PID.pop(index)
-
-    # Remove from Process List
-    ProcessList.pop(Index)
-    ProcessList_PID.pop(Index)
-    ProcessList_Names.pop(Index)
-    Utils.GarbageCollector_Collect()
+    UTILS.GarbageCollector_Collect()
 
     print("Taiyou : Finished process index: " + str(Index))
 
-    ProcessListChanged = True
+    #ProcessListChanged = True
 
     ClearPreRendered()
 
 def ClearPreRendered():
-    Core.Shape.ClearPreRendered_Rectangles()
+    Shape.ClearPreRendered_Rectangles()
 
 
 def GetProcessIndexByPID(PID):
@@ -252,7 +230,7 @@ def GenerateCrashLog():
     print("Generating crash log...")
     # Create the directory for the Crash Logs
     CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
-    Utils.Directory_MakeDir(CrashLogsDir)
+    UTILS.Directory_MakeDir(CrashLogsDir)
 
     try:
         FilePath = CrashLogsDir + SystemFault_ProcessObject.NAME + ".txt"
@@ -306,15 +284,17 @@ def GenerateCrashLog():
 
     print("Crash log completed")
 
-
 def Destroy():
+    for process in Core.ProcessAccess:
+        process.KillProcess(False)
+
     Core.IsRunning = False
+
     pygame.quit()
     sys.exit()
 
 DrawingCode = None
 EventUpdateCode = None
-CeiraDeFPS = Utils.FPS()
 
 def UpdateDisplayDevice():
     global DrawingCode
@@ -343,4 +323,4 @@ def SetDisplay():
     else:
         DISPLAY = pygame.display.set_mode((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight), pygame.DOUBLEBUF | pygame.HWACCEL | pygame.HWSURFACE | pygame.FULLSCREEN)
 
-    pygame.display.set_caption("Taiyou Framework v" + Utils.FormatNumber(Core.TaiyouGeneralVersion))
+    pygame.display.set_caption("Taiyou Framework v" + UTILS.FormatNumber(Core.TaiyouGeneralVersion))

@@ -15,10 +15,10 @@
 #
 #
 import pygame
-from System.Core import Utils
-from System.Core import Convert
-from System.Core import Shape
-from System.SystemApps.TaiyouUI.MAIN import UI
+from Library.CoreUtils import Convert
+from Library import CorePrimitives as Shape
+from Library import UI
+from Library import CoreUtils as UTILS
 
 class Widget_Controller:
     def __init__(self, pContentManager, Rectangle):
@@ -31,12 +31,13 @@ class Widget_Controller:
         self.Opacity = 255
         self.ObjectOffset = (0, 0)
         self.WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
+        self.BackgroundColor = (0, 0, 0, 0)
 
     def UpdateRect(self):
         self.WidgetSurface = pygame.Surface((self.Rectangle[2], self.Rectangle[3]), pygame.SRCALPHA)
 
     def Draw(self, DISPLAY):
-        self.WidgetSurface.fill((0, 0, 0, 0))
+        self.WidgetSurface.fill(self.BackgroundColor)
         self.WidgetSurface.set_alpha(self.Opacity)
         for widget in self.WidgetCollection:
             widget.Render(self.WidgetSurface)
@@ -51,6 +52,10 @@ class Widget_Controller:
 
     def Append(self, Widget):
         self.WidgetCollection.append(Widget)
+
+    def UpdateOffsetToWindow(self, Window):
+        self.ObjectOffset = (Window.POSITION[0], Window.POSITION[1] + Window.TITLEBAR_RECTANGLE[3])
+
 
     def Update(self):
         ColideRect = pygame.Rect(self.ObjectOffset[0] + self.Rectangle[0], self.ObjectOffset[1] + self.Rectangle[1], self.Rectangle[2], self.Rectangle[3])
@@ -95,7 +100,7 @@ class Widget_PictureBox:
         if WidgetID == -1:
             raise ValueError("WidgetID cannot be -1")
 
-        self.Rectangle = Utils.Convert.List_PygameRect(Rectangle)
+        self.Rectangle = UTILS.Convert.List_PygameRect(Rectangle)
         self.Image = ImageName
         self.ID = WidgetID
         self.InteractionType = None
@@ -121,7 +126,7 @@ class Widget_ValueChanger:
         if WidgetID == -1:
             raise ValueError("WidgetID cannot be -1")
 
-        self.Rectangle = Utils.Convert.List_PygameRect((Position[0], Position[1], 48, 34))
+        self.Rectangle = UTILS.Convert.List_PygameRect((Position[0], Position[1], 48, 34))
         self.TitleName = TitleName
         self.ID = WidgetID
         self.Content = pContentManager
@@ -187,7 +192,7 @@ class Widget_Label:
         self.Color = Color
         self.X = X
         self.Y = Y
-        self.Rectangle = Utils.Convert.List_PygameRect((X, Y, self.Content.GetFont_width(self.FontName, FontSize, self.Text), self.Content.GetFont_height(self.FontName, FontSize, self.Text)))
+        self.Rectangle = UTILS.Convert.List_PygameRect((X, Y, self.Content.GetFont_width(self.FontName, FontSize, self.Text), self.Content.GetFont_height(self.FontName, FontSize, self.Text)))
         self.AwaysUpdate = False
         self.CursorOffset = (0, 0)
         self.IsVisible = True
@@ -201,7 +206,7 @@ class Widget_Label:
         if not self.IsVisible:
             return
 
-        self.Rectangle = Utils.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
+        self.Rectangle = UTILS.Convert.List_PygameRect((self.X, self.Y, self.Content.GetFont_width(self.FontName, self.FontSize, self.Text), self.Content.GetFont_height(self.FontName, self.FontSize, self.Text)))
 
 class Widget_ProgressBar:
     def __init__(self, pContentManager, pInitialProgress, pMaxValue, pRectangle, pWidgetID):
@@ -226,7 +231,7 @@ class Widget_ProgressBar:
         if self.Progress >= self.ProgressMax:
             self.Progress = self.ProgressMax
 
-        self.ProgressRect = (self.Rectangle[0], self.Rectangle[1], max(10, Utils.Get_Percentage(self.Progress, self.Rectangle[2], self.ProgressMax)), 10)
+        self.ProgressRect = (self.Rectangle[0], self.Rectangle[1], max(10, UTILS.Get_Percentage(self.Progress, self.Rectangle[2], self.ProgressMax)), 10)
 
         Shape.Shape_Rectangle(DISPLAY, (20, 20, 58), self.Rectangle, 0, self.Rectangle[3])
         Shape.Shape_Rectangle(DISPLAY, (94, 114, 219), self.ProgressRect, 0, self.ProgressRect[3])
@@ -234,6 +239,20 @@ class Widget_ProgressBar:
     def Update(self):
         pass
 
+class Widget_ButtonArray:
+    def __init__(self):
+        pass
+
+    def Render(self, DISPLAY):
+        pass
+
+    def Update(self):
+        if not self.IsVisible:
+            return
+
+    def EventUpdate(self, event):
+        if not self.IsVisible:
+            return
 
 class Widget_Button:
     def __init__(self, pContentManager, Text, FontSize, X, Y, WidgetID):
@@ -288,7 +307,7 @@ class Widget_Button:
         # -- Update all Size and Position Variables -- #
         self.TextWidth = self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
         self.TextHeight = self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize, self.Text)
-        self.Rectangle = Utils.Convert.List_PygameRect((self.Rectangle[0], self.Rectangle[1], self.TextWidth + 2, self.TextHeight + 2))
+        self.Rectangle = UTILS.Convert.List_PygameRect((self.Rectangle[0], self.Rectangle[1], self.TextWidth + 2, self.TextHeight + 2))
         self.Centred_X = self.Rectangle[2] / 2 - self.Content.GetFont_width("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
         self.Centred_Y = self.Rectangle[3] / 2 - self.Content.GetFont_height("/Ubuntu_Bold.ttf", self.FontSize - 2, self.Text) / 2
 

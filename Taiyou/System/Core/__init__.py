@@ -17,28 +17,28 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.6"
+    return "4.8"
 
 def Get_ShapeVersion():
-    return "2.3"
+    return "2.5"
 
 def Get_AppDataVersion():
     return "1.2"
 
 def Get_UtilsVersion():
-    return "2.6"
+    return "2.7"
 
 def Get_TaiyouMainVersion():
-    return "4.0"
+    return "4.1"
 
 def Get_ContentManagerVersion():
-    return "4.0"
+    return "4.1"
 
 def Get_FXVersion():
-    return "1.3"
+    return "1.4"
 
 def Get_BootloaderVersion():
-    return "2.5"
+    return "2.6"
 
 def Get_MAINVersion():
     return "2.4"
@@ -47,7 +47,7 @@ def Get_WindowManagerManagerVersion():
     return "1.4"
 
 def Get_TaiyouUIVersion():
-    return "2.6"
+    return "2.8"
 
 
 # -- Calculate the Version of Taiyou Game Engine -- #
@@ -94,6 +94,7 @@ TaiyouPath_ApplicationsFolder = ""
 TaiyouPath_SystemApplicationsFolder = ""
 TaiyouPath_ApplicationsDataFolder = ""
 TaiyouPath_SystemApplicationsDataFolder = ""
+TaiyouPath_UserFilesFolder = ""
 WindowManagerShared_Event = None
 WindowManagerShared_EventEnabled = False
 WindowManagerShared_EventWaitBeforeClear = 0
@@ -147,6 +148,7 @@ def Init():
     global TaiyouPath_ApplicationsDataFolder
     global TaiyouPath_SystemApplicationsDataFolder
     global MainLoopRefreshRate
+    global TaiyouPath_UserFilesFolder
 
     # -- Set the Correct Slash Directory -- #
     CurrentPlatform = platform.system()
@@ -167,6 +169,7 @@ def Init():
         TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System/SystemApps/"
         TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data/app/"
         TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data/system/"
+        TaiyouPath_UserFilesFolder = TaiyouPath_UserPath + "UserFiles/"
 
     elif CurrentPlatform == "Windows":
         TaiyouPath_CorrectSlash = "\\"
@@ -184,11 +187,13 @@ def Init():
         TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System\\SystemApps\\"
         TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\app\\"
         TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\system\\"
+        TaiyouPath_UserFilesFolder = TaiyouPath_UserPath + "UserFiles\\"
 
     # Create directory for User Paths
-    Utils.Directory_MakeDir(TaiyouPath_UserPath)
-    Utils.Directory_MakeDir(TaiyouPath_UserPackpagesPath)
-    Utils.Directory_MakeDir(TaiyouPath_UserTempFolder)
+    UTILS.Directory_MakeDir(TaiyouPath_UserPath)
+    UTILS.Directory_MakeDir(TaiyouPath_UserPackpagesPath)
+    UTILS.Directory_MakeDir(TaiyouPath_UserTempFolder)
+    UTILS.Directory_MakeDir(TaiyouPath_UserFilesFolder)
 
     # -- Initialize Some Modules
     CntMng.InitModule()
@@ -508,8 +513,8 @@ def GetAppDataFromAppName(AppName):
     Path = "{1}{0}".format(AppName, TaiyouPath_AppDataFolder)
     
     # Check if path exists
-    if not Utils.Directory_Exists(Path):
-        Utils.Directory_MakeDir(Path)
+    if not UTILS.Directory_Exists(Path):
+        UTILS.Directory_MakeDir(Path)
 
     return Path
 
@@ -527,23 +532,27 @@ def RegisterToCoreAccess(self):
     ProcessAccess.append(self)
     ProcessAccess_PID.append(self.PID)
 
+def RemoveFromCoreAccess(process):
+    try:
+        Index = ProcessAccess_PID.index(process.PID)
+
+        ProcessAccess.pop(Index)
+        ProcessAccess_PID.pop(Index)
+    except ValueError:
+        print("Cannot remove process that don't exist.")
 
 # -- Imports All Modules -- #
-import os, pygame, platform, getpass, threading
+import os, pygame, platform, getpass, threading, traceback
 from System.Core import CONTENT_MANAGER as CntMng
 from System.Core import APPDATA as AppData
-from System.Core import FX as Fx
-from System.Core import SHAPES as Shape
-from System.Core import UTILS as Utils
-from System.Core.UTILS import Convert as Convert
-from System.Core.UTILS import CoreUtils as CoreUtils
 from System.Core import WMM as wmm
 from System.Core import MAIN
+from Library import CoreUtils as UTILS
 
 class Process(object):
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
         """
-        a TaiyouProcess Object
+        A TaiyouProcess Object
         :param pPID:Process PID
         :param pProcessName:Process Name
         :param pROOT_MODULE:Root Module
@@ -557,7 +566,7 @@ class Process(object):
         self.INIT_ARGS = pInitArgs
         self.ICON = None
         self.IS_GRAPHICAL = False
-        self.DISPLAY = pygame.Surface((320, 240))
+        self.DISPLAY = pygame.Surface((320, 240), pygame.HWACCEL | pygame.HWSURFACE)
         self.LAST_SURFACE = self.DISPLAY.copy()
         self.APPLICATION_HAS_FOCUS = True
         self.POSITION = (0, 0)
@@ -572,18 +581,22 @@ class Process(object):
         self.WINDOW_SURFACE_LAST_DRAG_STATE_BORDER_UPDATE_NEXT_FRAME = False
         self.WINDOW_SURFACE_LAST_DRAG_STATE_LAST_GEOMETRY = None
         self.CURSOR = None
+        self.FRAMELESS = False
+        self.PROCESS_KILL = False
         self.LAST_TITLEBAR_TEXT = False
+        self.UpdateClock = pygame.time.Clock()
         self.SetCursor(0)
         self.Initialize()
-
-        RegisterToCoreAccess(self)
+        self.UpdateFPS = 100
 
         if self.IS_GRAPHICAL:
             self.StartDrawThread()
 
+        RegisterToCoreAccess(self)
+
     def SetTitle(self, title):
         """
-        Set the process title
+        Set the process title [Unsafe to Override]
         :param title:Process Title
         :return:
         """
@@ -591,14 +604,26 @@ class Process(object):
 
         if self.TITLEBAR_TEXT != str(title):
             self.WINDOW_SURFACE_LAST_DRAG_STATE = not self.WINDOW_SURFACE_LAST_DRAG_STATE
-            print("Entidade")
 
     def SetCursor(self, Value):
+        """
+        Set process cursor [Unsafe to Override]
+        :param Value:
+        :return:
+        """
         self.CURSOR = int(Value)
+
+    def SetUpdateFPS(self, Value):
+        """
+        Set Update FPS [Unsafe to Override]
+        :param Value:
+        :return:
+        """
+        self.UpdateFPS = int(Value)
 
     def SetVideoMode(self, Fullscreen, Resolution, maxResolution=False):
         """
-        Set process video mode
+        Set process video mode [Unsafe to Override]
         :param Fullscreen:Set to True if process is Fullscreen.
         :param Resolution:Process Resolution
         :param maxResolution:Set true if process will have max resolution of current display device.
@@ -614,12 +639,12 @@ class Process(object):
             ResW = MAIN.ScreenWidth
             ResH = MAIN.ScreenHeight
 
-        self.DISPLAY = pygame.Surface((ResW, ResH))
+        self.DISPLAY = pygame.Surface((ResW, ResH), pygame.HWACCEL | pygame.HWSURFACE)
         self.TITLEBAR_RECTANGLE = pygame.Rect(self.POSITION[0], self.POSITION[1], ResW, 15)
 
     def SetAsNonGraphical(self):
         """
-        Set application as non-graphical
+        Set application as non-graphical [Unsafe to Override]
         :return:
         """
         self.IS_GRAPHICAL = False
@@ -627,7 +652,7 @@ class Process(object):
 
     def StartDrawThread(self):
         """
-        Start draw thread
+        Start draw thread [Unsafe to Override]
         :return:
         """
         # Initialize Drawing Thread
@@ -641,7 +666,7 @@ class Process(object):
 
     def KillDrawThread(self):
         """
-        KIll draw thread
+        KIll draw thread [Unsafe to Override]
         :return:
         """
         self.DRAW_KILL = True
@@ -649,14 +674,14 @@ class Process(object):
 
     def StopDrawThread(self):
         """
-        Stops draw thread
+        Stops draw thread [Unsafe to Override]
         :return:
         """
         self.DRAW_STOP = True
 
     def ContinueDrawThread(self):
         """
-        Resumes draw thread
+        Resumes draw thread [Unsafe to Override]
         :return:
         """
         self.DRAW_STOP = False
@@ -670,7 +695,7 @@ class Process(object):
 
     def DrawRequest(self):
         """
-        Main function called by Draw Thread
+        Main function called by Draw Thread [Unsafe to Override]
         :return:
         """
         # Defines Clock
@@ -688,11 +713,22 @@ class Process(object):
                     return
                 continue
 
-            # Call draw function
-            self.Draw()
+            try:
+                # Call draw function
+                self.Draw()
+
+            except:
+                self.ProcessError()
 
             # Copy Screen to Draw Buffer
             self.LAST_SURFACE = self.DISPLAY.copy()
+
+    def ProcessError(self):
+        print("{0}_rendering - Application has failed.")
+        print(traceback.format_exc())
+        self.KillProcess(False)
+
+        MAIN.CreateProcess("System{0}SystemApps{0}crash_dialog".format(TaiyouPath_CorrectSlash), "application_crash", (self.TITLEBAR_TEXT, self.NAME, self.PID))
 
     def Draw(self):
         """
@@ -700,6 +736,23 @@ class Process(object):
         :return:
         """
         pass
+
+    def UpdateRequest(self):
+        """
+        Internal function to handle Process Update Loop [Unsafe to Override]
+        :return:
+        """
+        while self.Running:
+            self.UpdateClock.tick(self.UpdateFPS)
+
+            if not self.APPLICATION_HAS_FOCUS and self.IS_GRAPHICAL:
+                continue
+
+            try:
+                self.Update()
+
+            except:
+                self.ProcessError()
 
     def Update(self):
         """
@@ -710,7 +763,7 @@ class Process(object):
 
     def CenterWindow(self):
         """
-        Center window to screen
+        Center window to screen [Unsafe to Override]
         :return:
         """
         if self.FULLSCREEN:
@@ -726,14 +779,19 @@ class Process(object):
         """
         pass
 
-    def KillProcess(self):
+    def KillProcess(self, WhenKilled=True):
         """
-        This function is called when the processing is being closed by Taiyou
+        This function is called when the processing is being closed by Taiyou [Unsafe to Override]
         :return:
         """
         print("Process [{0}] has received kill request.".format(self.TITLEBAR_TEXT))
+        RemoveFromCoreAccess(self)
         self.KillDrawThread()
-        self.WhenKilled()
+
+        self.Running = False
+
+        if WhenKilled:
+            self.WhenKilled()
 
     def WhenKilled(self):
         """
