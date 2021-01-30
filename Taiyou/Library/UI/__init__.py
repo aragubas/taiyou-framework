@@ -18,10 +18,13 @@ import pygame
 import Library.CorePrimitives as Shape
 import Library.UI.Widget as widget
 from Library import CoreUtils as UTILS
+import Library.CoreContentManager as ContentManager
 
 #region Theme Manager
 ThemesList_Properties = list()
 ThemesList_PropertyNames = list()
+SystemResources = ContentManager.ContentManager
+SystemSoundsVolume = 0.3
 
 def ThemesManager_LoadTheme(ContentManager, ThemeName):
     global ThemesList_Properties
@@ -31,7 +34,7 @@ def ThemesManager_LoadTheme(ContentManager, ThemeName):
     ThemesList_PropertyNames.clear()
 
     print("Taiyou.TaskBar : Loading UI Theme '" + ThemeName + "'")
-    for key in ContentManager.Get_RegKey("/theme/{0}".format(ThemeName)).splitlines():
+    for key in ContentManager.Get_RegKey("UI/theme/{0}".format(ThemeName)).splitlines():
         if key.startswith("#"):
             continue
 
@@ -92,6 +95,10 @@ class VerticalListWithDescription:
         self.ButtonDownRectangle = pygame.Rect(34, 0, 32, 32)
         self.ListSurfaceUpdated = False
         self.ContentManager = pContentManager
+
+    def UpdateOffsetToWindow(self, Window):
+        self.ColisionXOffset = Window.POSITION[0]
+        self.ColisionYOffset = Window.POSITION[1] + Window.TITLEBAR_RECTANGLE[3]
 
     def ResetSelectedItem(self):
         self.LastItemClicked = "null"
@@ -167,6 +174,7 @@ class VerticalListWithDescription:
                         self.LastItemClicked = itemNam
                         self.ItemSelected[i] = True
                         self.LastItemIndex = self.ItemIndexes[i]
+                        SystemResources.PlaySound("/select.wav", SystemSoundsVolume)
 
                 if event.type == pygame.MOUSEBUTTONUP:
                     self.ItemSelected[i] = False

@@ -223,6 +223,7 @@ class Widget_ProgressBar:
         self.ProgressMax = pMaxValue
         self.Rectangle = Convert.List_PygameRect(pRectangle)
         self.ProgressRect = pygame.Rect(0, 0, 0, 0)
+        self.LastProgress = 0
 
     def Render(self, DISPLAY):
         if not self.IsVisible:
@@ -230,6 +231,10 @@ class Widget_ProgressBar:
 
         if self.Progress >= self.ProgressMax:
             self.Progress = self.ProgressMax
+
+        if self.LastProgress != self.Progress:
+            self.LastProgress = self.Progress
+            UI.SystemResources.PlaySound("/progress.wav", UI.SystemSoundsVolume)
 
         self.ProgressRect = (self.Rectangle[0], self.Rectangle[1], max(10, UTILS.Get_Percentage(self.Progress, self.Rectangle[2], self.ProgressMax)), 10)
 
@@ -341,8 +346,4 @@ class Widget_Button:
         if event.type == pygame.MOUSEBUTTONUP:
             self.ButtonState = 0
             self.InteractionType = True
-
-            try:
-                self.Content.PlaySound("/click.wav")
-            except:
-                pass
+            UI.SystemResources.PlaySound("/click.wav", UI.SystemSoundsVolume)

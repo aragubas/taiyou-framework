@@ -16,7 +16,7 @@
 #
 import pygame
 import System.Core as Core
-
+from Library import CoreEffects as Fx
 
 print("Taiyou FX version " + Core.Get_FXVersion())
 
@@ -24,7 +24,7 @@ def Simple_BlurredRectangle(SourceSurface, Rectangle, BlurAmmount=100, Backgroun
     # Create new surface, blit SourceSurface
     ResultCeira = pygame.Surface((Rectangle[2], Rectangle[3]))
     ResultCeira.blit(SourceSurface, (0, 0), (Rectangle[0], Rectangle[1], Rectangle[2], Rectangle[3]))
-    ResultCeira = Core.Fx.Surface_Blur(ResultCeira, BlurAmmount)
+    ResultCeira = Surface_Blur(ResultCeira, BlurAmmount)
 
     # Copy the ResultCeira surface, fill with Fill Color then set a Alpha Value
     BlackBG = ResultCeira.copy()

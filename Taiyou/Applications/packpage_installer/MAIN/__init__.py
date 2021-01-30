@@ -19,6 +19,7 @@ from System import Core
 from Library import UI
 from System.Core import CntMng
 from Library import CoreUtils
+from Library import CorePaths
 
 class Process(Core.Process):
     def Initialize(self):
@@ -70,7 +71,7 @@ class Process(Core.Process):
         self.UpdatePackpageList()
 
     def Draw(self):
-        self.DISPLAY.fill((25, 30, 58))
+        self.DISPLAY.fill(UI.ThemesManager_GetProperty("DefaultBackground"))
 
         BGIconOpacity = 100
         if self.NoPackpagesFoundMode:
@@ -197,14 +198,14 @@ class Process(Core.Process):
                 self.FinishInstalation(True)
 
     def DeletePackpage(self):
-        PackpagePath = Core.TaiyouPath_UserPackpagesPath + self.SelectedPackpage + self.ContentManager.Get_RegKey("/packpage_file_format")
+        PackpagePath = CorePaths.TaiyouPath_UserPackpagesPath + self.SelectedPackpage + self.ContentManager.Get_RegKey("/packpage_file_format")
 
         if CoreUtils.File_Exists(PackpagePath):
             CoreUtils.File_Delete(PackpagePath)
 
     def ApplicationInstallingUpdateProgress(self):
         print("Instalation Progress Update\nStep: {0}".format(str(self.PackpageInstalationStep)))
-        PackpagePath = Core.TaiyouPath_UserPackpagesPath + self.SelectedPackpage + self.ContentManager.Get_RegKey("/packpage_file_format")
+        PackpagePath = CorePaths.TaiyouPath_UserPackpagesPath + self.SelectedPackpage + self.ContentManager.Get_RegKey("/packpage_file_format")
 
         # Check if File exists
         if self.PackpageInstalationStep == 1:
@@ -213,7 +214,7 @@ class Process(Core.Process):
 
         elif self.PackpageInstalationStep == 2:  # Check if Extract Path exists and clean it
             print("Packpage : {0}".format(self.SelectedPackpage))
-            self.ExtractPath = Core.TaiyouPath_UserTempFolder + self.SelectedPackpage
+            self.ExtractPath = CorePaths.TaiyouPath_UserTempFolder + self.SelectedPackpage
             print("ExtractPath : " + self.ExtractPath)
 
             # Check if Extract Path Exists
@@ -229,8 +230,8 @@ class Process(Core.Process):
 
         elif self.PackpageInstalationStep == 4:  # Check if Packpage is Valid
             print("Check for app and data folder on extracted path")
-            self.AppFolderPath = self.ExtractPath + Core.TaiyouPath_CorrectSlash + "app" + Core.TaiyouPath_CorrectSlash
-            self.DataFolderPath = self.ExtractPath + Core.TaiyouPath_CorrectSlash + "data" + Core.TaiyouPath_CorrectSlash
+            self.AppFolderPath = self.ExtractPath + CorePaths.TaiyouPath_CorrectSlash + "app" + CorePaths.TaiyouPath_CorrectSlash
+            self.DataFolderPath = self.ExtractPath + CorePaths.TaiyouPath_CorrectSlash + "data" + CorePaths.TaiyouPath_CorrectSlash
             AppFolderExists = CoreUtils.Directory_Exists(self.AppFolderPath)
             DataFolderExists = CoreUtils.Directory_Exists(self.DataFolderPath)
 
@@ -240,7 +241,7 @@ class Process(Core.Process):
 
         elif self.PackpageInstalationStep == 5:  # Check if Application Already Exists
             AppFolderInsideIt = os.listdir(self.AppFolderPath)[0]
-            CheckPath = Core.TaiyouPath_ApplicationsFolder + AppFolderInsideIt
+            CheckPath = CorePaths.TaiyouPath_ApplicationsFolder + AppFolderInsideIt
             if CoreUtils.Directory_Exists(CheckPath) and not self.IgnorePackpageReplace:
                 self.PackpageReplaceWarning = True
                 return
@@ -250,8 +251,8 @@ class Process(Core.Process):
                 FolderInAppPath = os.listdir(self.AppFolderPath)
                 for folder in FolderInAppPath:
                     # Check if folder exists
-                    CheckPath = ''.join((Core.TaiyouPath_ApplicationsFolder, folder))
-                    if CheckPath == Core.TaiyouPath_ApplicationsFolder:
+                    CheckPath = ''.join((CorePaths.TaiyouPath_ApplicationsFolder, folder))
+                    if CheckPath == CorePaths.TaiyouPath_ApplicationsFolder:
                         print("WARNING : This function almost deleted all of your installed applications.\nWe have an protection to prevent this.")
                         continue
 
@@ -263,8 +264,8 @@ class Process(Core.Process):
                 FolderInDataPath = os.listdir(self.DataFolderPath)
                 for folder in FolderInDataPath:
                     # Check if folder exists
-                    CheckPath = ''.join((Core.TaiyouPath_ApplicationsDataPath, folder))
-                    if CheckPath == Core.TaiyouPath_ApplicationsDataPath:
+                    CheckPath = ''.join((CorePaths.TaiyouPath_ApplicationsDataPath, folder))
+                    if CheckPath == CorePaths.TaiyouPath_ApplicationsDataPath:
                         print("WARNING : This function almost deleted all of your installed applications data.\nWe have an protection to prevent this.")
                         continue
 
@@ -274,15 +275,15 @@ class Process(Core.Process):
                         CoreUtils.Directory_Remove(CheckPath)
 
             print("Copy Application to Application Folder...")
-            CoreUtils.Directory_Copy(self.AppFolderPath[:-1], Core.TaiyouPath_ApplicationsFolder[:-1])
+            CoreUtils.Directory_Copy(self.AppFolderPath[:-1], CorePaths.TaiyouPath_ApplicationsFolder[:-1])
 
         elif self.PackpageInstalationStep == 6:  # Copy the Application Folder
             print("Copy Application to Application Folder...")
-            CoreUtils.Directory_Copy(self.AppFolderPath, Core.TaiyouPath_ApplicationsFolder[:-1])
+            CoreUtils.Directory_Copy(self.AppFolderPath, CorePaths.TaiyouPath_ApplicationsFolder[:-1])
 
         elif self.PackpageInstalationStep == 7:
             print("Copy Application Data to Application Data Folder...")
-            CoreUtils.Directory_Copy(self.DataFolderPath, Core.TaiyouPath_ApplicationsDataFolder)
+            CoreUtils.Directory_Copy(self.DataFolderPath, CorePaths.TaiyouPath_ApplicationsDataFolder)
 
         elif self.PackpageInstalationStep == 8:
             self.InstalationCompleteDeletePackpage = True
@@ -295,11 +296,11 @@ class Process(Core.Process):
         self.PackpageVerticalList.ClearItems()
         self.PackpageVerticalList.ResetSelectedItem()
 
-        PackpagesList = CoreUtils.Directory_FilesList(Core.TaiyouPath_UserPackpagesPath)
+        PackpagesList = CoreUtils.Directory_FilesList(CorePaths.TaiyouPath_UserPackpagesPath)
 
         for Packpage in PackpagesList:
             if Packpage.endswith(self.ContentManager.Get_RegKey("packpage_file_format")):
-                Name = Packpage.rstrip().replace(Core.TaiyouPath_UserPackpagesPath, "").replace(self.ContentManager.Get_RegKey("packpage_file_format"), "")
+                Name = Packpage.rstrip().replace(CorePaths.TaiyouPath_UserPackpagesPath, "").replace(self.ContentManager.Get_RegKey("packpage_file_format"), "")
                 print("Found Packpage {0}".format(Name))
                 self.PackpageVerticalList.AddItem(Name, self.ContentManager.Get_RegKey("packpage_description"))
 
@@ -345,7 +346,7 @@ class Process(Core.Process):
         self.UpdatePackpageList()
 
     def SetSelectedPackpage(self, pkg_path):
-        self.SelectedPackpage = pkg_path.rstrip().replace(Core.TaiyouPath_UserPackpagesPath, "").replace(".zip", "")
+        self.SelectedPackpage = pkg_path.rstrip().replace(CorePaths.TaiyouPath_UserPackpagesPath, "").replace(".zip", "")
 
         if self.LastSelectedPackpage != self.SelectedPackpage:
             self.LastSelectedPackpage = self.SelectedPackpage

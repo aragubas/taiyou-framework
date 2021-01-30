@@ -22,6 +22,7 @@ import numpy as np
 import os, time, numpy, math
 from Library import CoreUtils as UTILS
 from Library import CorePrimitives as Shape
+from Library import CorePaths
 
 print("Taiyou ContentManager version " + Core.Get_ContentManagerVersion())
 
@@ -35,7 +36,7 @@ SoundDisabled = False
 
 def InitModule():
     global DefaultImage
-    DefaultImage = pygame.image.load("{0}img/default.png".format(Core.TaiyouPath_SystemDataPath))
+    DefaultImage = pygame.image.load("{0}img/default.png".format(CorePaths.TaiyouPath_SystemDataPath))
 
 class ContentManager:
     def __init__(self):
@@ -66,20 +67,20 @@ class ContentManager:
 
     def SetSourceFolder(self, pSourceFolder, SystemDataFolder=False):
         if SystemDataFolder:
-            self.SourceFolder = Core.TaiyouPath_SystemDataPath
+            self.SourceFolder = CorePaths.TaiyouPath_SystemDataPath
             return
 
-        Root = Core.TaiyouPath_ApplicationsDataPath
+        Root = CorePaths.TaiyouPath_ApplicationsDataPath
 
         if not pSourceFolder.endswith("/"):
-            pSourceFolder = pSourceFolder + Core.TaiyouPath_CorrectSlash
+            pSourceFolder = pSourceFolder + CorePaths.TaiyouPath_CorrectSlash
 
-        self.SourceFolder = "{0}{1}".format(Root, pSourceFolder.replace("/", Core.TaiyouPath_CorrectSlash))
+        self.SourceFolder = "{0}{1}".format(Root, pSourceFolder.replace("/", CorePaths.TaiyouPath_CorrectSlash))
         print("Taiyou.ContentManager.LoadUserAppContents : Source Directory has been set to ({0}).".format(self.SourceFolder))
 
     # region Image I/O Functions
     def SetImageFolder(self, pFolder):
-        self.Image_Path = self.SourceFolder + pFolder.replace("/", Core.TaiyouPath_CorrectSlash)
+        self.Image_Path = self.SourceFolder + pFolder.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
     def LoadImagesInFolder(self):
         """
@@ -95,7 +96,7 @@ class ContentManager:
 
         FolderName = self.Image_Path
 
-        sprite_metadata = open(FolderName + "/meta.data".replace("/", Core.TaiyouPath_CorrectSlash), "r")
+        sprite_metadata = open(FolderName + "/meta.data".replace("/", CorePaths.TaiyouPath_CorrectSlash), "r")
         sprite_meta_lines = sprite_metadata.readlines()
 
         print("ContentManager.LoadImagesInFolder : Loading all Images...")
@@ -286,9 +287,9 @@ class ContentManager:
 
     # region Registry I/O functions
     def SetRegKeysPath(self, pFolder):
-        self.Reg_Path = self.SourceFolder + pFolder.replace("/", Core.TaiyouPath_CorrectSlash)
+        self.Reg_Path = self.SourceFolder + pFolder.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
-        if self.Reg_Path.endswith(Core.TaiyouPath_CorrectSlash):
+        if self.Reg_Path.endswith(CorePaths.TaiyouPath_CorrectSlash):
             self.Reg_Path = self.Reg_Path[:-1]
 
         print("RegPath was set to:\n" + self.Reg_Path)
@@ -305,7 +306,7 @@ class ContentManager:
         reg_dir = self.Reg_Path
         # -- FIX for working on Windows -- #
         self.Reg_Path = self.SourceFolder + reg_dir.replace(self.SourceFolder, "")
-        self.Reg_Path = self.Reg_Path.replace("/", Core.TaiyouPath_CorrectSlash)
+        self.Reg_Path = self.Reg_Path.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
         start_time = time.time()
         # -- Unload the Registry -- #
@@ -375,9 +376,9 @@ class ContentManager:
         :return:
         """
         if not keyEntred.startswith("/"):
-            return "{0}{1}".format(Core.TaiyouPath_CorrectSlash, keyEntred)
+            return "{0}{1}".format(CorePaths.TaiyouPath_CorrectSlash, keyEntred)
         else:
-            return keyEntred.replace("/", Core.TaiyouPath_CorrectSlash)
+            return keyEntred.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
     def SetFontPath(self, FolderName):
         """
@@ -385,7 +386,7 @@ class ContentManager:
         :param FolderName:
         :return:
         """
-        self.Font_Path = self.SourceFolder + FolderName.replace("/", Core.TaiyouPath_CorrectSlash)
+        self.Font_Path = self.SourceFolder + FolderName.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
     def Get_RegKey(self, keyName):
         """
@@ -403,7 +404,7 @@ class ContentManager:
         :param keyValue:New Value
         :return:
         """
-        FileLocation = "{0}{1}.data".format(self.Reg_Path, keyName.replace("/", Core.TaiyouPath_CorrectSlash))
+        FileLocation = "{0}{1}.data".format(self.Reg_Path, keyName.replace("/", CorePaths.TaiyouPath_CorrectSlash))
 
         # -- Create the directory -- #
         os.makedirs(os.path.dirname(FileLocation), exist_ok=True)
@@ -411,7 +412,7 @@ class ContentManager:
         print("Taiyou.ContentManager.Write_RegKey : Registry File Location;" + FileLocation)
 
         # -- Modify the Loaded Value in Memory -- #
-        Index = self.reg_keys.index(keyName.replace("/", Core.TaiyouPath_CorrectSlash))
+        Index = self.reg_keys.index(keyName.replace("/", CorePaths.TaiyouPath_CorrectSlash))
         self.reg_contents[Index] = keyValue
 
         # -- Write the Actual Registry Key -- #
@@ -487,7 +488,7 @@ class ContentManager:
 
             except ValueError:  # -- Add font to the FontCache if was not found -- #
                 self.CurrentLoadedFonts_Name.append(FontCacheName)
-                FontPath = self.Font_Path + FontFileLocation.replace("/", Core.TaiyouPath_CorrectSlash)
+                FontPath = self.Font_Path + FontFileLocation.replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
                 self.CurrentLoadedFonts_Contents.append(pygame.font.Font(FontPath, Size))
 
@@ -538,7 +539,7 @@ class ContentManager:
 
     # region Sound I/O Functions
     def SetSoundPath(self, pFolder):
-        self.Sound_Path = (self.SourceFolder + pFolder).replace("/", Core.TaiyouPath_CorrectSlash)
+        self.Sound_Path = (self.SourceFolder + pFolder).replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
     def LoadSoundsInFolder(self):
         """
@@ -777,12 +778,12 @@ class ContentManager:
             return
 
         # -- Convert to the Correct Slash -- #
-        SourceName = SourceName.replace("/", Core.TaiyouPath_CorrectSlash)
-        if not SourceName.startswith(Core.TaiyouPath_CorrectSlash):
-            SourceName = Core.TaiyouPath_CorrectSlash + SourceName
+        SourceName = SourceName.replace("/", CorePaths.TaiyouPath_CorrectSlash)
+        if not SourceName.startswith(CorePaths.TaiyouPath_CorrectSlash):
+            SourceName = CorePaths.TaiyouPath_CorrectSlash + SourceName
         sound = self.AllLoadedSounds.get(SourceName)
 
-        if sound == None:
+        if sound is None:
             raise FileNotFoundError("The soundfile [{0}] does not exists.".format(SourceName))
 
         # -- Get Sound -- #

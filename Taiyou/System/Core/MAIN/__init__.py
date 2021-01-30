@@ -19,7 +19,9 @@
 import System.Core as Core
 from Library import CoreUtils as UTILS
 from Library import CorePrimitives as Shape
-import pygame, sys, importlib, threading
+from Library import CorePaths
+from Library import CoreAccess
+import pygame, sys, importlib, threading, traceback
 
 # The main Entry Point
 print("Taiyou Main version " + Core.Get_TaiyouMainVersion())
@@ -34,12 +36,6 @@ InitDelay_Enabled = True
 EngineInitialized = False
 ErrorScreenInitialzed = False
 ThrowException = True
-ProcessListChanged = False
-ProcessListChanged_Delay = False
-#ProcessList = list()
-#ProcessList_Names = list()
-#ProcessList_PID = list()
-ProcessNextPID = -1
 SystemFault_Trigger = False
 SystemFault_Traceback = ""
 SystemFault_ProcessObject = None
@@ -146,90 +142,11 @@ def ReceiveCommand(Command, Arguments=None):
         Txt = "TaiyouMessage EXCEPTION\nThe Command {0}\ndoes not have the necessary number of arguments.".format(str(Command))
         print(Txt)
 
-def CreateProcess(Path, ProcessName, pInitArgs=None):
-    """
-     Set the Application Object
-    :param ApplicationFolder:Folder Path
-    :return:
-    """
-    global ProcessList
-    global ProcessList_Names
-    global ProcessList_PID
-    global DISPLAY
-    global ProcessListChanged
-    global ProcessNextPID
-
-    print("TaiyouFramework.CreateProcess : Creating Process: [" + ProcessName + "]...")
-
-    # Get Process Path
-    Path = Path.replace("/", Core.TaiyouPath_CorrectSlash)
-    ProcessIndex = len(Core.ProcessAccess_PID)
-    ProcessNextPID += 1
-
-    # Print new process info to console
-    print("Process Information:")
-    print("ProcessIndex: " + str(ProcessIndex))
-    print("Path: " + Path)
-    print("ProcessName: " + ProcessName)
-    print("ProcessPID : " + str(ProcessNextPID))
-
-    # Import Module
-    Module = importlib.import_module(Core.Get_MainModuleName(Path))
-
-    # Get Process Object from Module
-    ProcessWax = Module.Process(ProcessNextPID, ProcessName, Core.Get_MainModuleName(Path), pInitArgs, ProcessIndex)
-
-    # Unload Module from Ram
-    del Module
-
-    # Check if module is imported and remove it
-    if Core.Get_MainModuleName(Path) in sys.modules:
-        sys.modules.pop(Core.Get_MainModuleName(Path))
-    UTILS.GarbageCollector_Collect()
-
-    # Start process thread with UpdateRequest Function
-    Thread = threading.Thread(target=ProcessWax.UpdateRequest).start()
-
-    # Set THIS_THREAD Variable to Process
-    ProcessWax.THIS_THREAD = Thread
-
-    print("Process created sucefully")
-    # Return newly created process PID
-    return ProcessNextPID
-
-def SendSigKillToProcessByPID(PID):
-    ProcessList[PID].ReceiveSignal("SIG_KILL")
-
-def KillProcessByPID(PID):
-    global ProcessListChanged
-    Index = GetProcessIndexByPID(PID)
-
-    # Call SIG_KILL Function on Process
-    Core.ProcessAccess[Core.ProcessAccess_PID.index(PID)].KillProcess()
-
-    UTILS.GarbageCollector_Collect()
-
-    print("Taiyou : Finished process index: " + str(Index))
-
-    #ProcessListChanged = True
-
-    ClearPreRendered()
-
-def ClearPreRendered():
-    Shape.ClearPreRendered_Rectangles()
-
-
-def GetProcessIndexByPID(PID):
-    try:
-        return Core.ProcessAccess_PID.index(PID)
-
-    except ValueError:
-        raise ModuleNotFoundError("The process {0} could not be found".format(PID))
 
 def GenerateCrashLog():
     print("Generating crash log...")
     # Create the directory for the Crash Logs
-    CrashLogsDir = "./Logs/".replace("/", Core.TaiyouPath_CorrectSlash)
+    CrashLogsDir = "./Logs/".replace("/", CorePaths.TaiyouPath_CorrectSlash)
     UTILS.Directory_MakeDir(CrashLogsDir)
 
     try:
@@ -285,13 +202,15 @@ def GenerateCrashLog():
     print("Crash log completed")
 
 def Destroy():
-    for process in Core.ProcessAccess:
-        process.KillProcess(False)
+    for process in CoreAccess.ProcessAccess:
+        process.KillProcess(True)
+        del process
 
     Core.IsRunning = False
 
     pygame.quit()
     sys.exit()
+
 
 DrawingCode = None
 EventUpdateCode = None
@@ -309,7 +228,7 @@ def UpdateDisplayDevice():
     if EventUpdateCode is not None:
         if not pygame.fastevent.get_init():
             return
-            
+
         else:
             EventUpdateCode()
 

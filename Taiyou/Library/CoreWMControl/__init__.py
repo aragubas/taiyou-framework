@@ -15,6 +15,7 @@
 #
 #
 import System.Core as Core
+from Library import CoreAccess
 import traceback
 
 # The main Entry Point
@@ -60,7 +61,7 @@ def WindowManagerSignal(self, Signal, Args=None):
         if Signal == 0:
             OriginalDragValue = self.WINDOW_DRAG_ENABLED
 
-            for process in Core.ProcessAccess:
+            for process in CoreAccess.ProcessAccess:
                 process.APPLICATION_HAS_FOCUS = False
                 process.WINDOW_DRAG_ENABLED = False
 
@@ -70,23 +71,19 @@ def WindowManagerSignal(self, Signal, Args=None):
             return
 
         elif Signal == 1:
-            Core.MAIN.KillProcessByPID(self.PID)
+            CoreAccess.KillProcessByPID(self.PID)
             return
 
         elif Signal == 2:
-            Core.ProcessAccess[TaskBarUIProcessID].PlayNotifySound = True
+            CoreAccess.ProcessAccess[TaskBarUIProcessID].PlayNotifySound = True
             return
 
         elif Signal == 3:
-            Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
+            CoreAccess.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = False
             return
 
         elif Signal == 4:
-            Core.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
-            return
-
-        elif Signal == 5:
-            Core.ProcessAccess[TaskBarUIProcessID].WelcomeScreenAppered = True
+            CoreAccess.ProcessAccess[TaskBarUIProcessID].GUI_ALLOW_TASKMANAGER = True
             return
     except:
         print("Error while processing Window Manager Request")

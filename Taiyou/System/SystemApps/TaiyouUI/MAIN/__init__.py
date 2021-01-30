@@ -21,9 +21,11 @@ from datetime import date
 from datetime import datetime
 from Library import UI
 from System.Core.MAIN import DISPLAY
+from Library import CoreWMControl as WmControl
 from System.SystemApps.TaiyouUI.MAIN import TaskBar
 from Library import CoreEffects
 from Library import CorePrimitives as Shape
+from Library import CoreAccess
 
 class Process(Core.Process):
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
@@ -37,7 +39,6 @@ class Process(Core.Process):
         self.ZoomlevelMod = 1.0
         self.ZoomEnabled = False
         self.Timer = pygame.time.Clock()
-        self.ImagesResLoaded = False
         self.DefaultContent = Core.CntMng.ContentManager()
         self.TaskBarInstance = TaskBar.TaskBarInstance
         self.DoubleBuffer = None
@@ -47,7 +48,7 @@ class Process(Core.Process):
 
         super(Process, self).__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
 
-        Core.wmm.TaskBarUIProcessID = self.PID
+        WmControl.TaskBarUIProcessID = self.PID
 
     def Initialize(self):
         print("Initializing TaiyouUI...")
@@ -55,20 +56,7 @@ class Process(Core.Process):
         pygame.mouse.set_visible(False)
 
         # -- Default Content --
-        self.DefaultContent = Core.CntMng.ContentManager()
-        self.DefaultContent.SetSourceFolder("", True)
-        self.DefaultContent.SetFontPath("fonts")
-        self.DefaultContent.SetImageFolder("img")
-        self.DefaultContent.SetRegKeysPath("reg/UI")
-        self.DefaultContent.SetSoundPath("sound")
-        self.DefaultContent.SetFontPath("fonts")
-
-        self.DefaultContent.InitSoundSystem()
-        self.DefaultContent.LoadRegKeysInFolder()
-        self.DefaultContent.LoadSoundsInFolder()
-
-        # Load the default Theme File
-        UI.ThemesManager_LoadTheme(self.DefaultContent, self.DefaultContent.Get_RegKey("/selected_theme"))
+        self.DefaultContent = UI.SystemResources
 
         # Create TaskBar Instance
         self.TaskBarInstance = TaskBar.TaskBarInstance(self.DefaultContent, self)
@@ -76,6 +64,11 @@ class Process(Core.Process):
         self.BGWaxUpdateTimer = 0
         self.BGWaxUpdateInterval = 5
         self.BGWaxSurface = pygame.Surface((5 * 70, 5 * 70))
+
+        self.SetTitle("TaiyouUI")
+
+        Core.MAIN.DrawingCode = self.DrawScreen
+        Core.MAIN.EventUpdateCode = self.EventUpdate
 
     def EventUpdate(self):
         if not pygame.fastevent.get_init():
@@ -96,7 +89,7 @@ class Process(Core.Process):
                 # -- Increase Zoom -- #
                 if LastModKey & pygame.KMOD_SHIFT:
                     if event.key == pygame.K_F11:
-                        self.ZoomlevelMod += float(self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount"))
+                        self.ZoomlevelMod += float(self.DefaultContent.Get_RegKey("UI/options/zoom_adjust_ammount"))
 
                         if self.ZoomlevelMod >= 10:
                             self.ZoomlevelMod = 10
@@ -117,7 +110,7 @@ class Process(Core.Process):
                 if LastModKey & pygame.KMOD_CTRL:
                     # -- Decrease Zoom -- #
                     if event.key == pygame.K_F11:
-                        self.ZoomlevelMod -= float(self.DefaultContent.Get_RegKey("/options/zoom_adjust_ammount"))
+                        self.ZoomlevelMod -= float(self.DefaultContent.Get_RegKey("UI/options/zoom_adjust_ammount"))
 
                         if self.ZoomlevelMod <= 1.0:
                             self.ZoomlevelMod = 1.0
@@ -126,6 +119,7 @@ class Process(Core.Process):
                 if event.key == pygame.K_F11:
                     self.UI_Call_Request()
 
+            # Update Focused Process Thinghy
             if not self.TaskBarInstance.Enabled:
                 # Do Focused Process Event Update
                 try:
@@ -140,8 +134,8 @@ class Process(Core.Process):
                         self.FocusedProcess.ProcessError()
                     self.FocusedProcess = None
 
-                # Update Process Events
-                for process in Core.ProcessAccess:
+                # Update Process Window Drag
+                for process in CoreAccess.ProcessAccess:
                     # Check if current procesas is not TaiyouUI itself
                     if process.PID == self.PID:
                         continue
@@ -152,8 +146,9 @@ class Process(Core.Process):
                             self.UpdateProcessWindowDrag(event, process)
 
                         # Stop Rendering Un-Focused Process
-                        if process is not self.FocusedProcess:
-                            process.DRAW_STOP = True
+                        if self.FocusedProcess is not None:
+                            if process.PID != self.FocusedProcess.PID:
+                                process.DRAW_STOP = True
 
             else:
                 # Update TaskBar Input Handling
@@ -161,8 +156,12 @@ class Process(Core.Process):
                 Core.WindowManagerShared_Event = None
 
     def SingleInstanceFocus(self):
-        if len(Core.ProcessAccess) == 2:
-            for process in Core.ProcessAccess:
+        if len(CoreAccess.ProcessAccess) == 2:
+            for process in CoreAccess.ProcessAccess:
+                # Skip Non-Graphical Process
+                if not process.IS_GRAPHICAL:
+                    continue
+
                 if process.PID != self.PID:
                     process.APPLICATION_HAS_FOCUS = True
                     self.FocusedProcess = process
@@ -188,26 +187,39 @@ class Process(Core.Process):
 
         FocusedProcessColisor = pygame.Rect(self.FocusedProcess.POSITION[0], self.FocusedProcess.POSITION[1], self.FocusedProcess.DISPLAY.get_width(), self.FocusedProcess.DISPLAY.get_height())
 
+        # Colisor = pygame.Rect(process.TITLEBAR_RECTANGLE[0], process.TITLEBAR_RECTANGLE[1], process.TITLEBAR_RECTANGLE[2], process.DISPLAY.get_height())
+
+        # When clicking on the titlebar of focused process
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if process != self.FocusedProcess and FocusedProcessColisor.collidepoint(pygame.mouse.get_pos()):
+            # Dont allow moving the window when another titlebar is behind the window
+            if process.PID != self.FocusedProcess.PID and FocusedProcessColisor.collidepoint(pygame.mouse.get_pos()):
                 return
 
             pos = pygame.mouse.get_pos()
 
+            if process.PID != self.FocusedProcess.PID and self.DefaultContent.Get_RegKey("UI/window_clicking_focus").lower() == "true":
+                WindowColisor = pygame.Rect(process.TITLEBAR_RECTANGLE[0], process.TITLEBAR_RECTANGLE[1], process.DISPLAY.get_width(), process.DISPLAY.get_height())
+
+                if WindowColisor.collidepoint(pos):
+                    WmControl.WindowManagerSignal(process, 0)
+
+            # Start moving the window
             if process.TITLEBAR_RECTANGLE.collidepoint(pos):
                 process.WINDOW_DRAG_ENABLED = True
                 self.SomeWindowIsBeingMoved = True
                 self.SomeWindowIsBeingMoved_PID = process.PID
                 process.WINDOW_DRAG_SP = (process.TITLEBAR_RECTANGLE[0] - pos[0], process.TITLEBAR_RECTANGLE[1] - pos[1])
 
-                Core.wmm.WindowManagerSignal(process, 0)
+                WmControl.WindowManagerSignal(process, 0)
 
+        # When releasing the button on focused process titlebar
         elif event.type == pygame.MOUSEBUTTONUP:
             if process.WINDOW_DRAG_ENABLED:
                 process.WINDOW_DRAG_ENABLED = False
                 self.SomeWindowIsBeingMoved = False
                 self.SomeWindowIsBeingMoved_PID = -1
 
+        # Move window when moving window
         if process.WINDOW_DRAG_ENABLED and process.APPLICATION_HAS_FOCUS and self.SomeWindowIsBeingMoved_PID == process.PID:
             pos = pygame.mouse.get_pos()
 
@@ -217,57 +229,49 @@ class Process(Core.Process):
             process.POSITION = (process.WINDOW_DRAG_SP[0] + pos[0], process.WINDOW_DRAG_SP[1] + pos[1])
 
     def Update(self):
-        Clock = pygame.time.Clock()
-        while self.Running:
-            Clock.tick(60)
+        # Check if SystemFault has been occurred
+        if Core.MAIN.SystemFault_Trigger:
+            Core.MAIN.SystemFault_Trigger = False
+            self.TaskBarInstance.SetMode(1)
+            self.UI_Call_Request()
 
-            if not self.ImagesResLoaded:
-                self.ImagesResLoaded = True
-                self.DefaultContent.LoadImagesInFolder()
+        # Single-Instance Application Focus
+        self.SingleInstanceFocus()
 
-            # Check if SystemFault has been occurred
-            if Core.MAIN.SystemFault_Trigger:
-                Core.MAIN.SystemFault_Trigger = False
-                self.TaskBarInstance.SetMode(1)
-                self.UI_Call_Request()
-
-            Core.MAIN.DrawingCode = self.DrawScreen
-            Core.MAIN.EventUpdateCode = self.EventUpdate
-
-            # Single-Instance Application Focus
-            self.SingleInstanceFocus()
-
-            # Play Notify Sound
-            if self.PlayNotifySound:
-                self.PlayNotifySound = False
-                self.DefaultContent.PlaySound("/notify.wav")
+        # Play Notify Sound
+        if self.PlayNotifySound:
+            self.PlayNotifySound = False
+            self.DefaultContent.PlaySound("/notify.wav", UI.SystemSoundsVolume)
 
     def BackgroundGenerator(self):
         self.BGWaxUpdateTimer += 1
 
         if self.BGWaxUpdateTimer >= self.BGWaxUpdateInterval:
             self.BGWaxUpdateTimer = 0
-            self.BGWaxUpdateInterval = randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/interval_min")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/interval_max")))
-            RenderEffect = pygame.Surface((5 * 70, 5 * 70))
+            self.BGWaxUpdateInterval = randint(int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/interval_min")), int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/interval_max")))
 
-            for x in range(0, 5):
-                for y in range(0, 5):
+            RenderEffectTileSizes = int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/tile_size"))
+            RenderEffectImageSize = int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/image_size"))
+            RenderEffect = pygame.Surface((RenderEffectTileSizes * RenderEffectImageSize, RenderEffectTileSizes * RenderEffectImageSize))
+
+            for x in range(0, RenderEffectTileSizes):
+                for y in range(0, RenderEffectTileSizes):
                     Color = (
-                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value"))),
-                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value"))),
-                        randint(int(self.DefaultContent.Get_RegKey("/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("/dynamic_bg/max_value")))
+                        randint(int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/max_value"))),
+                        randint(int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/max_value"))),
+                        randint(int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/min_value")), int(self.DefaultContent.Get_RegKey("UI/dynamic_bg/max_value")))
                     )
 
-                    Shape.Shape_Rectangle(RenderEffect, Color, (x * 70, y * 70, 70, 70))
+                    Shape.Shape_Rectangle(RenderEffect, Color, (x * RenderEffectImageSize, y * RenderEffectImageSize, RenderEffectImageSize, RenderEffectImageSize))
 
             self.BGWaxSurface = pygame.transform.scale(CoreEffects.Surface_Blur(RenderEffect, 150), (Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight))
 
         DISPLAY.blit(self.BGWaxSurface, (0, 0))
 
         today = date.today()
-        DateText = "{0}".format(today.strftime(self.DefaultContent.Get_RegKey("/dynamic_bg/date_format")))
+        DateText = "{0}".format(today.strftime(self.DefaultContent.Get_RegKey("UI/dynamic_bg/date_format")))
         now = datetime.now()
-        TimeText = "{0}".format(now.strftime(self.DefaultContent.Get_RegKey("/dynamic_bg/hour_format")))
+        TimeText = "{0}".format(now.strftime(self.DefaultContent.Get_RegKey("UI/dynamic_bg/hour_format")))
 
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (50, 50, 50), 12, 12)
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (50, 50, 50), 12, 52)
@@ -275,10 +279,14 @@ class Process(Core.Process):
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 24, TimeText, (150, 150, 150), 10, 50)
         self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 38, DateText, (150, 150, 150), 10, 10)
 
+        NextBackdrop = "Backdrop %" + Core.UTILS.FormatNumber(Core.UTILS.Get_Percentage(self.BGWaxUpdateTimer, 100, self.BGWaxUpdateInterval))
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 12, NextBackdrop, (30, 30, 30), 9, Core.MAIN.ScreenHeight - 24)
+        self.DefaultContent.FontRender(DISPLAY, "/Ubuntu_Bold.ttf", 12, NextBackdrop, (120, 120, 120), 10, Core.MAIN.ScreenHeight - 25)
+
     def DrawScreen(self):
         # Draw the Applications Window
 
-        if self.DefaultContent.Get_RegKey("/dynamic_bg/enabled").lower() == "true":
+        if self.DefaultContent.Get_RegKey("UI/dynamic_bg/enabled").lower() == "true":
             if self.EnableBackground and not self.TaskBarInstance.Enabled:
                 self.BackgroundGenerator()
         else:
@@ -290,7 +298,7 @@ class Process(Core.Process):
             self.TaskbarActiveCursorReseted = False
 
             # Draw the Unfocused Process
-            for process in Core.ProcessAccess:
+            for process in CoreAccess.ProcessAccess:
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
@@ -317,15 +325,15 @@ class Process(Core.Process):
             try:
                 if not self.FocusedProcess is None:
                     try:
-                        ProcessExists = Core.ProcessAccess_PID.index(self.FocusedProcess.PID)
+                        ProcessExists = CoreAccess.ProcessAccess_PID.index(self.FocusedProcess.PID)
 
                         self.DrawProcess(self.FocusedProcess)
                     except ValueError:
                         pass
 
                 else:
-                    if len(Core.ProcessAccess_PID) > 1:
-                        self.FocusedProcess = Core.ProcessAccess[len(Core.ProcessAccess)]
+                    if len(CoreAccess.ProcessAccess_PID) > 1:
+                        self.FocusedProcess = CoreAccess.ProcessAccess[len(CoreAccess.ProcessAccess)]
 
             except Exception:
                 print("TaiyouUI.ApplicationError at (Active application rendering).")
@@ -336,11 +344,11 @@ class Process(Core.Process):
             self.TaskBarInstance.Set_LastDisplayFrame(DISPLAY)
             # WORKAROUND: Fix rendering bug
             # Update Process Events
-            for process in Core.ProcessAccess:
+            for process in CoreAccess.ProcessAccess:
                 if self.FocusedProcess is None:
                     break
 
-                # Check if current procesas is not TaiyouUI itself
+                # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
 
@@ -351,7 +359,7 @@ class Process(Core.Process):
             self.TaskbarActiveCursorReseted = True
             self.CurrentCursor = 0
 
-            for process in Core.ProcessAccess:
+            for process in CoreAccess.ProcessAccess:
                 # Check if current process is not TaiyouUI itself
                 if process.PID == self.PID:
                     continue
@@ -372,10 +380,10 @@ class Process(Core.Process):
     def DrawZoom(self):
         if self.ZoomEnabled:
             if self.Zoomlevel > self.ZoomlevelMod:
-                self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("/options/zoom_animation_scale"))
+                self.Zoomlevel -= abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("UI/options/zoom_animation_scale"))
 
             if self.Zoomlevel < self.ZoomlevelMod:
-                self.Zoomlevel += abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("/options/zoom_animation_scale"))
+                self.Zoomlevel += abs(self.Zoomlevel - self.ZoomlevelMod) / int(self.DefaultContent.Get_RegKey("UI/options/zoom_animation_scale"))
 
             if self.Zoomlevel < 1:
                 self.Zoomlevel = 1
@@ -386,12 +394,13 @@ class Process(Core.Process):
 
     def DrawCursor(self):
         # Draw the Cursor
-        CursorPath = "/cursor/{0}".format(self.CurrentCursor)
+        CursorPath = "UI/cursor/{0}".format(self.CurrentCursor)
+
         if self.DefaultContent.KeyExists(CursorPath):
             self.DefaultContent.ImageRender(DISPLAY, self.DefaultContent.Get_RegKey(CursorPath), pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
         else:
-            self.DefaultContent.ImageRender(DISPLAY, self.DefaultContent.Get_RegKey("/cursor/0"), pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+            self.DefaultContent.ImageRender(DISPLAY, self.DefaultContent.Get_RegKey("UI/cursor/0"), pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 
     def DrawFullscreenProcess(self, process):
         try:
@@ -452,7 +461,7 @@ class Process(Core.Process):
             Core.MAIN.SystemFault_ProcessObject = process
             self.FocusedProcess = None
             self.TaskBarInstance.SetMode(1)
-            Core.wmm.WindowManagerSignal(None, 4)
+            WmControl.WindowManagerSignal(None, 4)
             self.UI_Call_Request()
             print("TaiyouApplicationDrawLoop : Process Error Detected\nin Process PID({0})".format(process.PID))
             print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
@@ -510,3 +519,6 @@ class Process(Core.Process):
         process.WINDOW_SURFACE.blit(pSurface, (1, process.TITLEBAR_RECTANGLE[3]))
 
         return process.WINDOW_SURFACE
+
+    def WhenKilled(self):
+        Core.MAIN.Destroy()

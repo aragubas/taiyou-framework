@@ -14,37 +14,47 @@
 #   limitations under the License.
 #
 #
-import pygame, os, pickle, io, time, traceback, threading
+import pygame
 import System.Core as Core
-from System.Core import CntMng
-from System.Core import MAIN
-from System.Core import AppData
-import System.Core as tge
 from Library import UI
 
 class Process(Core.Process):
     def Initialize(self):
         self.DefaultContent = Core.CntMng.ContentManager()
 
-        self.DefaultContent.SetSourceFolder("", True)
-        self.DefaultContent.SetFontPath("fonts")
-        self.DefaultContent.SetImageFolder("img")
-        self.DefaultContent.SetRegKeysPath("reg/CRASH_DIALOG")
-        self.DefaultContent.SetSoundPath("sound")
-        self.DefaultContent.SetFontPath("fonts")
-
-        self.DefaultContent.LoadImagesInFolder()
-        self.DefaultContent.LoadRegKeysInFolder()
-        self.DefaultContent.LoadSoundsInFolder()
+        self.DefaultContent = UI.SystemResources
         self.CrashSoundPlayed = False
+        self.CrashType = 0
+        self.CrashText = "undefined"
 
         self.SetVideoMode(False, (420, 140))
         self.CenterWindow()
-        self.CrashedProcess_TitlebarName = str(self.INIT_ARGS[0])
-        self.CrashedProcess_ProcessName = str(self.INIT_ARGS[1])
-        self.CrashedProcess_PID = str(self.INIT_ARGS[2])
 
-        self.SetTitle("{0} has crashed.".format(self.CrashedProcess_TitlebarName))
+        try:
+            self.CrashType = int(self.INIT_ARGS[3])
+
+        except:
+            pass
+
+        self.CrashedProcess_TitlebarName = ""
+        self.CrashedProcess_ProcessName = ""
+        self.CrashedProcess_PID = ""
+
+        if self.CrashType == 0:
+            self.CrashedProcess_TitlebarName = str(self.INIT_ARGS[0])
+            self.CrashedProcess_ProcessName = str(self.INIT_ARGS[1])
+            self.CrashedProcess_PID = str(self.INIT_ARGS[2])
+
+            self.SetTitle("{0} has crashed.".format(self.CrashedProcess_TitlebarName))
+            self.CrashText = "{0}\nhas stopped working.\n\nPID: {1}\nProcessName: {2}\n\nPress ESC to exit".format(self.CrashedProcess_TitlebarName, self.CrashedProcess_PID, self.CrashedProcess_ProcessName)
+
+
+        elif self.CrashType == 1:
+            self.CrashedProcess_ProcessName = str(self.INIT_ARGS[0])
+
+            self.SetTitle("Cannot open {0}".format(self.CrashedProcess_ProcessName))
+            self.CrashText = "{0}\nhas failed when starting.\n\nPress ESC to exit".format(self.CrashedProcess_ProcessName)
+
         self.ICON = self.DefaultContent.GetImage("/error.png")
 
     def EventUpdate(self, event):
@@ -58,10 +68,13 @@ class Process(Core.Process):
             self.DefaultContent.PlaySound("/error.wav")
 
     def Draw(self):
-        self.DISPLAY.fill((20, 27, 30))
-        CrashText = "The process {0}\nhas stopped working.\n\nPID: {1}\nProcessName:{2}\n\nPress ESC to exit".format(self.CrashedProcess_TitlebarName, self.CrashedProcess_PID, self.CrashedProcess_ProcessName)
+        try:
+            self.DISPLAY.fill(UI.ThemesManager_GetProperty("DefaultBackground"))
+
+        except:
+            self.DISPLAY.fill((0, 0, 0))
 
         self.DefaultContent.ImageRender(self.DISPLAY, "/error.png", 5, 5, 128, 128, SmoothScaling=True)
-        self.DefaultContent.FontRender(self.DISPLAY, "/Ubuntu_Bold.ttf", 14, CrashText, (215, 224, 223), 145, 5)
+        self.DefaultContent.FontRender(self.DISPLAY, "/Ubuntu_Bold.ttf", 14, self.CrashText, (215, 224, 223), 145, 5)
 
         self.LAST_SURFACE = self.DISPLAY.copy()

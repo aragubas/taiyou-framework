@@ -22,15 +22,17 @@ from System.SystemApps.Bootloader.MAIN import ListInstalledApplications
 from Library import CoreUtils
 from Library import CoreEffects
 from Library import CorePrimitives as Shape
+from Library import CoreWMControl as WmControl
+from Library import CorePaths
+from Library import CoreAccess
 
-class TaskBarInstance:
+class TaskBarInstance():
     def __init__(self, pDefaultContent, pRootProcess):
         self.Enabled = False
         self.DisableToggle = False
         self.RootProcess = pRootProcess
         self.Animation = CoreUtils.AnimationController(3, multiplierRestart=True)
         self.CurrentMode = None
-        self.Welcome = False
         self.GoToModeWhenReturning = None
         self.DefaultContent = pDefaultContent
         self.LastDisplayFrame = pygame.Surface((Core.MAIN.ScreenWidth, Core.MAIN.ScreenHeight), pygame.HWACCEL | pygame.HWSURFACE)
@@ -71,22 +73,17 @@ class TaskBarInstance:
 
             # Play Error Sound when the UI opened on a System Fault
             if not Core.MAIN.SystemFault_Trigger:
-                # Play Welcome Sound when opening the UI for the first time
-                if not self.Welcome:
-                    self.DefaultContent.PlaySound("/intro_2.wav")
-                    print("Task_Bar : Welcome")
-
-                else:  # Play the Opening Sound when not opening for the First Time
-                    self.CurrentMode.Toggle()
-                    self.DefaultContent.PlaySound("/in.wav")
+                # Play Opening Sound
+                self.CurrentMode.Toggle()
+                self.DefaultContent.PlaySound("/in.wav", UI.SystemSoundsVolume)
 
             else:  # Play error sound when returning from System Fault
-                self.DefaultContent.PlaySound("/error.wav")
+                self.DefaultContent.PlaySound("/error.wav", UI.SystemSoundsVolume)
 
         else:
             self.DisableToggle = True
             self.Animation.Enabled = True
-            self.DefaultContent.PlaySound("/out.wav")
+            self.DefaultContent.PlaySound("/out.wav", UI.SystemSoundsVolume)
 
     def Update(self):
         # Check if wax is being disabled
@@ -194,8 +191,6 @@ class ApplicationSelectorMode_Instace:
 
     def RenderTitle(self, ContentsSurface):
         TitleText = "Opened Tasks"
-        if not self.RootObj.Welcome:
-            TitleText = "Welcome"
         TitleFontSize = 58
         TitleFont = "/Ubuntu_Bold.ttf"
         self.DefaultContent.FontRender(ContentsSurface, TitleFont, TitleFontSize, TitleText, (240, 240, 240), int(self.RootObj.Animation.Value - 255) / 10 + ContentsSurface.get_width() / 2 - self.DefaultContent.GetFont_width(TitleFont, TitleFontSize, TitleText) / 2, 15)
@@ -234,7 +229,7 @@ class ApplicationSelectorMode_Instace:
         # Update WindowList Contents
         self.WindowList.ClearItems()
 
-        for process in Core.ProcessAccess:
+        for process in CoreAccess.ProcessAccess:
             if process.PID == self.RootObj.RootProcess.PID:
                 continue
             # Skip non-graphical processes
@@ -258,9 +253,9 @@ class ApplicationSelectorMode_Instace:
         if self.WindowList.LastItemIndex is not None:
             try:
                 ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
-                Core.MAIN.KillProcessByPID(ProcessPID)
+                CoreAccess.KillProcessByPID(ProcessPID)
 
-                self.DefaultContent.PlaySound("/click.wav")
+                self.DefaultContent.PlaySound("/click.wav", UI.SystemSoundsVolume)
 
             except IndexError:
                 self.WindowList.ResetSelectedItem()
@@ -269,7 +264,7 @@ class ApplicationSelectorMode_Instace:
                 Core.MAIN.SystemFault_Trigger = True
                 Core.MAIN.SystemFault_Traceback = traceback.format_exc()
                 Core.MAIN.SystemFault_ProcessObject = None
-                Core.wmm.WindowManagerSignal(None, 4)
+                WmControl.WindowManagerSignal(None, 4)
 
                 print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
                 print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
@@ -283,19 +278,19 @@ class ApplicationSelectorMode_Instace:
         if self.WindowList.LastItemIndex is not None:
             try:
                 ProcessPID = self.WindowList.ItemProperties[self.WindowList.LastItemIndex]
-                Process = Core.ProcessAccess[Core.ProcessAccess_PID.index(ProcessPID)]
+                Process = CoreAccess.ProcessAccess[CoreAccess.ProcessAccess_PID.index(ProcessPID)]
 
-                Core.wmm.WindowManagerSignal(Process, 0)
+                WmControl.WindowManagerSignal(Process, 0)
 
                 self.RootObj.RootProcess.UI_Call_Request()
 
-                self.DefaultContent.PlaySound("/click.wav")
+                self.DefaultContent.PlaySound("/click.wav", UI.SystemSoundsVolume)
 
             except IndexError:
                 self.WindowList.ResetSelectedItem()
 
     def SwitchToDashboard(self):
-        self.DefaultContent.PlaySound("/click.wav")
+        self.DefaultContent.PlaySound("/click.wav", UI.SystemSoundsVolume)
 
         self.RootObj.SetMode(2)
 
@@ -384,10 +379,10 @@ class ApplicationDashboard_Instace:
 
     def LoadApplicationsList(self):
         # List all valid folders
-        folder_list = CoreUtils.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        folder_list = CoreUtils.Directory_FilesList("." + CorePaths.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
-            if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
+            if file.endswith(CorePaths.TaiyouPath_CorrectSlash + "boot"):
                 BootFolders.append(file)
 
         ListInstalledApplications(BootFolders, self.ApplicationSelector)
@@ -480,18 +475,25 @@ class ApplicationDashboard_Instace:
 
         try:
             # Create the Application Process
-            Core.MAIN.CreateProcess(self.ApplicationSelector.SelectedItemModulePath, self.ApplicationSelector.SelectedItemModulePath)
+            CoreAccess.CreateProcess(self.ApplicationSelector.SelectedItemModulePath, self.ApplicationSelector.SelectedItemModulePath)
 
             self.RootObj.Toggle()
-        except Exception:
+
+        except:
+            print("Error while opening application in TaiyouUI Dashboard.")
+            print(traceback.format_exc())
+
+            CoreAccess.CreateProcess("System{0}SystemApps{0}crash_dialog".format(CorePaths.TaiyouPath_CorrectSlash), "application_crash", (self.ApplicationSelector.SelectedItemTitle, None, None, 1))
+            self.RootObj.Toggle()
+
+
+            """
             Core.MAIN.SystemFault_Traceback = traceback.format_exc()
             Core.MAIN.SystemFault_ProcessObject = None
-            Core.wmm.WindowManagerSignal(None, 4)
+            WmControl.WindowManagerSignal(None, 4)
 
             print("AppSeletorModeInstance : Process Error Detected\nin Process PID(unknow)")
             print("Traceback:\n" + Core.MAIN.SystemFault_Traceback)
 
             # Generate the Crash Log
-            Core.MAIN.GenerateCrashLog()
-            self.RootObj.SetMode(1)
-            return
+            """

@@ -17,12 +17,12 @@
 
 # -- Modules Versions -- #
 def Get_Version():
-    return "4.8"
+    return "5.0"
 
 def Get_ShapeVersion():
     return "2.5"
 
-def Get_AppDataVersion():
+def Get_CorePathsVersion():
     return "1.2"
 
 def Get_UtilsVersion():
@@ -32,26 +32,29 @@ def Get_TaiyouMainVersion():
     return "4.1"
 
 def Get_ContentManagerVersion():
-    return "4.1"
+    return "4.2"
 
 def Get_FXVersion():
     return "1.4"
 
 def Get_BootloaderVersion():
-    return "2.6"
+    return "2.9"
 
 def Get_MAINVersion():
-    return "2.4"
+    return "2.5"
 
 def Get_WindowManagerManagerVersion():
-    return "1.4"
+    return "1.6"
 
 def Get_TaiyouUIVersion():
-    return "2.8"
+    return "3.1"
+
+def Get_CoreAccessVersion():
+    return "1.0"
 
 
 # -- Calculate the Version of Taiyou Game Engine -- #
-TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_AppDataVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion()) + float(Get_TaiyouUIVersion())
+TaiyouGeneralVersion = float(Get_Version()) + float(Get_ShapeVersion()) + float(Get_CorePathsVersion()) + float(Get_UtilsVersion()) + float(Get_TaiyouMainVersion()) + float(Get_ContentManagerVersion()) + float(Get_FXVersion()) + float(Get_BootloaderVersion()) + float(Get_MAINVersion()) + float(Get_WindowManagerManagerVersion()) + float(Get_TaiyouUIVersion()) + float(Get_CoreAccessVersion())
 
 # -- Print Runtime Version -- #
 print("\nTaiyou General version " + str(TaiyouGeneralVersion))
@@ -78,33 +81,8 @@ SmoothScaleTransform = "MMX"
 ThrowException = False
 MainLoopRefreshRate = 0
 
-# -- Taiyou Paths -- #
-TaiyouPath_SystemPath = ""
-TaiyouPath_SystemRootPath = ""
-TaiyouPath_AppDataFolder = ""
-TaiyouPath_TaiyouConfigFile = ""
-TaiyouPath_CorrectSlash = ""
-TaiyouPath_RootDevice = ""
-TaiyouPath_ApplicationsDataPath = ""
-TaiyouPath_SystemDataPath = ""
-TaiyouPath_UserPackpagesPath = ""
-TaiyouPath_UserPath = ""
-TaiyouPath_UserTempFolder = ""
-TaiyouPath_ApplicationsFolder = ""
-TaiyouPath_SystemApplicationsFolder = ""
-TaiyouPath_ApplicationsDataFolder = ""
-TaiyouPath_SystemApplicationsDataFolder = ""
-TaiyouPath_UserFilesFolder = ""
-WindowManagerShared_Event = None
-WindowManagerShared_EventEnabled = False
-WindowManagerShared_EventWaitBeforeClear = 0
-
 LastException = "null"
 CurrentPlatform = ""
-
-# -- Global Variables -- #
-ProcessAccess = list()
-ProcessAccess_PID = list()
 
 IsRunning = True
 
@@ -128,77 +106,18 @@ def Init():
     global IgnoreSDL2Parameters
     global SmoothScaleTransform
     global PygameFastEvent
-    global TaiyouPath_CorrectSlash
-    global TaiyouPath_SystemPath
-    global TaiyouPath_TaiyouConfigFile
-    global TaiyouPath_CorrectSlash
-    global TaiyouPath_AppDataFolder
-    global TaiyouPath_RootDevice
-    global TaiyouPath_ApplicationsDataPath
-    global TaiyouPath_SystemDataPath
-    global TaiyouPath_SystemRootPath
+    global MainLoopRefreshRate
     global ThrowException
     global CurrentPlatform
     global AudioPlayblackChannels
-    global TaiyouPath_UserPackpagesPath
-    global TaiyouPath_UserPath
-    global TaiyouPath_UserTempFolder
-    global TaiyouPath_ApplicationsFolder
-    global TaiyouPath_SystemApplicationsFolder
-    global TaiyouPath_ApplicationsDataFolder
-    global TaiyouPath_SystemApplicationsDataFolder
-    global MainLoopRefreshRate
-    global TaiyouPath_UserFilesFolder
 
-    # -- Set the Correct Slash Directory -- #
-    CurrentPlatform = platform.system()
-
-    if CurrentPlatform == "Linux":
-        TaiyouPath_CorrectSlash = "/"
-        TaiyouPath_RootDevice = "./Taiyou/"
-        TaiyouPath_SystemPath = "{0}System/CoreFiles/".format(TaiyouPath_RootDevice)
-        TaiyouPath_UserPath = "./Taiyou/User/{0}/".format(getpass.getuser())
-        TaiyouPath_AppDataFolder = "{0}AppsData/".format(TaiyouPath_UserPath)
-        TaiyouPath_UserPackpagesPath = TaiyouPath_UserPath + "Packpages/"
-        TaiyouPath_UserTempFolder = TaiyouPath_UserPath + "Temporary/"
-        TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "Data/app/"
-        TaiyouPath_SystemDataPath = TaiyouPath_RootDevice + "Data/system/"
-        TaiyouPath_SystemRootPath = TaiyouPath_RootDevice + "System/"
-        TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemRootPath + "system.config"
-        TaiyouPath_ApplicationsFolder = TaiyouPath_RootDevice + "Applications/"
-        TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System/SystemApps/"
-        TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data/app/"
-        TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data/system/"
-        TaiyouPath_UserFilesFolder = TaiyouPath_UserPath + "UserFiles/"
-
-    elif CurrentPlatform == "Windows":
-        TaiyouPath_CorrectSlash = "\\"
-        TaiyouPath_RootDevice = os.getcwd() + "\\Taiyou\\"
-        TaiyouPath_SystemPath = "{0}System\\CoreFiles\\".format(TaiyouPath_RootDevice)
-        TaiyouPath_UserPath = "Taiyou\\User\\{0}\\".format(getpass.getuser())
-        TaiyouPath_AppDataFolder = "{0}AppsData\\".format(TaiyouPath_UserPath)
-        TaiyouPath_UserPackpagesPath = TaiyouPath_UserPath + "Packpages\\"
-        TaiyouPath_UserTempFolder = TaiyouPath_UserPath + "Temporary\\"
-        TaiyouPath_ApplicationsDataPath = TaiyouPath_RootDevice + "Data\\app\\"
-        TaiyouPath_SystemDataPath = TaiyouPath_RootDevice + "Data\\system\\"
-        TaiyouPath_SystemRootPath = TaiyouPath_RootDevice + "System\\"
-        TaiyouPath_TaiyouConfigFile = TaiyouPath_SystemRootPath + "system.config"
-        TaiyouPath_ApplicationsFolder = TaiyouPath_RootDevice + "Applications/"
-        TaiyouPath_SystemApplicationsFolder = TaiyouPath_RootDevice + "System\\SystemApps\\"
-        TaiyouPath_ApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\app\\"
-        TaiyouPath_SystemApplicationsDataFolder = TaiyouPath_RootDevice + "Data\\system\\"
-        TaiyouPath_UserFilesFolder = TaiyouPath_UserPath + "UserFiles\\"
-
-    # Create directory for User Paths
-    UTILS.Directory_MakeDir(TaiyouPath_UserPath)
-    UTILS.Directory_MakeDir(TaiyouPath_UserPackpagesPath)
-    UTILS.Directory_MakeDir(TaiyouPath_UserTempFolder)
-    UTILS.Directory_MakeDir(TaiyouPath_UserFilesFolder)
+    # Check all directories
+    CorePaths.CheckPaths()
 
     # -- Initialize Some Modules
     CntMng.InitModule()
 
-    conf_file = open(TaiyouPath_TaiyouConfigFile)
+    conf_file = open(CorePaths.TaiyouPath_TaiyouConfigFile)
 
     for x in conf_file:
         x = x.rstrip()
@@ -208,38 +127,38 @@ def Init():
             # -- Disable Font Rendering -- #
             if SplitedParms[0] == "DisableFontRendering":
                 if SplitedParms[1] == "True":
-                    CONTENT_MANAGER.FontRenderingDisabled = True
+                    CntMng.FontRenderingDisabled = True
                 else:
-                    CONTENT_MANAGER.FontRenderingDisabled = False
+                    CntMng.FontRenderingDisabled = False
 
-                print("Taiyou.Runtime.Init : Disable font rendering set to:" + str(CONTENT_MANAGER.FontRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable font rendering set to:" + str(CntMng.FontRenderingDisabled))
 
             # -- Disable Image Rendering -- #
             elif SplitedParms[0] == "DisableImageRendering":
                 if SplitedParms[1] == "True":
-                    CONTENT_MANAGER.ImageRenderingDisabled = True
+                    CntMng.ImageRenderingDisabled = True
                 else:
-                    CONTENT_MANAGER.ImageRenderingDisabled = False
+                    CntMng.ImageRenderingDisabled = False
 
-                print("Taiyou.Runtime.Init : Disable sprite rendering set to:" + str(CONTENT_MANAGER.ImageRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable sprite rendering set to:" + str(CntMng.ImageRenderingDisabled))
 
             # -- Disable Rectangle Rendering -- #
             elif SplitedParms[0] == "DisableRectangleRendering":
                 if SplitedParms[1] == "True":
-                    CONTENT_MANAGER.RectangleRenderingDisabled = True
+                    CntMng.RectangleRenderingDisabled = True
                 else:
-                    CONTENT_MANAGER.RectangleRenderingDisabled = False
+                    CntMng.RectangleRenderingDisabled = False
 
-                print("Taiyou.Runtime.Init : Disable rectangle rendering set to:" + str(CONTENT_MANAGER.RectangleRenderingDisabled))
+                print("Taiyou.Runtime.Init : Disable rectangle rendering set to:" + str(CntMng.RectangleRenderingDisabled))
 
             # -- Disable Image Transparency -- #
             elif SplitedParms[0] == "DisableImageTransparency":
                 if SplitedParms[1] == "True":
-                    CONTENT_MANAGER.ImageTransparency = True
+                    CntMng.ImageTransparency = True
                 else:
-                    CONTENT_MANAGER.ImageTransparency = False
+                    CntMng.ImageTransparency = False
 
-                print("Taiyou.Runtime.Init : Disable sound system set to:" + str(CONTENT_MANAGER.ImageTransparency))
+                print("Taiyou.Runtime.Init : Disable sound system set to:" + str(CntMng.ImageTransparency))
 
             # -- Disable Sound System -- #
             elif SplitedParms[0] == "DisableSoundSystem":
@@ -474,12 +393,16 @@ def Init():
 
     InitializeBootloader()
 
+
 def InitSoundSystem():
     global AudioFrequency
     global AudioSize
     global AudioChannels
     global AudioBufferSize
     global AudioPlayblackChannels
+
+    if CntMng.DisableSoundSystem:
+        return
 
     print("Initializing SoundSystem...")
     if pygame.mixer.get_init():
@@ -498,25 +421,12 @@ def InitSoundSystem():
     print("SoundSystem has been initialized.")
 
 def InitializeBootloader():
-    global TaiyouPath_CorrectSlash
-
-    CurrentApp_Folder = "System{0}SystemApps{0}Bootloader".format(TaiyouPath_CorrectSlash)
-    MAIN.CreateProcess(CurrentApp_Folder, "bootloader")
+    CurrentApp_Folder = "System{0}SystemApps{0}Bootloader".format(CorePaths.TaiyouPath_CorrectSlash)
+    CoreAccess.CreateProcess(CurrentApp_Folder, "bootloader")
 
 def GetUserSelectedApplication():
-    global TaiyouPath_RootDevice
-    global TaiyouPath_CorrectSlash
-    Path = "{0}System{1}{2}".format(TaiyouPath_RootDevice, TaiyouPath_CorrectSlash, "Selected.txt")
-    return open(Path, "r").read().rstrip().replace("/", TaiyouPath_CorrectSlash)
-
-def GetAppDataFromAppName(AppName):
-    Path = "{1}{0}".format(AppName, TaiyouPath_AppDataFolder)
-    
-    # Check if path exists
-    if not UTILS.Directory_Exists(Path):
-        UTILS.Directory_MakeDir(Path)
-
-    return Path
+    Path = "{0}System{1}{2}".format(CorePaths.TaiyouPath_RootDevice, CorePaths.TaiyouPath_CorrectSlash, "Selected.txt")
+    return open(Path, "r").read().rstrip().replace("/", CorePaths.TaiyouPath_CorrectSlash)
 
 def Get_MainModuleName(AppPath):
     """
@@ -524,30 +434,17 @@ def Get_MainModuleName(AppPath):
     :param GameFolder:
     :return:
     """
-    return "{0}{1}".format(AppPath.replace(TaiyouPath_CorrectSlash, "."), ".MAIN")
+    return "{0}{1}".format(AppPath.replace(CorePaths.TaiyouPath_CorrectSlash, "."), ".MAIN")
 
 # endregion
 
-def RegisterToCoreAccess(self):
-    ProcessAccess.append(self)
-    ProcessAccess_PID.append(self.PID)
-
-def RemoveFromCoreAccess(process):
-    try:
-        Index = ProcessAccess_PID.index(process.PID)
-
-        ProcessAccess.pop(Index)
-        ProcessAccess_PID.pop(Index)
-    except ValueError:
-        print("Cannot remove process that don't exist.")
-
 # -- Imports All Modules -- #
 import os, pygame, platform, getpass, threading, traceback
-from System.Core import CONTENT_MANAGER as CntMng
-from System.Core import APPDATA as AppData
-from System.Core import WMM as wmm
+import Library.CoreContentManager as CntMng
 from System.Core import MAIN
 from Library import CoreUtils as UTILS
+from Library import CorePaths
+from Library import CoreAccess
 
 class Process(object):
     def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
@@ -586,13 +483,19 @@ class Process(object):
         self.LAST_TITLEBAR_TEXT = False
         self.UpdateClock = pygame.time.Clock()
         self.SetCursor(0)
-        self.Initialize()
         self.UpdateFPS = 100
+
+        try:
+            self.Initialize()
+
+        except:
+            self.ProcessError()
+            return
 
         if self.IS_GRAPHICAL:
             self.StartDrawThread()
 
-        RegisterToCoreAccess(self)
+        CoreAccess.RegisterToCoreAccess(self)
 
     def SetTitle(self, title):
         """
@@ -604,6 +507,15 @@ class Process(object):
 
         if self.TITLEBAR_TEXT != str(title):
             self.WINDOW_SURFACE_LAST_DRAG_STATE = not self.WINDOW_SURFACE_LAST_DRAG_STATE
+
+    def SetWindowPosition(self, X, Y):
+        """
+        Set the window position
+        :param X: X
+        :param Y: Y
+        :return:
+        """
+        self.POSITION = (int(X), int(Y))
 
     def SetCursor(self, Value):
         """
@@ -724,11 +636,12 @@ class Process(object):
             self.LAST_SURFACE = self.DISPLAY.copy()
 
     def ProcessError(self):
-        print("{0}_rendering - Application has failed.")
+        print("The process {0} has failed.".format(self.NAME))
         print(traceback.format_exc())
-        self.KillProcess(False)
 
-        MAIN.CreateProcess("System{0}SystemApps{0}crash_dialog".format(TaiyouPath_CorrectSlash), "application_crash", (self.TITLEBAR_TEXT, self.NAME, self.PID))
+        CoreAccess.CreateProcess("System{0}SystemApps{0}crash_dialog".format(CorePaths.TaiyouPath_CorrectSlash), "application_crash", (self.TITLEBAR_TEXT, self.NAME, self.PID))
+
+        self.KillProcess(False)
 
     def Draw(self):
         """
@@ -785,13 +698,17 @@ class Process(object):
         :return:
         """
         print("Process [{0}] has received kill request.".format(self.TITLEBAR_TEXT))
-        RemoveFromCoreAccess(self)
-        self.KillDrawThread()
+        CoreAccess.RemoveFromCoreAccess(self)
+        if self.IS_GRAPHICAL:
+            self.KillDrawThread()
 
         self.Running = False
 
         if WhenKilled:
             self.WhenKilled()
+
+        del self
+        UTILS.GarbageCollector_Collect()
 
     def WhenKilled(self):
         """

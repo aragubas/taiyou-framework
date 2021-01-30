@@ -15,7 +15,7 @@
 #
 #
 import pygame
-from System.Core import CONTENT_MANAGER as CntMng
+import Library.CoreContentManager as CntMng
 import System.Core as tge
 from Library import CoreUtils as UTILS
 

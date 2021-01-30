@@ -18,7 +18,10 @@ import System.Core as Core
 import traceback, pygame
 from Library import CorePrimitives as Shape
 from Library import CoreUtils as UTILS
-
+from Library import UI
+from Library import CoreWMControl as WmControl
+from Library import CorePaths
+from Library import CoreAccess
 
 class ApplicationSelector:
     def __init__(self, pContentManager, pX, pY):
@@ -127,38 +130,54 @@ def ListInstalledApplications(BootFolders, ApplicationSelector):
         if AppTitle is None or IconPath is None or ModulePath is None:
             continue
 
-        BootIconPath = boot.replace("{0}boot".format(Core.TaiyouPath_CorrectSlash), "") + IconPath.replace("/", Core.TaiyouPath_CorrectSlash)
+        BootIconPath = boot.replace("{0}boot".format(CorePaths.TaiyouPath_CorrectSlash), "") + IconPath.replace("/", CorePaths.TaiyouPath_CorrectSlash)
         print(BootIconPath)
 
         ApplicationSelector.AddItem(AppTitle, ModulePath, BootIconPath)
 
 class Process(Core.Process):
-    def Initialize(self):
-        self.SetVideoMode(True, None, True)
-        self.SetTitle("Taiyou System Bootloader")
-
+    def __init__(self, pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex):
+        self.ImagesHasBeenLoaded = False
         self.Timer = pygame.time.Clock()
 
-        self.DefaultContent = Core.CntMng.ContentManager()
+        self.BootloaderKeys = Core.CntMng.ContentManager()
+        self.BootloaderKeys.SetSourceFolder("", True)
+        self.BootloaderKeys.SetRegKeysPath("reg/BOOTLOADER")
+        self.BootloaderKeys.LoadRegKeysInFolder()
 
-        self.DefaultContent.SetSourceFolder("", True)
-        self.DefaultContent.SetFontPath("fonts")
-        self.DefaultContent.SetImageFolder("img")
-        self.DefaultContent.SetRegKeysPath("reg/BOOTLOADER")
-        self.DefaultContent.SetSoundPath("sound")
-        self.DefaultContent.SetFontPath("fonts")
+        # Load DefaultUI Contents
+        UI.SystemResources = Core.CntMng.ContentManager()
+        UI.SystemResources.SetSourceFolder("", True)
+        UI.SystemResources.SetFontPath("fonts")
+        UI.SystemResources.SetImageFolder("img")
+        UI.SystemResources.SetRegKeysPath("reg")
+        UI.SystemResources.SetSoundPath("sound")
+        UI.SystemResources.SetFontPath("fonts")
 
-        self.DefaultContent.InitSoundSystem()
+        UI.SystemResources.InitSoundSystem()
+        UI.SystemResources.LoadRegKeysInFolder()
+        UI.SystemResources.LoadSoundsInFolder()
 
-        self.DefaultContent.LoadRegKeysInFolder()
-        self.DefaultContent.LoadSoundsInFolder()
+        UI.SystemSoundsVolume = float(UI.SystemResources.Get_RegKey("UI/system_sounds_volume"))
+
+        self.DefaultContent = UI.SystemResources
 
         self.Progress = 0
         self.ProgressAddDelay = 0
         self.ProgressProgression = True
-        self.ProgressMax = 100
+        self.ProgressMax = 2
         self.LoadingComplete = False
         self.InitialLoadingDelay = 0
+        self.LastProgress = 0
+
+        self.NoFoldersFound = False
+        self.FatalErrorScreen = False
+
+        self.ApplicationSeletorWelcomeSound = False
+
+        self.InitialSignal = False
+
+        super().__init__(pPID, pProcessName, pROOT_MODULE, pInitArgs, pProcessIndex)
 
         self.CenterX = self.DISPLAY.get_width() / 2
         self.CenterY = self.DISPLAY.get_height() / 2
@@ -167,18 +186,11 @@ class Process(Core.Process):
         self.ApplicationSeletorAnimatorStart = UTILS.AnimationController(0.5, multiplierRestart=True)
         self.ApplicationSelectorObj = ApplicationSelector(self.DefaultContent, self.CenterX - 550 / 2, self.CenterY - 120 / 2)
 
-        self.NoFoldersFound = False
-        self.FatalErrorScreen = False
-
-        self.ApplicationSeletorWelcomeSound = False
-
-        self.ImagesHasBeenLoaded = False
-
         # List all valid folders
-        folder_list = UTILS.Directory_FilesList("." + Core.TaiyouPath_CorrectSlash)
+        folder_list = UTILS.Directory_FilesList("." + CorePaths.TaiyouPath_CorrectSlash)
         BootFolders = list()
         for file in folder_list:
-            if file.endswith(Core.TaiyouPath_CorrectSlash + "boot"):
+            if file.endswith(CorePaths.TaiyouPath_CorrectSlash + "boot"):
                 BootFolders.append(file)
 
         ListInstalledApplications(BootFolders, self.ApplicationSelectorObj)
@@ -186,11 +198,13 @@ class Process(Core.Process):
         if len(BootFolders) == 0 or len(self.ApplicationSelectorObj.SeletorItems_Index) == 0:
             self.NoFoldersFound = True
 
-        self.InitialSignal = False
+
+
+    def Initialize(self):
+        self.SetVideoMode(True, None, True)
+        self.SetTitle("Taiyou System Bootloader")
 
     def Update(self):
-        self.Timer.tick(100)
-
         if self.ApplicationSeletor:
             self.ApplicationSeletorAnimatorStart.Update()
 
@@ -201,7 +215,6 @@ class Process(Core.Process):
                 self.ApplicationSeletorWelcomeSound = True
 
                 self.DefaultContent.PlaySound("/intro.wav")
-                Core.wmm.WindowManagerSignal(None, 5)
             return
 
         if self.ProgressProgression and not self.LoadingComplete:
@@ -217,33 +230,34 @@ class Process(Core.Process):
             if self.Progress >= self.ProgressMax and not self.LoadingComplete:
                 self.LoadingComplete = True
 
-                print("Taiyou.Bootloader :  : Loading Complete")
+                print("Taiyou.Bootloader : Loading Complete")
 
                 # Start the Default Application
+                CreatedProcessPID = 0
                 try:
                     print("Taiyou.Bootloader : Loading has been completed\nStarting user selected applicaton...")
                     # Create the Application Process
-                    Core.MAIN.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
+                    CreatedProcessPID = CoreAccess.CreateProcess(Core.GetUserSelectedApplication(), Core.GetUserSelectedApplication())
 
-                    # Allow Window Manager do receive request
-                    Core.wmm.WindowManagerSignal(None, 4)
+                    # Allow Window Manager to receive request
+                    WmControl.WindowManagerSignal(None, 4)
 
                     # Kills the Bootloader process
-                    print("Taiyou.Bootloader : I am done at the time...\ni think i will just exit the conversation.")
-                    Core.MAIN.KillProcessByPID(self.PID)
-                    self.Running = False
+                    self.KillProcess(False)
 
                 except Exception:
                     print("Taiyou.Bootloader : Fatal Error : Error while creating the process to the Auto-Start Application.")
 
                     Traceback = traceback.format_exc()
+                    print(Traceback)
+
+                    CoreAccess.KillProcessByPID(CreatedProcessPID)
 
                     # Check if SelectedFile wax exists
                     try:
                         UserSelectedApplication = Core.GetUserSelectedApplication()
 
                         self.GenerateCrashLog(Traceback, UserSelectedApplication)
-                        print(Traceback)
                         print("Something bad happened while creating the process for the default application.")
 
                         self.FatalErrorScreen = True
@@ -285,7 +299,7 @@ class Process(Core.Process):
             self.DefaultContent.FontRender(DisplayWithWax, Font, FontSize, TitleBarText, TextColor, self.CenterX - self.DefaultContent.GetFont_width(Font, FontSize, TitleBarText) / 2, self.CenterY - 120)
 
             # Draw the Select the Enter
-            Text = self.DefaultContent.Get_RegKey("/seletor/down_text")
+            Text = self.DefaultContent.Get_RegKey("BOOTLOADER/seletor/down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
@@ -297,7 +311,7 @@ class Process(Core.Process):
             self.DefaultContent.ImageRender(DisplayWithWax, "/folder_question.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
 
             # Draw the Select the Enter
-            Text = self.DefaultContent.Get_RegKey("/seletor/no_folders_found_down_text")
+            Text = self.DefaultContent.Get_RegKey("BOOTLOADER/seletor/no_folders_found_down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
@@ -309,7 +323,7 @@ class Process(Core.Process):
             self.DefaultContent.ImageRender(DisplayWithWax, "/error.png", self.CenterX - 186 / 2, self.CenterY - 186 / 2, 186, 186, SmoothScaling=True)
 
             # Draw the Select the Enter
-            Text = self.DefaultContent.Get_RegKey("/seletor/fatal_error_down_text")
+            Text = self.DefaultContent.Get_RegKey("BOOTLOADER/seletor/fatal_error_down_text")
             FontSize = 12
             Font = "/Ubuntu.ttf"
             TextColor = (150, 150, 150)
@@ -340,13 +354,13 @@ class Process(Core.Process):
                 if not self.ApplicationSelectorObj.SelectedItemIndex == -1:
                     try:
                         # Create the Application Process
-                        Core.MAIN.CreateProcess(self.ApplicationSelectorObj.SelectedItemModulePath, self.ApplicationSelectorObj.SelectedItemModulePath)
+                        CoreAccess.CreateProcess(self.ApplicationSelectorObj.SelectedItemModulePath, self.ApplicationSelectorObj.SelectedItemModulePath)
 
                         # Allow Window Manager do receive request
-                        Core.wmm.WindowManagerSignal(None, 4)
+                        WmControl.WindowManagerSignal(None, 4)
 
                         # Kills the Bootloader process
-                        Core.MAIN.KillProcessByPID(self.PID)
+                        CoreAccess.KillProcessByPID(self.PID)
 
                     except Exception as e:
                         Traceback = traceback.format_exc()
@@ -359,8 +373,8 @@ class Process(Core.Process):
                         self.APPLICATION_HAS_FOCUS = True
 
         else:
-            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress < 1:
-                self.LoadingComplete = False
+            if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and self.Progress < 3:
+                self.LoadingComplete = True
                 self.LoadingBarProgress = 0
                 self.Progress = 0
                 self.ProgressAddDelay = 0
@@ -398,14 +412,21 @@ class Process(Core.Process):
 
     def FinishLoadingScreen(self):
         self.ProgressMax = self.Progress
+        self.DefaultContent.PlaySound("/intro_2.wav", UI.SystemSoundsVolume)
 
     def LoadingSteps(self, CurrentProgres):
         print("Taiyou.Bootloader.LoadingSteps : Running Step {0}.".format(CurrentProgres))
+
+        # Load default UI Resources
         if CurrentProgres == 0:
+            # Load the default Theme File
+            UI.ThemesManager_LoadTheme(UI.SystemResources, UI.SystemResources.Get_RegKey("UI/selected_theme"))
+
+        if CurrentProgres == 1:
             # Start the SystemUI
-            Core.MAIN.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(Core.TaiyouPath_CorrectSlash), "system_ui")
+            CoreAccess.CreateProcess("System{0}SystemApps{0}TaiyouUI".format(CorePaths.TaiyouPath_CorrectSlash), "system_ui")
             self.InterruptDrawing = False
 
-        if CurrentProgres == 2:
+        if CurrentProgres >= self.ProgressMax:
             # Finish the Loading
             self.FinishLoadingScreen()
