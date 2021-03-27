@@ -1,6 +1,8 @@
 # Taiyou Framework
 Taiyou Framework is a re-creation of Taiyou Game Engine built for buiding cross-platform apps using only Python and Pygame as it renderer.
 
+# I am not working on this project anymore because python/pygame dont deal well with old/not powerfull hardware.
+
 ## Instalation Guide
 Download this fresh copy of Taiyou Framework clicking at "Code" button with download button and select Download Zip
 Make sure you have at least Python 3.8 installed i will not teach how to install python 🤡
